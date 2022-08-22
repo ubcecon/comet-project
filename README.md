@@ -23,4 +23,4 @@ This repository is currently a mirror of our notebooks and selected other materi
 
 # Contact Information
 
-You can find our most recent contact information on our website, or by emailing `comet-project@ubc.ca`
+You can find our most recent contact information on our website, or by emailing `comet.project@ubc.ca`
