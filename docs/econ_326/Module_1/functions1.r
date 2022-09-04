@@ -62,6 +62,20 @@ r= r %>% filter_all(any_vars(. %in% c(toupper(var))))
 return(r[1,1])
 }
 
+test_00 <- function() {
+  test_that("Solution is incorrect", {
+    expect_equal(digest(answer00), 'ffb497cd8da1b4a3f983803a079ef5ab')
+  })
+  print("Success!")
+}
+
+test_0 <- function() {
+  test_that("Solution is incorrect", {
+    expect_equal(digest(answer0), 'f401db5dd95a0d99eecaa13b19c3735a')
+  })
+  print("Success!")
+}
+
 test_1 <- function() {
   test_that("Solution is incorrect", {
     expect_equal(digest(answer1), '22f225ee36612a03a5ee660519194dd2')
