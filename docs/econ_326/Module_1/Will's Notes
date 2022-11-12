@@ -16,5 +16,7 @@ file is read only??? jupyeter cant save it??
 who is jovyan??
 
 Module 1
-  Your turn! Try using the glimpse() function to check out the data. Store your answer in a variable called answer0
-  print and glimpse work at the same time
+  Question: Your turn! Try using the glimpse() function to check out the data. Store your answer in a variable called answer0
+  Issue: print and glimpse work at the same time
+  Remark: added a function to check if student considered case sensitivity. 
+  
