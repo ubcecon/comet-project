@@ -35,4 +35,9 @@ Module 1
   
   Q:try it our yourself! What is the maximum value for education in this data set? (hint, try the max() function)
   Issue: does not print out the actual max value
-
+  
+  Q:We will first describe the gender wealth gap. In R, there are many ways we could compute basic descriptive statistics. The simplest way is to use summarize and group_by
+  I: the tibble has <fct>, <dbl>. Confusing.
+  
+  Q:  Advanced Note: piping The above example us 
+  I:we can out a step by step on what exactly piping does
