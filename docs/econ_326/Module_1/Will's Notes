@@ -1,4 +1,11 @@
-Start 
+Start -- important code to take note 
+
+library(tidyverse)
+library(haven)
+library(dplyr)
+library('scales')
+
+source("functions1.r")
 
 Tasks
   dont forget to put function before you run your code!!!
