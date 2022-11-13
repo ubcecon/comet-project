@@ -33,4 +33,6 @@ Module 1
   Issue: print and glimpse work at the same time
   Remark: added a function to check if student considered case sensitivity. 
   
+  Q:try it our yourself! What is the maximum value for education in this data set? (hint, try the max() function)
+  Issue: does not print out the actual max value
 
