@@ -19,6 +19,7 @@ Personal Questions
    there are different ways. you cna just do it in jupyet or you cna do it in github then linked jupyet to run the cpde. Its asking for a link. What is the link?
    github seems to be better from a coding standpoint. 
 
+  Whn you log off and comeback to it. you need to run all the cells above it, which takes a long time vs just running it offline??
 Personal Experience Jupyter
   Module 3
     Its not clear weather education or Education is being asked
@@ -27,6 +28,7 @@ Personal Experience Jupyter
 Remarks
   Tried putting if statements 
   a better use of time would be to just work on conetent not code
+  placed some explanations on what some code does
   
   added more more explanations
 
@@ -45,3 +47,9 @@ Module 1
   I:we can out a step by step on what exactly piping does
   
   explain what a tibble is
+  Q:We also see how this breaks down by gender. Look at the following table - do you see a pattern?
+  I: "`summarise()` has grouped output by 'education'. You can override using the
+`.groups` argument." 
+  R: I dont know whwat this error means btu the code still works. 
+  
+  Never explained what mutate is?
