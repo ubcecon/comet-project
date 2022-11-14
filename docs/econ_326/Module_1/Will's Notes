@@ -66,3 +66,5 @@ Activity 3 percentage table function is wrongly labeled, suppose to be income ga
   
   can you put a t test inside a digest?? wouldnt it be better to compare the round estimate??
 tab2_income_percent could use test functions
+
+tables should relfect that we are talking about after tax income now
