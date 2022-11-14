@@ -16,6 +16,8 @@ Personal Questions
    it says read only???
   Somtimes when I load it it loads into a main file called jovyan??
   created a branch inside jupyter called WillPractice, which is different from github file.
+   there are different ways. you cna just do it in jupyet or you cna do it in github then linked jupyet to run the cpde. Its asking for a link. What is the link?
+   github seems to be better from a coding standpoint. 
 
 Personal Experience Jupyter
   Module 3
@@ -41,3 +43,5 @@ Module 1
   
   Q:  Advanced Note: piping The above example us 
   I:we can out a step by step on what exactly piping does
+  
+  explain what a tibble is
