@@ -74,7 +74,7 @@ test_1 <- function() {
 
 
 test_2 <- function() {
-  test_that("Solution is incorrect", {
+  test_that("Solution is incorrect. Hint: is the difference positive or negative?", {
     expect_equal(digest(answer2),'8ddb40a1f799071bad5eba025a24ccdf')
   })
   print("Success!")
@@ -86,7 +86,7 @@ test_2 <- function() {
 
 test_2.5 <- function() {
   test_that("Solution is incorrect", {
-    expect_equal(digest(answer2.5),'3a5505c06543876fe45598b5e5e5195d')
+    expect_equal(digest(answer2.5_caps),'3a5505c06543876fe45598b5e5e5195d')
   })
   print("Success!")
 }
@@ -128,9 +128,31 @@ test_8 <- function() {
   print("Success!")
 }
 
+
+test_9 <- function() {
+  test_that("rege1 is incorrect.", {
+    expect_equal(digest(sum20), "e92fb46144db686d065b79496a2b1a3f")
+  })
+  print("Success!")
+}
+test_10 <- function() {
+  test_that("rege2 is incorrect", {
+    expect_equal(digest(sum30), "b819f65696db7f73a44f45f421772907")
+  })
+  print("Success!")
+}
+test_11 <- function() {
+  test_that("rege3 is incorrect", {
+    expect_equal(digest(sum40), "f745978767b586053793c44ec2e26a46")
+  })
+  print("Success!")
+}
+
+
+
 test_12 <- function() {
-  test_that("Solution is incorrect", {
-    expect_equal(digest(round(rege2$coefficients,2)), "5691989989603579fcee1a6c8d90ae15")
+  test_that("rege4 is incorrect", {
+    expect_equal(digest(sum50), "3e53f5abadce555e6ff2225af85ac6c4")
   })
   print("Success!")
 }
