@@ -1,76 +1,45 @@
-Start -- important code to take note 
+Start --
+Things to ask Jonathan
+   1. When comparing tables, I was thinking just reprinting the tables so students don't need to scroll back to the top to look for it. But maybe thats spoonfeeding
+   
+   2.There is a very bad argument. I may be dumb but I am sure the argumetn is not good.  not to mentionfinancial assets, stocks are not solely determined by stock holdings. Its not even clear if financial assets are a dummy variable or not    If we think about this, it makes sense: you can only have a "stock" if you have             financial assets! So, if I tell you what value "stock" takes on, you will immediately know        whether or not I have financial assets or not.
+    
+    
+    
+idk what this is for but ill put it here just in case ggsave('plot1.png')
 
+
+
+
+important code to take note 
+
+source("hands_on_tests_4.r")
+digest(round(reg1$coefficients[1], 3))
+ 
+ 
+ 
+ 
 Tasks
   dont forget to put function before you run your code!!!
   round decimals!
 
 Personal Questions
-  Github button on jupyter wont let me work on my github file? Need to meet live to resolve issue
-   it says read only???
-  Somtimes when I load it it loads into a main file called jovyan??
-  created a branch inside jupyter called WillPractice, which is different from github file.
-   there are different ways. you cna just do it in jupyet or you cna do it in github then linked jupyet to run the cpde. Its asking for a link. What is the link?
-   github seems to be better from a coding standpoint. 
-
-  Whn you log off and comeback to it. you need to run all the cells above it, which takes a long time vs just running it offline??
+  Short Answer 6 Everything is understood but asking about sample size is priming people to answer short answer 6 with something related to sample size
+    
 Personal Experience Jupyter
-  Module 3
-    Its not clear weather education or Education is being asked
+
 
 
 Remarks
   Tried putting if statements 
-  a better use of time would be to just work on conetent not code
+  a better use of time would be to just work on content not code
   placed some explanations on what some code does
-  
   added more more explanations
 
-Module 1
-  Question: Your turn! Try using the glimpse() function to check out the data. Store your answer in a variable called answer0
-  Issue: print and glimpse work at the same time
-  Remark: added a function to check if student considered case sensitivity. 
-  
-  Q:try it our yourself! What is the maximum value for education in this data set? (hint, try the max() function)
-  Issue: does not print out the actual max value
-  
-  Q:We will first describe the gender wealth gap. In R, there are many ways we could compute basic descriptive statistics. The simplest way is to use summarize and group_by
-  I: the tibble has <fct>, <dbl>. Confusing.
-  
-  Q:  Advanced Note: piping The above example us 
-  I:we can out a step by step on what exactly piping does
-  
-  explain what a tibble is
-  Q:We also see how this breaks down by gender. Look at the following table - do you see a pattern?
-  I: "`summarise()` has grouped output by 'education'. You can override using the
-`.groups` argument." 
-  R: I dont know whwat this error means btu the code still works. 
-  
-  Never explained what mutate is?
-
-    Activity 2 has no test function?
-
-Activity 3 percentage table function is wrongly labeled, suppose to be income gap not welath gap
-  has no test function as well
-  it would be helpful to be income gap and wealth gap side by side
-  
-  fixe test 3 and test 4
-  test 5 and 6 dont work
-  test 7 and 8 dont work
-  
-  can you put a t test inside a digest?? wouldnt it be better to compare the round estimate??
-tab2_income_percent could use test functions
-
-tables should relfect that we are talking about after tax income now
-
-can you write a function tht copies the table that we compare it too so that students dont need to scroll back up to look for the said table 
-
-SHort Answer 3&4
-  ask would this be what we expect. What could explain this finding
-Short answer 6
-  we can also ask what are possible reasons for this to be the case rather than just asking students to describe the data
   
   Module 4 has a typio in Short answer 1
   test function in module 4 are just wrong
   
   module 4 short answer 7 
   you mean run the regression below
+
