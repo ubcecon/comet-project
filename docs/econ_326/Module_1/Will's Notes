@@ -1,0 +1,41 @@
+Start --
+Things to ask Jonathan
+    1. linear hypothesis does not work
+    library car does not work
+    
+   1. When comparing tables, I was thinking just reprinting the tables so students don't need to scroll back to the top to look for it. But maybe thats spoonfeeding-- might confuse students even more
+   
+   2.There is a very bad argument. I may be dumb but I am sure the argumetn is not good.  not to mentionfinancial assets, stocks are not solely determined by stock holdings. Its not even clear if financial assets are a dummy variable or not    If we think about this, it makes sense: you can only have a "stock" if you have             financial assets! So, if I tell you what value "stock" takes on, you will immediately know        whether or not I have financial assets or not.
+    
+    
+    
+idk what this is for but ill put it here just in case ggsave('plot1.png')
+
+
+
+
+important code to take note 
+
+source("functions5.r")
+digest(round(reg1$coefficients[1], 3))
+ 
+ 
+ 
+ 
+Tasks
+  dont forget to put function before you run your code!!!
+  round decimals!
+
+Personal Questions
+ 
+
+
+
+Remarks
+  Tried putting if statements 
+  a better use of time would be to just work on content not code
+  placed some explanations on what some code does
+  added more more explanations
+
+  
+  

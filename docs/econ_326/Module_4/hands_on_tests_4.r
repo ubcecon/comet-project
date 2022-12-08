@@ -3,7 +3,7 @@ library(digest)
 
 test_1 <- function() {
   test_that("Solution is incorrect", {
-    expect_equal(digest(round(reg1$coefficients[1], 3)), "b15ca508a03464079264b00263eb978b")
+    expect_equal(digest(round(reg1$coefficients[1], 3)), "5492ea03b542f2865d0889675db7c138")
   })
   print("Success!")
 }
@@ -11,10 +11,11 @@ test_1 <- function() {
 
 test_2 <- function() {
   test_that("Solution is incorrect", {
-    expect_equal(digest(round(reg2$coefficients[1], 3)), "b502eb9ed5d5f950f9c298b9f1ab7472")
+    expect_equal(digest(round(reg2$coefficients[1], 3)), "0b9cf3c70995c397636b67404f48be2e")
   })
   print("Success!")
 }
+
 
 test_3 <- function() {
   test_that("Solution is incorrect", {

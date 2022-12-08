@@ -62,36 +62,41 @@ return(r[1,1])
 }
 
 test_1 <- function() {
-  test_that("Solution is incorrect", {
-    expect_equal(digest(summary(reg1)), '2c3cfa131a9a6cbcbbebc51e7fe97eaa')
+  test_that("Solution is incorrect. Hint: remember the interaction variables?", {
+    expect_equal(digest(summary(reg1)), '1a328c9a3cc465e648027031359876df')
   })
   print("Success!")
 }
-
+test_1.5 <- function() {
+  test_that("Solution is incorrect", {
+    expect_equal(digest(summary(reg2)), 'a0a9f5c554afe13a47dbeee3b139b8ad')
+  })
+  print("Success!")
+}
 test_2 <- function() {
   test_that("Solution is incorrect", {
-    expect_equal(digest(summary(reg3A)), '7f5bef2ff4f99fe4be8f2dcf099d9d9e')
+    expect_equal(digest(summary(reg3A)), '4815cc28ff09904b323be1c504f72804')
   })
   print("Success!")
 }
 
 test_3 <- function() {
   test_that("Solution is incorrect", {
-    expect_equal(digest(summary(reg3M)), '473c4e8cf725439c7e8064b4a3c8b149')
+    expect_equal(digest(summary(reg3M)), 'ed11cc5ab6199f0d8832cec017682232')
   })
   print("Success!")
 }
 
 test_4 <- function() {
   test_that("Solution is incorrect", {
-    expect_equal(digest(summary(reg3F)), '6c9260df8f592a07d35912c705d6f759')
+    expect_equal(digest(summary(reg3F)), '79a93152b1a67fdcf67fb2ff6b93e57c')
   })
   print("Success!")
 }
 
 test_5 <- function() {
-  test_that("Solution is incorrect", {
-    expect_equal(digest(summary(reg4)), '23fb386d07b60e8dfda47c0bf8192835')
+  test_that("Solution is incorrect. Hint: interactions?", {
+    expect_equal(digest(summary(reg4)), '44469f95eb066d4d06e4707082143472')
   })
   print("Success!")
 }
