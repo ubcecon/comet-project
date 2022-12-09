@@ -4,6 +4,7 @@ library(dplyr)
 
 
 
+
 dictionary <- function(var) {
 r <- c("Age of the major income earner in the family unit.", "PAGEMIEG")
 r <- rbind(r,c("price of property", "PASRCST"))
@@ -86,14 +87,14 @@ test_1 <- function() {
 }
 test_1_5 <- function() {
   test_that("Solution is incorrect. Hint: what variables are we comparing?", {
-    expect_equal(digest(answer1_5), '9702fe780299927b0afc81fad6fc7fc9')
+    expect_equal(digest(answer1_5), 'd30807db015302ff6b212d9f1f38c5b3')
   })
   print("Success!")
 }
 
 test_2 <- function() {
   test_that("Solution is incorrect. Hint: have we defined all variables?", {
-    expect_equal(digest(answer2), 'e3a6e0628222a000b59311a7215e46a2')
+    expect_equal(digest(answer2), 'a23fc01ed1d2f26bcba3195907c9a6a6')
   })
   print("Success!")
 }
@@ -160,7 +161,7 @@ test_8 <- function() {
 
 test_9 <- function() {
   test_that("Solution is incorrect. Hint: what variables are we comparing?", {
-    expect_equal(digest(tab_income3), '6e4ac520f398474473265e68dc5c21dc')
+    expect_equal(digest(tab_income3), 'c4c7f928c6fc74f44464d3719cc2bf45')
   })
   print("Success!")
 }
