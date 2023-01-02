@@ -116,7 +116,10 @@ SFS_data$pasrbuyg <- as_factor(SFS_data$pasrbuyg)
 SFS_data$financial_asset <- SFS_data$pwastbnd + SFS_data$pwastdep + SFS_data$pwastmui + SFS_data$pwastoin + SFS_data$pwaststk
 SFS_data$risk_proxy <- SFS_data$pwaststk/SFS_data$financial_asset
 SFS_data <- rename(SFS_data, stock = pwaststk)
-    
+SFS_data <- rename(SFS_data, bond = pwastbnd)
+SFS_data <- rename(SFS_data, bank_deposits = pwastdep)
+SFS_data <- rename(SFS_data, mutual_funds = pwastmui)
+SFS_data <- rename(SFS_data, other_investments = pwastoin)
 }
 
 
@@ -131,35 +134,57 @@ test_1 <- function() {
 
 test_2 <- function() {
   test_that("Solution is incorrect", {
-    expect_equal(digest(reg_LESS), '6d81f8ff934765b744fd6aae5d1e9f38')
+    expect_equal(digest(reg_LESS), '52649dca2bbbc1c05fc087cc19dd4013')
+  })
+  print("Success!")
+}
+
+
+test_2.5 <- function() {
+  test_that("Solution is incorrect", {
+    expect_equal(digest(reg_HS), '554580b1dbc1798d832d08bbe6b3b16b')
   })
   print("Success!")
 }
 
 test_3 <- function() {
   test_that("Solution is incorrect", {
-    expect_equal(digest(reg_NU), '6265e4d8fe25130862fdaaf36eaa6291')
+    expect_equal(digest(reg_NU), '698d8a99efd307d5d90037ded739b957')
+  })
+  print("Success!")
+}
+
+
+test_3.5 <- function() {
+  test_that("Solution is incorrect", {
+    expect_equal(digest(reg_U), 'c90781a518d90e15ebd258a072ce2f26')
   })
   print("Success!")
 }
 
 test_4 <- function() {
   test_that("Solution is incorrect", {
-    expect_equal(digest(reg2), '7398816ff1fa80326974badda8d38a80')
+    expect_equal(digest(reg2), '4009632ba32c42bb3bbfa19631d1afbd')
   })
   print("Success!")
 }
 
 test_5 <- function() {
   test_that("Solution is incorrect", {
-    expect_equal(digest(reg3), '00bb0ff0e258e01585e70ad10db516e6')
+    expect_equal(digest(reg3), '4568b10660af4383a7fc8e205a3f1907')
   })
   print("Success!")
 }
 
+test_5.5 <- function() {
+  test_that("Solution is incorrect", {
+    expect_equal(digest(reg4), '575a42efd960ee2f08f80f28fffb3b80')
+  })
+  print("Success!")
+}
 test_6 <- function() {
   test_that("Solution is incorrect", {
-    expect_equal(digest(reg5), '98e51c4a485740b3bd8c9dd4a69516c0')
+    expect_equal(digest(reg5), '574dfb9f9e848820944dd4e8e4c3cd21')
   })
   print("Success!")
 }

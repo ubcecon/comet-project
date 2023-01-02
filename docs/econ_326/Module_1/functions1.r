@@ -4,6 +4,7 @@ library(dplyr)
 
 
 
+
 dictionary <- function(var) {
 r <- c("Age of the major income earner in the family unit.", "PAGEMIEG")
 r <- rbind(r,c("price of property", "PASRCST"))
@@ -63,78 +64,104 @@ return(r[1,1])
 }
 
 test_00 <- function() {
-  test_that("Solution is incorrect", {
+      test_that("Solution is incorrect, Hint: there are 3 commands to view data", {
     expect_equal(digest(answer00), 'ffb497cd8da1b4a3f983803a079ef5ab')
   })
+        
+      
   print("Success!")
 }
 
 test_0 <- function() {
-  test_that("Solution is incorrect", {
-    expect_equal(digest(answer0), 'f401db5dd95a0d99eecaa13b19c3735a')
+  test_that("Solution is incorrect, Hint: what is the jargon for education?", {
+    expect_equal(digest(answer0),'f401db5dd95a0d99eecaa13b19c3735a')
   })
   print("Success!")
 }
 
 test_1 <- function() {
-  test_that("Solution is incorrect", {
+  test_that("Solution is incorrect. Hint: what do you compare income to?", {
     expect_equal(digest(answer1), '22f225ee36612a03a5ee660519194dd2')
+  })
+  print("Success!")
+}
+test_1_5 <- function() {
+  test_that("Solution is incorrect. Hint: what variables are we comparing?", {
+    expect_equal(digest(answer1_5), 'd30807db015302ff6b212d9f1f38c5b3')
   })
   print("Success!")
 }
 
 test_2 <- function() {
-  test_that("Solution is incorrect", {
-    expect_equal(digest(answer2), 'e3a6e0628222a000b59311a7215e46a2')
+  test_that("Solution is incorrect. Hint: have we defined all variables?", {
+    expect_equal(digest(answer2), 'a23fc01ed1d2f26bcba3195907c9a6a6')
+  })
+  print("Success!")
+}
+test_2_5 <- function() {
+  test_that("Solution is incorrect. Hint: what variables are we comparing?", {
+    expect_equal(digest(answer2_5), '2350a19744da5e1a68551053d62860ba')
   })
   print("Success!")
 }
 
+test_3_3 <- function() {
+  test_that("Solution is incorrect. Hint: what variables are we comparing?", {
+    expect_equal(digest(answer3_3), 'fe5c801a09f3d2b8946001948a622a61')
+  })
+  print("Success!")
+}
 test_3 <- function() {
   test_that("Solution is incorrect", {
-    expect_equal(digest(ths), '88b596cec22340b39459fd98438e300a')
+    expect_equal(digest(answer3), 'c9a464017bb4a89722b0738995703a95')
   })
   print("Success!")
 }
 
+test_3_7 <- function() {
+  test_that("Solution is incorrect. Hint: what variables are we comparing?", {
+    expect_equal(digest(answer3_7), 'c0f56d971341cd25d063c90671c9fcc8')
+  })
+  print("Success!")
+}
 test_4 <- function() {
   test_that("Solution is incorrect", {
-    expect_equal(digest(tuni), '729cc057a51bba7bfeeec6a9be8ed5cc')
+    expect_equal(digest(answer4), '17cc3055ce3a012e6bcc9a640911f7b9')
   })
   print("Success!")
 }
 
 test_5 <- function() {
   test_that("Solution is incorrect", {
-    expect_equal(digest(retHS), 'dce5eb380fb5b268b4446cd497b26c3c')
+    expect_equal(digest(retHS_ans), '7d8a2f0744cdf35882e769acf64be8b7')
   })
   print("Success!")
 }
 
 test_6 <- function() {
   test_that("Solution is incorrect", {
-    expect_equal(digest(retHSF), 'fbeb46149c0405353e9d423c9bbc819d')
+    expect_equal(digest(retHSF_ans), 'afc3e94dec8db21fa7f29156059ede00')
   })
   print("Success!")
 }
 
 test_7 <- function() {
   test_that("Solution is incorrect", {
-    expect_equal(digest(retU), 'bc4e476b5e3127ad9092e92dc6fee86b')
+    expect_equal(digest(retU_ans), 'bdf551b33ddd329a701e9b81aaba378c')
   })
   print("Success!")
 }
 
 test_8 <- function() {
   test_that("Solution is incorrect", {
-    expect_equal(digest(retUF), '345ba5fb0aedf4e80c2da04c2ac11663')
+    expect_equal(digest(retUF_ans), '62e32d54ef7575db96c559ea8dc18924')
   })
   print("Success!")
 }
 
 test_9 <- function() {
-  test_that("Solution is incorrect", {
-    expect_equal(digest(tab_income3), '6e4ac520f398474473265e68dc5c21dc')
+  test_that("Solution is incorrect. Hint: what variables are we comparing?", {
+    expect_equal(digest(tab_income3), 'c4c7f928c6fc74f44464d3719cc2bf45')
   })
   print("Success!")
 }
