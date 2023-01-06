@@ -1,0 +1,752 @@
+---
+title: "01 - ECON 326: Introduction to Basic Statistics using Jupyter"
+author: COMET Team <br> _Emrul Hasan, Jonah Heyl, Shiming Wu, Anneke Dresselhuis, Jonathan Graves, William Co_
+date: 8 December 2022
+description: This notebook is an introduction to basic statistics using Jupyter and R, and some fundamental data analysis.  It is a high-level review of the most important applied tools from earlier units.
+categories: [introduction, econ 326, data, descriptive statistics]
+format: 
+  html: default
+  ipynb:
+    jupyter:
+      kernelspec:
+        display_name: R
+        language: r
+        name: ir
+---
+
+## Outline
+
+### Prerequisites
+* Introduction to Jupyter 
+* Introduction to R
+
+### Outcomes
+After completing this worksheet, you will be able to
+
+* Import and load data into R
+* Create and customize plots in R
+* Compute and visualize descriptive statistics from data
+* Perform a t-test in R
+
+## Part 1: Introduction to R and Jupyter
+
+
+In this tutorial, we will be working with some real-world data: the 2019 Survey of Financial Security, provided by Statistics Canada[<sup id="fn1s">1</sup>](#fn1). First, we will import data into our notebook. We are going to give a brief review of some of the features of R (feel free to skip this if you are already familiar with R or review the introduction notebooks if you are in need of a more comprehensive review).
+In R, we import data using different commands, which are stored in **libraries** that other developers of R have created for us.  Let's import some of the most important libraries now.  
+
+We can do this in a Jupyter notebook by selecting a cell and hitting `shift+enter` or by pressing the `play` button in the menu.
+
+> **Important**: information is stored in cells in a notebook.  However, cells run independently; so, if you run a later cell it doesn't re-evaluate previous cells.  You have to re-run them before you can use the results.  You can re-run all the cells in a notebook with the "fast forward" button.
+
+
+
+Try loading some of the packages into memory by running the following cell.
+
+```{r}
+# Run this cell to evaluate the code
+library(tidyverse)
+library(haven)
+library(dplyr)
+
+source("functions1.r")
+
+#warning messages are okay
+```
+
+You have now imported the packages into memory, and they are available to use in subsequent cells.  You may also see some output, which tells you about how they have been imported.
+
+As an aside, in this course we try (as much as possible) to use R packages which are part of the [tidyverse](https://www.tidyverse.org/) family of packages.  This is because they are well-supported, consistent, and commonly used in data sciences.  There are (usually) other packages that provide similar functions.
+
+
+
+### Importing Data into R
+
+The first step in an econometric project is to import, tidy, and examine your data.  For this project, we will be using data from the 2019 Survey of Financial Security (SFS), provided by Statistics Canada (see the license notes).  This is _real data_ on real Canadians.
+
+In this course, we will always work with data that is **tidy**.  This is a data-science term that refers to data with a particular format or shape.  Specifically, tidy data is rectangular data in which:
+* Each row represents one observation
+* Each column represents a single variable
+
+You can imagine this as a spreadsheet in a program like Excel.  This is the way most statistical programs like to receive data - but it _isn't_ a property of the data itself.  It is only a representation; there can be other kinds of representations.  For example, a panel data set might have each row as a unit (e.g. country) and each column might represent a variable in a year (e.g. unemployment in 2016, unemployment in 2017, etc.).  Often, when we work with real-world data we have to reshape it in order for it to be usable - but in this course, we won't worry about that just yet.
+
+Data can be stored in many different file formats (which encode how information is stored), which must be interpreted by our statistical programs. For example, data files with a `.dta` are formatted for Stata,  data files with a `.csv` suffix are formatted as comma-seperated values, and data files with an `.Rda` suffix are formatted for R. This is referred to as **importing** data. There are different methods for importing data in different formats; for example:
+
+* `read_dta()`: Importing data from a ```.dta``` file: this is data that was created by the statistical software STATA and is commonly used in economics.
+* `read.csv()`: Importing data from a delimited text file: this is data which is in a text format, but where the columns are *delimited* or seperated by a special character.  For example, the ```.csv``` (comma-separated variable) format is text, but where the columns are separated by a comma.
+* `load()`: Importing data from an ```.Rda``` file: this is data that was created by the statistical software R and is commonly used in statistics.
+
+Each of these formats has a special **function** associated with it. Functions are commands, stored in R packages, that tell R to do things.  In fact, you've already seen one!  The ```library(...)``` function imports whatever package is in the brackets into memory.
+
+Let's start by importing our ```.dta``` file into memory, using the ```read_dta``` function.  When we read things into memory, we normally want to use them later, so we have to give them a name.  Let's call this ```SFS_data``` so we can refer to it later on.
+
+```{r}
+# read the file named "SFS_2019_Eng.dta" into memory, and assign it to the object SFS_data
+SFS_data <- read_dta("../datasets/SFS_2019_Eng.dta")
+```
+
+### Viewing and Inspecting Data
+
+We have now imported our data into R. To better understand our data, the natural next step is to inspect and view it. We always do this immediately after loading in our data to make sure there are no unexpected features or problems with it. We will learn three of these commands:
+
+* ```head(...)```
+* ```print(...)```
+* ```glimpse(...)```
+
+Let's try these methods out to see what each one does!
+
+```{r}
+head(SFS_data)
+```
+
+```{r}
+print(SFS_data)
+```
+
+You can use the following commands to know the detailed information of variables.
+
+```{r}
+# | eval: false
+
+# If you want to know more about the variables, you can input the name in dictionary().
+dictionary('pefatinc')
+
+str(SFS_data$pefatinc)
+```
+
+Your turn! Try using the `glimpse()` function to check out the data. Store your answer in a variable called `answer00`
+
+```{r}
+answer00 <- glimpse ??? #fill inthe code here.
+
+test_00()
+```
+
+Some important variables in this dataset:
+
+* ```pefmtinc```: income_before_tax
+* ```pefatinc```: income_after_tax
+* ```pwnetwpg```: wealth
+* ```pgdrmie```: gender
+* ```peducmie```: education
+
+#### Accessing Variables and Data Frames
+
+If you recall, this dataset is _tidy_ in that each observation is a row, and each column is a variable.  In R, datasets are called *data frames* - this particular one is a special type of data frame called a _tibble_ (like, table).  We don't need to get into too many details about data frames, but basically they collect and organize all of the variables and observations.  Many functions in R need information to be organized into a data frame so that it can be computed.  You will see examples of these later on.
+
+One of the most important things to remember is that you can access the _variables_ in a dataframe in two ways:
+
+1.  First, you can use the `$` operator to directly access the variables
+2.  Second, within a command, you can tell the command what data you are working with, then refer to the variables by name.
+
+For example, if we wanted to get the `mean` of `pwnetwpg` (wealth) we could do it this way:
+
+```{r}
+mean(SFS_data$pwnetwpg)
+```
+
+This says: get the variable ``pwnetwpg`` from the dataframe ``SFS_data``, then compute the mean.  In a command like ``filter`` you can tell the command to work with the data, and then refer to the variables just by their name.  
+
+Try it our yourself! What is the maximum value for education in this data set? (hint, try  the `max()` function) 
+
+```{r}
+answer0 <- max(...)???
+
+test_0() 
+```
+
+Often, we need to clean up data in order to use it.  One way is to _filter_ based on values
+
+```{r}
+SFS_data <- filter(SFS_data, !is.na(SFS_data$pefmtinc))  
+# here we filter out the observations where before tax income is missing (or is a NA)
+```
+
+We can also `rename` variables so that they have more sensible names (e.g. what is a `pgdrmie` anyways?):
+
+```{r}
+SFS_data <- SFS_data %>%
+    rename(income_before_tax = pefmtinc) %>% # finally, we can rename columns, to be more meaningfull names, this is not nessary but is generally a good practice
+    rename(income_after_tax = pefatinc) %>%
+    rename(wealth = pwnetwpg) %>%
+    rename(gender = pgdrmie) %>%
+    rename(education = peducmie) 
+```
+
+You will notice that the code above looks a little different and uses the `%>%` operation.  This is called the **pipe operator**.  It is shorthard for "insert whatever comes before into the first argument of what comes afer" - kind of like a series a pipes, hence the name.  You can think of it as saying "and then do".
+
+For example, the line `SFS_data <- SFS_data %>% rename(income_before_tax = pefmtinc)` is the same as writing:
+
+```
+SFS_data <- rename(SFS_data, income_before_tax = pefmtinc)
+```
+
+This is particularly helpful when writing a "chain" of commands which modify or update data, since you don't have to keep writing `SFS_data <-` each time - making your code easier to write, read, and less prone to errors.
+
+## Part 2: The Wealth Gap in Female and Male-Led Households
+
+Now we can get started on our analysis. You may have heard people talk about the gender income/wealth gap in the news, politics or even other economics courses. For complex reasons that we won't get into here, women in many societies have historically and continue to experience economic inequality on the basis of their gender. In fact, many studies show that there is gender income gap and gender wealth gap, despite the fact that women are an important part of workforce. 
+
+In this analysis, we'll be exploring a few of the following questions:
+What factors contribute to the gender gap? Here we are going to explore the wealth gap between male-led households and female-led households 
+> In this context, a **male-led household** is a household in which a male earns the majority of the income and a **female-led household** is a household in which a female earns the majority of the income.
+
+<span style="color:#CC7A00" > 🔎 **Let's think critically** </span>
+> 🟠 Note that in this dataset, sex and gender are used synonymously to describe two binary classes. In real life, a person's gender may not correspond to the sex assigned to them at birth, or even to a classification of sexual identity that exists in the view of Western hegemonic gender and sexuality tradition; as such, notions of sexuality and gender are best understood to exist on a spectrum rather than as a binary class.\
+> 🟠 In the context of gender classification, what do you think are some ways that coding variables can reinforce exclusionary logics or dis/misrepresent certain people groups?\
+> 🟠 What _other_ kinds of economic gender income or wealth gap questions are overlooked when we only look at differences between people who identify as [cisgendered](https://en.wikipedia.org/wiki/Cisgender) men and women?\
+> 🟠 If you are interested in learning more about Statistics Canada's work in diversifying gender and sexual expression in the national census for 2021, you can read their [technical report on sex at birth and gender](https://www12.statcan.gc.ca/census-recensement/2021/ref/98-20-0002/982000022020002-eng.cfm) issued in July 2020.  
+
+With this in mind, we'll begin our analysis by asking ourselves: is there a significant gap between male-led household wealth and female-led household wealth? A different way to ask this is: given our data, what percent of the time would we except this gap to appear randomly? 
+
+One way to evaluate this would be to ask: **if** there was no difference between these groups, how likely would the difference we measure in our data be?  This kind of hypothesis test describes a $p$-value, so first we will perform a $t$-test, to get this value. Now if this $p$-value indicates a significant gap in wealth, we can go on to ask what is causing this wealth gap.
+
+At a high level, there are a few things that can cause this wealth gap:
+
+1. **Difference in income** between male and female-led households.  
+2. **Difference in saving and investment habits** between male and female-led households (e.g., male-led households might take on more risk or holds less cash than female-led households). 
+3. **Difference in inherited wealth** between male and female-led households (e.g., female-led households might inherit more wealth (regardless of income).
+4. **Difference in economic obstacles** faced by male and female-led households (e.g., female-led households might face additional obstacles in building wealth or accessing credit).
+
+> **Note**: these factors are not mutually exclusive - that is, lower income and less inheritance can have simultaneous affects on a person's wealth.
+
+We'll be exploring this topic for the next three modules. In this module, we'll see if there is a significant wealth gap, and what causes it, which may involve investigating the income gap between male and female-led households. First off, we're going to compute the average family wealth. Then we compute the average family wealth conditional on being a female lead household vs a male lead households. Next we will do a $t$-test to see if the wealth gap is significant. Finally, we will briefly investigate what is causing the wealth gap.
+
+```{r}
+mean(SFS_data$wealth) 
+#this computes the sample mean of wealth from the SFS_data set
+#notice no more jargon! we just renamed it 
+```
+
+One important step in working with data is to tell R what type our variables R.
+
+* This means that for **quantiative** variables, we need to make sure they are numeric
+* And for **qualiative** variables that they are _factors_
+
+This will also make them easier to read, and ensure they are handled properly.  Let's try that now using the `as.factor` and `as.numeric` functions. Compare the results above with the new dataset below.
+
+```{r}
+
+SFS_data<-SFS_data[!(SFS_data$education=="9"),] #
+
+SFS_data <- SFS_data %>%
+            mutate(education = case_when(
+                education == "1" ~ "Less than high school",
+                education == "2" ~ "High school",
+                education == "3" ~ "Non-university post-secondary",
+                education == "4" ~ "University",
+                TRUE ~ "NA" #otherwise
+            )) %>%
+            #filter(education != "NA") %>%
+            mutate(education = as_factor(education)) %>% #education is now afactor
+            mutate(gender = as_factor(gender)) # gender is now a factor
+
+head(SFS_data)
+```
+
+### Computing the Wealth Gap
+
+We will first describe the gender wealth gap. In R, there are many ways we could compute basic descriptive statistics.  The simplest way is to use ``summarize`` and ``group_by``:
+
+```{r}
+
+# Next we look at wealth for households with men and women as main earners
+
+results <- SFS_data %>% 
+    group_by(gender) %>%
+    summarize(m_wealth = mean(wealth), sd_wealth = sd(wealth)) 
+
+results #more information about the tibble can be found in the introduction to R in comet
+```
+
+> **As We Mentioned**: _piping_ The above example uses the **pipe operator** (``%>%``).  Mechanically, what piping does is insert the object before the pipe into the object after the pipe.  For example, if we have ``z <- f(x,y)`` we could write this using pipes as ``z <- x %>% f(y)``.  Piping is really most useful when you are chaining (piping) a series of commands together.  You can think of a pipe as saying "_and then_" followed by a command.  The item before the pipe will be inputted into the next command.  This allows you to do complex data manipulation in a way that is readable.
+>
+> For example, the command above (1) starts with ``SFS_data`` (2) groups it by ``gender``, (3) takes the grouped data and summarizes it.  If we wrote this without using a pipe it would look like:
+> ``summarize(group_by(SFS_data,gender), m_wealth = mean(wealth), sd_wealth = sd(wealth))``
+
+
+We can also visualize this, using ``ggplot2``, which can create bar graphs and other visualizations.  Here's a bar graph and a boxplot.
+
+```{r}
+
+f <- ggplot(data = SFS_data, aes(x = gender, y = wealth)) + xlab("Gender of Main Earner") + ylab("Wealth")  #labels and defines our x and y axis
+f1 <- f + geom_bar(stat = "summary", fun = "mean", fill = "lightblue") # produce a summary statistic, the mean
+f1 <- f1 + coord_flip() # make a horizontal bar graph!
+
+options(repr.plot.width=6,repr.plot.height=3) # this controls the size; you can change 6 and 3 to look better
+
+f2 <- f + geom_boxplot(fill = "lightblue") + coord_flip() #formatting preferences
+
+f3 <- ggplot(data = SFS_data, aes(x = wealth)) + geom_histogram(binwidth = 500000) + xlab("Wealth") + ylab("Count") + facet_grid(. ~ gender) 
+
+f1
+f2
+f3
+```
+
+> _Think Deeper:_ What does this tell you about the distribution of wealth in these datasets?  Could this be a problem for our analysis?
+
+This is all interesting to look at.  However, this is not a formal test of the gender-wealth gap.  We need to examine this from a statistical perspective. In other words, we would like to examine if the gender-wealth gap is statistically significant. We can do this through a two sample $t$-test, which can be performed using the `t.test()` command in R: 
+
+```{r}
+levels(SFS_data$gender)
+```
+
+```{r}
+
+t1 = t.test(  #take not of this useful function
+       x = filter(SFS_data, gender == "Male")$wealth,
+       y = filter(SFS_data, gender == "Female")$wealth,
+       alternative = "two.sided",
+       mu = 0,
+       conf.level = 0.95)
+
+t1 
+
+round(t1$estimate[1] - t1$estimate[2],2) # this just rounds our results
+```
+
+As we can see here, the `t.test()` command outputs the $p$-value and test statistic immediately. This particular $t$-test was for a 95% confidence level. The gender-wealth gap is $235,285.60 dollars. As you can see, there is a significant gap in wealth between male and female lead households.
+
+### Going Deeper:
+> ***What could be the potential causes of the gender-wealth gap in Canada?***
+
+The next step is to understand why or how the gender wealth gap might exist. The natural potential factors to study are education and income. For example, perhaps females are less likely to have a university degree in a high-paying field, or perhaps females earn less income.  These reasons could potentially create a gender wealth gap.  Let's take a look at education in the survey, then try to understand how it interacts with gender:
+
+```{r}
+
+# Next we look at wealth for households with different education
+results <- 
+    SFS_data %>% #we define our dataset 
+    group_by(education) %>%  #group variable of interest
+    summarize(m_wealth = mean(wealth), sd_wealth = sd(wealth))
+
+results
+```
+
+The results suggest average wealth increases with education of the main earner. 
+
+> _Think Deeper:_ Why might this be the case?  
+
+We also see how this breaks down by gender.  Look at the following table - do you see a pattern?
+
+```{r}
+
+results <- 
+    SFS_data %>% #we define our dataset 
+    group_by(education,gender) %>% #group variable of interest
+    summarize(m_wealth = mean(wealth), sd_wealth = sd(wealth))
+
+results
+
+options(repr.plot.width=10,repr.plot.height=3)
+
+f <- ggplot(data = SFS_data, aes(x = gender, y = wealth)) + xlab("Gender") + ylab("Wealth") #labels and defines our x and y axis
+f <- f + geom_bar(stat = "summary", fun = "mean", fill = "lightblue") #produce a summary statistic, the mean
+f <- f + facet_grid(. ~ education) #add a grid by education
+
+f
+```
+
+You can see that female-led households tend to accumulate less wealth than the male counterpart.  
+
+However, it is worthwhile to look at the difference in wealth gap in percent terms rather than absolute terms. This is because people at a higher education level earn more so the gap may appear deceptively larger. ``percentage_table`` is a function, which takes `result`, name of `column1` and name of `column3` of `results` table that we summarized as inputs. We assign this function to the object `percentage_table`, and produce the table we want. 
+
+```{r}
+percentage_table <- SFS_data %>%
+    group_by(education) %>%
+    group_modify(~ data.frame(wealth_gap = 
+                    mean(filter(., gender == "Female")$wealth)/mean(filter(., gender == "Male")$wealth) - 1)) %>%
+    mutate(wealth_gap = percent(wealth_gap))
+    
+
+percentage_table
+```
+
+From the results above, a family with a male as the main earner generally accumulates more wealth than female-lead household which has similar education background. The gender-wealth gap is widest for university graduates, with male-lead family has 28% more wealth than female-lead family. We can make this even more clear by adding a new variable (`university`) to our dataset.  Frequently, we will want to make new variables to help us analyze the results, especially when a variable is more complicated than we would like it to be.
+
+You can create this in many ways - but a very useful command is the `case_when` command.  Here is an example for our `university` variable.  Pay attention to the use of the `as_factor` command at the end to tell R that this is still a qualitative variable.
+
+
+```{r}
+
+SFS_data <- SFS_data %>% 
+               mutate( # more information on mutate in introduction to r modules
+               university = case_when( 
+                     education == "University" ~ "Yes", #the ~ seperates the original from the new name
+                     education == "Non-university post-secondary" ~ "No", #changes the non university variable to "No"
+                     education == "High school" ~ "No", #changes the non university variable to "no"
+                     education == "Less than high school" ~ "No")) %>% #changes the non university variable to "no"
+             mutate(university = as_factor(university)) #remember, it's a factor!
+
+glimpse(SFS_data$university)
+```
+
+Now, let's repeat the analysis we did above by education status; then we can perform a $t$-test on each of these sub-groups:
+
+```{r}
+
+results <- 
+    SFS_data %>%
+    group_by(university,gender) %>%
+    summarize(m_wealth = mean(wealth), sd_wealth = sd(wealth))
+
+results 
+
+f <- ggplot(data = SFS_data, aes(x = gender, y = wealth)) + xlab("Gender") + ylab("Wealth") #label and define our x and y axis
+f <- f + geom_bar(stat = "summary", fun = "mean", fill = "lightblue") #produce a summary statistic, the mean
+f <- f + facet_grid(. ~ university) #add a grid by education
+
+f
+```
+
+Similarly, let's look at the difference in wealth gap in percent terms. We use `results` generated in previous cell (the $4\times 4$ table) as the inputs this time.
+
+```{r}
+
+percentage_table <- SFS_data %>%
+    group_by(university) %>%
+    group_modify(~ data.frame(wealth_gap = 
+                    mean(filter(., gender == "Female")$wealth)/mean(filter(., gender == "Male")$wealth) - 1)) %>%
+    mutate(wealth_gap = percent(wealth_gap))
+    
+
+percentage_table
+```
+
+Without a university degree, male-lead households accumulate 18% more wealth than female counterparts, while with university degree, the gap is widened to 2%. Thus education seems to enlarge the gender-wealth gap.
+
+Let's study gender wealth gap within subsamples of "university degree" and "no university degree" respectively by running formal two sample t-test in the 2 subsamples.
+
+```{r}
+
+university_data = filter(SFS_data, university == "Yes") # university only data 
+nuniversity_data = filter(SFS_data, university == "No") # non university data
+
+t2 = t.test(
+       x = filter(university_data, gender == "Male")$wealth,
+       y = filter(university_data, gender == "Female")$wealth,
+       alternative = "two.sided",
+       mu = 0,
+       conf.level = 0.95)
+
+t2  # test for the wealth gap in university data
+
+round(t2$estimate[1] - t2$estimate[2],2) #rounds our estimate
+
+
+t3 = t.test(
+       x = filter(nuniversity_data, gender == "Male")$wealth,
+       y = filter(nuniversity_data, gender == "Female")$wealth,
+       alternative = "two.sided",
+       mu = 0,
+       conf.level = 0.95)
+
+t3 # test for the wealth gap in non-university data
+
+round(t3$estimate[1] - t3$estimate[2],2) #rounds our estimate
+```
+
+Consider the results above.  Do you think the results of Welch Two Sample t-test are consistent with the above descriptive results?
+
+> _Think Deeper_: How can you explain the effects of education on gender-wealth gap? What would you need to know in order to rationalize your explanation?  
+
+### Wrapping Up
+
+At this point, we have started to explore the gender wealth gap.  Next, work on the following exercises to learn more. We will touch on the second important factor: income.
+
+## Part 3: Exercises
+
+### Activity 1 
+First, examine ``SFS_data`` with a focus on before-tax income. Create a table that tabulates the average before-tax income by gender. A correct ``tab_income`` table will pass the test.  Try looking at how we generated some of the earlier tables for inspiration, if you need a hint.
+
+```{r}
+#| eval: false
+
+tab_income <- #fill in the code below; what goes before the %>%?
+    ??? %>% 
+    group_by(???)  %>%
+    summarize(m_income = ???(income_before_tax), sd_income = sd(income_before_tax))
+
+tab_income
+
+answer1 <- tab_income
+test_1() #quiz 1
+```
+
+### Short Answer 1:
+
+What type of variable is ``gender``? Does it make sense to have ``gender`` as that variable type? Why or why not?  Write your answer in the box below:
+
+<font color="red">Type answer here
+</font>
+
+### Activity 2
+
+The table that we got in the previous activity is fairly clear, but let's illustrate things with a chart. Construct a bar graph that charts the average income before tax by gender. ``income_graph`` will store this plot. You can see it by running the second code chunk below.
+
+```{r}
+#| eval: false
+
+income_graph <- ggplot(data = SFS_data, aes(x = ???, y = ???)) + 
+                xlab("Gender") + ylab("Income before tax")  #what goes in the y = and x = spot? 
+
+
+# don't change this part
+income_graph <- income_graph + geom_bar(stat = "summary", fun = mean, fill = "lightblue")
+income_graph <- income_graph + coord_flip()
+
+
+income_graph
+
+
+answer1_5 <- income_graph
+test_1_5() #quiz 1.5
+```
+
+### Short Answer 2
+Examine the graph.  What do we observe when we compare the average before-tax income between genders? What does this suggest?
+
+<font color="red">Answer here!</font>
+
+### Activity 3
+Now, create a table that tabulates average before-tax income by education level and gender. This table, labelled ``tab_income2``, will be tested for correctness.
+
+```{r}
+#| eval: false
+tab_income2 <- 
+    SFS_data %>%
+    group_by(???, ???) %>% 
+    summarize(m_income = mean(???), sd_income = sd(???))
+
+tab_income2
+
+answer2 <- tab_income2
+test_2() #quiz 2
+```
+
+### Short Answer 3
+Examine the table. What do we observe when we compare the before-tax income gap between education levels? What does this suggest?  What could explain this finding?
+
+<font color="red">Answer here!</font>
+
+### Activity 4
+Economists are often concerned with two aspects of the relationship between male and female lead households  and education:
+* Difference in average income between the two household groups
+* The difference in returns to education between the two household groups
+
+Let's explore these two topics. First, test whether there are significant differences in income before tax between male and female lead households within each education group. Within which education levels do we see significant differences 
+
+_Note_: You will perform the t-test's of gender income gap on each education group.
+
+```{r}
+#| eval: false
+less_than_high_school_data = filter(SFS_data, education == "Less than high school") #filter variables we need
+high_school_data = filter(SFS_data, education == "High school")
+post_secondary_data = filter(SFS_data, education == "Non-university post-secondary")
+university_data = filter(SFS_data, education == "University")
+
+#Less than high school
+tlesshs = t.test( 
+       x = filter(???, gender == "Male")$income_before_tax,
+       y = filter(less_than_high_school_data, gender == "Female")$???,
+       alternative = "two.sided",
+       mu = 0,
+       conf.level = 0.95)
+
+tlesshs
+
+tlesshs_ans=round(tlesshs$estimate[1] - tlesshs$estimate[2],2) #rounds answer
+
+answer3_3 <- tlesshs_ans
+
+test_3_3() 
+```
+
+```{r}
+#| eval: false
+
+#High school
+ths = t.test(
+       x = filter(???, gender == "Male")$???,
+       y = filter(???, gender == "???")$income_before_tax,
+       alternative = "two.sided",
+       mu = 0,
+       conf.level = 0.95)
+ths
+
+ 
+ths_ans=round(ths$estimate[1] - ths$estimate[2],2) #rounds answer
+
+answer3 <- ths_ans
+
+test_3()
+ 
+```
+
+```{r}
+#| eval: false
+
+# Non-uni post-seconary
+tsocol = t.test(
+       x = filter(???, gender == "Male")$income_before_tax,
+       y = filter(???, gender == "Female")$income_before_tax,
+       alternative = "two.sided",
+       mu = 0,
+       conf.level = 0.95)
+tsocol
+tsocol_ans=round(tsocol$estimate[1] - tsocol$estimate[2],2) #rounds answer
+
+answer3_7 <- tsocol_ans
+
+test_3_7()
+```
+
+```{r}
+#| eval: false
+
+#University
+
+tuni = t.test(
+       x = filter(???, gender == "Male")$income_before_tax,
+        y = filter(???, gender == "Female")$???,
+       alternative = "two.sided",
+       mu = 0,
+       conf.level = 0.95)
+
+tuni
+tuni_ans=round(tuni$estimate[1] - tuni$estimate[2],2) #rounds answer
+
+
+answer4 <- tuni_ans
+
+
+test_4()
+```
+
+### Activity 5
+Next, examine whether returns to education differ between genders. For our purposes, we will define:
+> **Returns to Education**: The difference in average income before tax between two subsequent education levels.
+
+Run this test for the returns to education of: 
+* High school diploma (relative to less than high school) and 
+* University degree (relative to non-university post-secondary)
+
+*The following t-test objects will be tested for correctness:* Returns to education of a high school diploma for males (``retHS``) and for females(``retHSF``), and returns to education of a university's degree for males (``retU``) and for females (``retUF``).
+
+```{r}
+#| eval: false
+
+#Returns to education: High school diploma
+
+##Males
+less_than_high_school_data = filter(SFS_data, ??? == "Less than high school") #filter variables we need
+high_school_data = filter(SFS_data, education == "High school")
+post_secondary_data = filter(SFS_data, education == "Non-university post-secondary")
+university_data = filter(SFS_data, education == "University")
+
+
+retHS = t.test(
+       x = filter(???, gender == "Male")$income_before_tax,
+       y = filter(less_than_high_school_data, gender == "Male")$???,
+       alternative = "two.sided",
+       mu = 0,
+       conf.level = 0.95)
+
+retHS
+retHS_ans=round(retHS$estimate[1] - retHS$estimate[2],2)
+
+test_5() 
+```
+
+```{r}
+#| eval: false
+
+#Returns to education: High school diploma
+#Females
+
+retHSF = t.test(
+       x = filter(???, gender == "Female")$income_before_tax,
+       y = filter(less_than_high_school_data, gender == "Female")$???,
+       alternative = "two.sided",
+       mu = 0,
+       conf.level = 0.95)
+
+retHSF
+retHSF_ans=round(retHSF$estimate[1] - retHSF$estimate[2],2)
+
+test_6()
+```
+
+```{r}
+#| eval: false
+
+#Returns to education: University
+
+##Males
+
+retU = t.test(
+       x = filter(university_data, gender == "Male")$???,
+       y = filter(post_secondary_data, ??? == "Male")$income_before_tax,
+       alternative = "two.sided",
+       mu = 0,
+       conf.level = 0.95)
+
+retU
+retU_ans=round(retU$estimate[1] - retU$estimate[2],2)
+
+
+test_7() 
+```
+
+```{r}
+#| eval: false
+
+#Returns to education: University
+##Females
+
+retUF = t.test(
+       x = filter(university_data, ??? == "Female")$income_before_tax,
+       y = filter(post_secondary_data, ??? == "Female")$???,
+       alternative = "two.sided",
+       mu = 0,
+       conf.level = 0.95)
+
+retUF
+retUF_ans=round(retUF$estimate[1] - retUF$estimate[2],2)
+
+test_8()
+```
+
+### Short Answer 4
+**Reflect on your analysis:** Interpret the results of the t-tests above. Are the returns to each level of education significant for males? For females? Comment on the difference between returns to education for a high school degree and that for a university degree. Would the result be what we expect? What could explain this finding?
+
+<font color="red">Answer here (delete this text)</font>
+
+### Short Answer 5
+**Discuss your results:** Do the returns to each level of education (for either level of education) differ between males and females? What differences between the two groups might explain this difference?
+
+<font color="red">Answer here (delete this text)</font>
+
+### Activity 6
+Now, let's repeat Activity 3 with after-tax income, i.e., create a table that tabulates average after-tax income by education level and gender. This table, labelled ``tab_income3``, will be tested for correctness.
+
+```{r}
+#| eval: false
+tab_income3 <- 
+    SFS_data %>%
+    group_by(education, ???) %>% 
+    summarize(m_income = ???(income_after_tax), sd_income = sd(???))
+
+tab_income3
+
+answer3 <- tab_income3
+test_9() #quiz 9
+```
+
+### Short Answer 6
+Compare the above table with the one in Activity 3. What do you find and why?
+
+<font color="red">Answer here (delete this text)</font>
+
+<span id="fn1">[<sup>1</sup>](#fn1s)Statistics Canada, Survey of Financial Security, 2019, 2021. Reproduced and distributed on an "as is" basis with the permission of Statistics Canada.Adapted from Statistics Canada, Survey of Financial Security, 2019, 2021. This does not constitute an endorsement by Statistics Canada of this product.</span>
+
