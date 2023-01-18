@@ -438,7 +438,7 @@ my_function(2)
 However, if we want to override this default, we can simply call the function with a new input for `y`. This is done below for `y=4`, allowing us to execute our code as though our default was actually `y=4`.
 
 ```{r}
-my_function <- function(x, y = 4)
+my_function <- function(x, y = 3)
  {x = x + y
   2 * x}
 
