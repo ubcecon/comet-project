@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-GB" xml:lang="en-GB"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.36">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="keywords" content="economics, econometrics, R, data, machine learning, UBC, COMET, geog 374, econ 325, econ 326, learning, teaching, learn r, r help, help, tutorial, r tutorial for beginners,learning statistics with r, learn r programming, learn statistics, linear regression, r machine learning, learn machine learning, university of british columbia, british columbia, r programming for beginners, r language tutorial, r tutorial for beginners, economic data, econometrics tutoring, economics help for students, economics homework help, oer resources for teachers, open educational resources for teachers, educational resource, oer project, oer materials, oer resources, learn economics online, learn econometrics, teach yourself economics, teach yourself econometrics, econometrics basics for beginners">
+
+<title>COMET - GEOG 374: \(t\)-test - Determining Differences in Growth Between Cross-Pollinated and Self-Fertilized Plants</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<link href="../../../docs/geog_374/Lab_05_Chisquare/Lab_05_Chisquare.html" rel="next">
+<link href="../../../docs/geog_374/Lab_02_ANOVA/Lab_02_ANOVA.html" rel="prev">
+<link href="../../../media/comet_favicon.png" rel="icon" type="image/png">
+<script src="../../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<link rel="stylesheet" href="../../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a href="../../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../../media/logo_no_tiny_text.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">COMET</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../index.html" rel="" target=""><i class="bi bi-house-door" role="img">
+</i> 
+ <span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-get-started" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Get Started</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-get-started">    
+        <li>
+    <a class="dropdown-item" href="../../../pages/quickstart.html" rel="" target="">
+ <span class="dropdown-text">Quickstart Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../pages/installing_locally.html" rel="" target="">
+ <span class="dropdown-text">Install and Use COMET</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/intro_jupyter/intro_to_jupyter.html" rel="" target="">
+ <span class="dropdown-text">Learn about Jupyter</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/intro_r/introduction_to_R.html" rel="" target="">
+ <span class="dropdown-text">Learn about R</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/econ_prep/Introduction to Statistical Concepts.html" rel="" target="">
+ <span class="dropdown-text">Review High School Statistics</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-basics" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Basics</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-basics">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/index_intro.html" rel="" target="">
+ <span class="dropdown-text">Preliminary Material</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_325/index_325.html" rel="" target="">
+ <span class="dropdown-text">Introduction to Econometrics (ECON 325)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/econ_prep/Introduction to Statistical Concepts.html" rel="" target="">
+ <span class="dropdown-text">Review of Statistics</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-fundamentals" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Fundamentals</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-fundamentals">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_326/index_326.html" rel="" target="">
+ <span class="dropdown-text">Introduction to Empirical Models (ECON 326)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/geog_374/index_374.html" rel="" target="">
+ <span class="dropdown-text">Geographic Computation (GEOG 374)</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-projects" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Projects</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-projects">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_490/index_490.html" rel="" target="">
+ <span class="dropdown-text">Overview of ECON 490</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_490/index_490_r.html" rel="" target="">
+ <span class="dropdown-text">R Modules</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_490/index_490_stata.html" rel="" target="">
+ <span class="dropdown-text">STATA Modules</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-advanced" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Advanced</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-advanced">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_adv/index_adv.html" rel="" target="">
+ <span class="dropdown-text">Advanced Topics</span></a>
+  </li>  
+    </ul>
+  </li>
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-launch-comet" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+      <i class="bi bi-play" role="img">
+</i> 
+ <span class="menu-text">Launch COMET</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-launch-comet">    
+        <li>
+    <a class="dropdown-item" href="https://open.jupyter.ubc.ca/jupyter/hub/user-redirect/git-pull?repo=https%3A%2F%2Fgithub.com%2Fubcecon%2Fcomet-project&amp;urlpath=lab%2Ftree%2Fcomet-project%2F&amp;branch=main" rel="" target=""><i class="bi bi-cloud-check" role="img">
+</i> 
+ <span class="dropdown-text">Launch on JupyterOpen</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://ubc.syzygy.ca/jupyter/hub/user-redirect/git-pull?repo=https%3A%2F%2Fgithub.com%2Fubcecon%2Fcomet-project&amp;urlpath=lab%2Ftree%2Fcomet-project%2F&amp;branch=main" rel="" target=""><i class="bi bi-gear" role="img">
+</i> 
+ <span class="dropdown-text">Launch on Syzygy</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://colab.research.google.com/github/ubcecon/comet-project/blob/main/" rel="" target=""><i class="bi bi-google" role="img">
+</i> 
+ <span class="dropdown-text">Launch on Collab</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://github.com/ubcecon/comet-project/archive/refs/heads/main.zip" rel="" target=""><i class="bi bi-cloud-download" role="img">
+</i> 
+ <span class="dropdown-text">Launch Locally</span></a>
+  </li>  
+        <li><hr class="dropdown-divider"></li>
+        <li>
+    <a class="dropdown-item" href="https://github.com/ubcecon/comet-project/archive/refs/heads/data-only.zip" rel="" target=""><i class="bi bi-clipboard-data" role="img">
+</i> 
+ <span class="dropdown-text">Project Datasets</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="../../../#" rel="" target="">
+ <span class="menu-text">|</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-about" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">About</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-about">    
+        <li>
+    <a class="dropdown-item" href="../../../pages/team.html" rel="" target="">
+ <span class="dropdown-text">COMET Team</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../pages/using_comet.html" rel="" target="">
+ <span class="dropdown-text">Teach With COMET</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../pages/copyright.html" rel="" target="">
+ <span class="dropdown-text">Copyright Information</span></a>
+  </li>  
+    </ul>
+  </li>
+</ul>
+            <div class="quarto-navbar-tools">
+</div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../docs/geog_374/index_374.html">Geographic Computation</a></li><li class="breadcrumb-item"><a href="../../../docs/geog_374/Lab_06_Ttest/Lab_06_Ttest.html"><span class="math inline">\(t\)</span>-test Methods</a></li></ol></nav>
+      <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+      </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation docked overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_326/index_326.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Methods Of Empirical Research In Economics (ECON 326)</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true">
+ <span class="menu-text">Method Modules</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_326/review/review_of_basic_stats.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Review of Econometrics</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_326/simple_regression/simple_regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Simple Regression</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_326/multiple_regression/multiple_regression1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Multiple Regression</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_326/issues_in_regression/issues_in_regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Issues in Regression</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_326/interactions/interactions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Interactions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_326/project/project_1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Example Project</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="px-0"><hr class="sidebar-divider hi "></li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true">
+ <span class="menu-text">Geographic Computation</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/geog_374/index_374.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Geographic Computation (GEOG 374)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/geog_374/Lab_02_ANOVA/Lab_02_ANOVA.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">ANOVA Methods</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/geog_374/Lab_06_Ttest/Lab_06_Ttest.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="math inline">\(t\)</span>-test Methods</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/geog_374/Lab_05_Chisquare/Lab_05_Chisquare.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Chi-squared Tests</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/geog_374/Lab_03_Regression/Lab_03_Regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Regression Methods</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#outline" id="toc-outline" class="nav-link active" data-scroll-target="#outline">Outline</a>
+  <ul class="collapse">
+  <li><a href="#prerequisites" id="toc-prerequisites" class="nav-link" data-scroll-target="#prerequisites">Prerequisites</a></li>
+  <li><a href="#outcomes" id="toc-outcomes" class="nav-link" data-scroll-target="#outcomes">Outcomes</a></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
+  </ul></li>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#data" id="toc-data" class="nav-link" data-scroll-target="#data">Data</a></li>
+  <li><a href="#part-1-key-concepts" id="toc-part-1-key-concepts" class="nav-link" data-scroll-target="#part-1-key-concepts">Part 1: Key Concepts</a>
+  <ul class="collapse">
+  <li><a href="#two-sample-t-tests" id="toc-two-sample-t-tests" class="nav-link" data-scroll-target="#two-sample-t-tests">Two Sample T-tests</a></li>
+  <li><a href="#mann-whitney-wilcoxon-test" id="toc-mann-whitney-wilcoxon-test" class="nav-link" data-scroll-target="#mann-whitney-wilcoxon-test">Mann-Whitney-Wilcoxon Test</a></li>
+  </ul></li>
+  <li><a href="#part-2-lab-exercises" id="toc-part-2-lab-exercises" class="nav-link" data-scroll-target="#part-2-lab-exercises">Part 2: Lab Exercises</a>
+  <ul class="collapse">
+  <li><a href="#exercise-1-data-exploration-and-visualization" id="toc-exercise-1-data-exploration-and-visualization" class="nav-link" data-scroll-target="#exercise-1-data-exploration-and-visualization">Exercise 1: Data Exploration and Visualization</a></li>
+  <li><a href="#exercise-2-two-sample-t-test-and-mann-whitney-wilcoxon-test" id="toc-exercise-2-two-sample-t-test-and-mann-whitney-wilcoxon-test" class="nav-link" data-scroll-target="#exercise-2-two-sample-t-test-and-mann-whitney-wilcoxon-test">Exercise 2: Two-Sample T-test and Mann-Whitney-Wilcoxon Test</a></li>
+  </ul></li>
+  </ul>
+<div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/ubcecon/comet-project/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
+    </div>
+<!-- main -->
+<main class="content column-body" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">GEOG 374: <span class="math inline">\(t\)</span>-test - Determining Differences in Growth Between Cross-Pollinated and Self-Fertilized Plants</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<ul>
+<li><strong>Authors</strong>: Hewitt Lab (Micheal Jerowsky and Nina Hewitt) <span class="math inline">\(\times\)</span> COMET Team (Charlotte White, and Jonathan Graves)</li>
+<li><strong>Last Update</strong>: 9 September 2023</li>
+</ul>
+<p>This module has a suggested citation of:</p>
+<blockquote class="blockquote">
+<p>Jerowsky, M., Hewitt, N., 2023. <em>Interactive Notebooks for Statistics and Computation in Geography: Determining Differences in Growth Between Cross-Pollinated and Self-Fertilized Plants</em>. In Adshade et al.&nbsp;2023. <em>The COMET Project: Creating Online Materials for Econometrics Teaching</em>. https://comet.arts.ubc.ca/.</p>
+</blockquote>
+<section id="outline" class="level2">
+<h2 class="anchored" data-anchor-id="outline">Outline</h2>
+<section id="prerequisites" class="level3">
+<h3 class="anchored" data-anchor-id="prerequisites">Prerequisites</h3>
+<ul>
+<li>Introduction to Jupyter</li>
+<li>Introduction to R</li>
+<li>Introduction to Data</li>
+</ul>
+</section>
+<section id="outcomes" class="level3">
+<h3 class="anchored" data-anchor-id="outcomes">Outcomes</h3>
+<p>After completing this notebook, you will be able to: * Explore data to gain a better understanding of its content and structure. * Visualize data using a histogram and boxplot. * Conduct a t-test in R. * Conduct a Mann-Whitney-Wilcoxon test in R.</p>
+</section>
+<section id="references" class="level3">
+<h3 class="anchored" data-anchor-id="references">References</h3>
+<ul>
+<li><a href="https://openstax.org/books/introductory-statistics/pages/10-introduction">Illowsky and Dean - Chapter 10: Hypothesis Testing with Two Samples</a></li>
+<li><a href="https://onlinestatbook.com/2/logic_of_hypothesis_testing/logic_hypothesis.html">Lane - Chapter 11: Logic of Hypothesis Testing</a></li>
+<li><a href="https://onlinestatbook.com/2/tests_of_means/testing_means.html">Lane - Chapter 12: Tests of Means</a></li>
+<li><a href="http://darwin-online.org.uk/converted/published/1876_CrossandSelfFertilisation_F1249/1876_CrossandSelfFertilisation_F1249.html"><em>Cross and Self-Fertilization of Plants</em>, by Charles Dawin</a></li>
+</ul>
+</section>
+</section>
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>When many of us think of Charles Darwin, we think of his voyages to the Galapagos Islands and <em>The Origin of Species</em> which describes his theory of evolution and natural selection. However, few realize that after he returned from his voyage aboard the HMS Beagle, he would never leave Britain again due to ailing health. Rather, the gardens at Darwin House in the Kentish countryside would become a laboratory for him. He would grow all sorts of exotic specimens that were sent to him by botanists from around the world.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/darwinhouse.jpg" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">Darwin House, Photo by Nigel Wallace-Iles, English Heritage</figcaption>
+</figure>
+</div>
+<p>In this lab, you will conduct a t-test to analyze an experiment conducted by Charles Darwin in which he sought to determine if there was a difference between the growth of cross-pollinated plants and self-fertilized plants. In cross-pollinated plants, the pollen and ovule are from different individuals, whereas in self-fertilized plants, the pollen and ovule are from the same individual. He postulated that cross-pollinated plants would produce fitter offspring when compared to self-fertilized plants. In order to test this, Darwin raised pairs of plants (one self-fertilized and one cross-pollinated) in the same pot, and then measured differences in their heights.</p>
+</section>
+<section id="data" class="level2">
+<h2 class="anchored" data-anchor-id="data">Data</h2>
+<p>We will use the dataset collected by Charles Darwin in his treatise on the cross and self-fertilization of plants, documenting the height of 15 pairs.</p>
+<p>To begin, let’s import our data and save it as a variable called <code>dat</code>.</p>
+<div id="1c6a36ff-9947-469a-abf0-27752ccb2680" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"Lab_06_tests.r"</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>dat <span class="ot">=</span> <span class="fu">read.csv</span>(<span class="st">"../datasets/Lab_06_darwin.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>This data contains values for: * <strong>Fertilization</strong>: Treatment condition 1 refers to cross-pollination, and treatment condition 2 refers to self-fertilization.</p>
+<ul>
+<li><p><strong>Plant</strong>: The specific plant pairing.</p></li>
+<li><p><strong>Height</strong>: The height of the plant in cm.</p></li>
+</ul>
+</section>
+<section id="part-1-key-concepts" class="level2">
+<h2 class="anchored" data-anchor-id="part-1-key-concepts">Part 1: Key Concepts</h2>
+<section id="two-sample-t-tests" class="level3">
+<h3 class="anchored" data-anchor-id="two-sample-t-tests">Two Sample T-tests</h3>
+<p>A two sample t-test is a form of hypothesis test that is used to determine if two groups are significantly different from each other by comparing the means of those groups. However, there are some basic assumptions that must be fulfilled before using this hypothesis test: * The populations from which the sample groups are taken are assumed to be normal. * Samples are randomly selected and independent. * The samples are assumed to have equal standard deviations (or variances). If this is not the case, we can conduct a t-test for unequal variances (Welch’s t-test).</p>
+<blockquote class="blockquote">
+<p><strong>Example:</strong> An education researcher would like to compare the knowledge gains from students’ environmental education in two different grade 6 classes that use different approaches to teaching. One class takes students on a field trip to a local park, while the second class goes on a virtual field trip of the same park. The dependent variable is the grade students receive on a knowledge test at the end of the field trip, and the independent variable is the type of field trip they participated in. As the researcher is comparing the means of these two different groups, they will use a two sample t-test.</p>
+</blockquote>
+<p>When conducting a t-test, a researcher is interested in determining if the test statistic exceeds the critical values of the test. The null hypothesis for such a test can be written as follows: <span class="math inline">\(Ho: \mu_1 - \mu_2 = 0\)</span></p>
+<p>However, the alternate hypothesis for such a test will depend on whether it is a two-tailed or one-tailed test.</p>
+<p>A two-tailed test simply looks to see if there is a difference between the means at all. Looking at the distribution of sample differences, we would seek to see if our computed test statistic lay past the critical value at either end of the distribution. In such a case, the critical value would be associated with an <span class="math inline">\(\alpha/2\)</span>:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/twotail.jpg" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">Two-tail t-test</figcaption>
+</figure>
+</div>
+<p>A one-tailed test looks to see if there is a difference between means at one end of the distribution. This would be used if the question being asked assumed that the mean of one sample was higher or lower than the other. We would look to see if our computed test statistic lay past the critical value at one end of the distribution. In such a case, the critical value would be associated with the full <span class="math inline">\(\alpha\)</span> value.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/onetail.jpg" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">One-tail t-test</figcaption>
+</figure>
+</div>
+<p>The alternate hypothesis can be written as follows depending on the type of test being conducted:</p>
+<ul>
+<li>Two-tailed Test: $Ha: _1 - _2 $</li>
+<li>Left-tailed Test: $Ha: _1 - _2 &lt; 0 $</li>
+<li>Right-tailed Test: $Ha: _1 - _2 &gt; 0 $</li>
+</ul>
+<p>If our computed t-statistic is within the critical region for our test, then we have found a statistically significant result. We can reject our null hypothesis, and the two groups are different from one another based on our chosen alpha level. In the case of conducting a t-test in r, if the p-value is below an assumed <span class="math inline">\(\alpha\)</span>, we can also reject our null hypothesis.</p>
+<p>In r, the function for t-test is <code>t.test(y~x,data=dataset, var.equal=TRUE)</code> where * <code>y</code>= numeric variable * <code>x</code>= treatment group * <code>dataset</code>should be replaced with the name of the variable storing your data. * You can use the <code>var.equal = TRUE</code> option to specify equal variances and a pooled variance estimate, or remove it if you believe variances to be unequal. * You can use the <code>alternative="less"</code> or <code>alternative="greater"</code> option to specify a one tailed test if desired.</p>
+</section>
+<section id="mann-whitney-wilcoxon-test" class="level3">
+<h3 class="anchored" data-anchor-id="mann-whitney-wilcoxon-test">Mann-Whitney-Wilcoxon Test</h3>
+<p>A t-test, however, is not appropriate in every case. T-tests are based on assumptions about the larger population that the samples have been drawn from. In this way, t-tests are <strong>parametric tests</strong>. As specified above, our dataset must therefore fulfill a number of basic assumptions in order for us to conduct a t-test. But what can be done if our dataset does not meet all of these assumptions?</p>
+<p>The Mann-Whitney-Wilcoxon test is a <strong>nonparametric statistical test</strong> used to compare two independent samples of ordinal or continuous data. It assesses whether there is a significant difference between the medians of the two groups by ranking all the observations in the combined sample and then comparing the sum of ranks for each group. It is an alternative to the two-sample t-test when normality and equal variances assumptions are violated, or when the sample size is small.</p>
+<p>It is important to note that the Mann-Whitney-Wilcoxon test only tests for a difference in the median values of the two groups. Additionally, it assumes that the two samples are independent and randomly sampled.</p>
+</section>
+</section>
+<section id="part-2-lab-exercises" class="level2">
+<h2 class="anchored" data-anchor-id="part-2-lab-exercises">Part 2: Lab Exercises</h2>
+<section id="exercise-1-data-exploration-and-visualization" class="level3">
+<h3 class="anchored" data-anchor-id="exercise-1-data-exploration-and-visualization">Exercise 1: Data Exploration and Visualization</h3>
+<p>First we will explore the data collected by Darwin to ensure that it meets the prerequisites for a t-test.</p>
+<p><strong>A)</strong> Investigate the dataframe using <code>head</code> and <code>tail</code> to view its structure, headings, and the total number of records. Then look at the overall structure of your data.</p>
+<div id="851b46a3-b376-4d64-8cb4-f6d61ee3981a" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(dat) <span class="co"># look at the first few entries</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">tail</span>(dat) <span class="co"># look at the last few entries</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(dat)  <span class="co"># look at the overall structure</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>B)</strong> Next, create two variables (<code>Fertil.1</code> and <code>Fertil.2</code>) to hold the observations for cross-pollinated and self-fertilized plants.</p>
+<div id="8217686f-a7e8-4de0-a2cf-5abb02515eaf" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>Fertil<span class="fl">.1</span> <span class="ot">=</span> dat<span class="sc">$</span>height_cm[dat<span class="sc">$</span>Fertil<span class="sc">==</span><span class="dv">1</span>]  </span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>Fertil<span class="fl">.2</span> <span class="ot">=</span> dat<span class="sc">$</span>height_cm[dat<span class="sc">$</span>Fertil<span class="sc">==</span><span class="dv">2</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>Question 1:</strong> How many records are in this dataset?</p>
+<div id="cbab0eb7-ce3c-41b7-95ba-d684513fa33b" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>answer_1 <span class="ot">&lt;-</span> <span class="co"># your answer here</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_1</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>C)</strong> Create histograms for each treatment group to visualize the distribution of plant height. You will need to create classes to visualize your data by using the <code>seq()</code> function, storing this as a variable called <code>bins</code>. Make sure to label your histograms.</p>
+<div id="70b9df47-1878-4ab5-8543-45c752a319aa" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>bins <span class="ot">=</span> <span class="fu">seq</span>(<span class="dv">30</span>, <span class="dv">60</span>, <span class="dv">6</span>) <span class="co"># create classes for your histograms</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>))                <span class="co"># create a matrix of plots to hold two plots in the same output               </span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(Fertil<span class="fl">.1</span>,                   <span class="co"># create a histogram for treatment group 1</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">breaks=</span>bins,                <span class="co"># reference your class breaks</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"Plant Height (cm)"</span>, <span class="co"># title your x axis</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>     <span class="at">main=</span><span class="st">""</span>,                    <span class="co"># give your histogram a descriptive title</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="st">"light green"</span>)        <span class="co"># color your histogram</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(Fertil<span class="fl">.2</span>,                   <span class="co"># create a histogram for treatment group 2</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>     <span class="at">breaks=</span>bins,                <span class="co"># reference your class breaks </span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"Plant Height (cm)"</span>, <span class="co"># title your x axis</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>     <span class="at">main=</span><span class="st">""</span>,                    <span class="co"># create a histogram for treatment group 2</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="st">"purple"</span>)             <span class="co"># color your histogram </span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>D)</strong> Use the <code>fivenum</code> function to calculate quartiles for <code>Fertil.1</code> and <code>Fertil.2</code> that will help you describe your data.</p>
+<div id="61c260aa-0898-47ca-9c64-6616e226aee2" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fivenum</span>(Fertil<span class="fl">.1</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fivenum</span>(Fertil<span class="fl">.2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>Question 2:</strong> What is the range of the self-fertilized group? Please include 2 decimal places in your answer.</p>
+<div id="5ddf01ec-f5bf-49cc-abb5-fe5af4d3e620" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>answer_2 <span class="ot">&lt;-</span> <span class="co"># your answer here</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_2</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>Question 3:</strong> What is the median value for the cross-pollinated group?</p>
+<div id="cf10b0c0-5f2c-4833-92a8-27df7209fe56" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>answer_3 <span class="ot">&lt;-</span> <span class="co"># your answer here</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_3</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>E)</strong> Another way to visualize and inspect your data is to create a box plot. Use the <code>boxplot()</code> function to create a boxplot of each group for comparison. Be sure to add a title to your visual!</p>
+<div id="6c9d5094-0d4c-45e2-8556-b7b6964a96f9" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">boxplot</span>(dat<span class="sc">$</span>height_cm <span class="sc">~</span> dat<span class="sc">$</span>Fertil,    <span class="co">#create boxplots</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>        <span class="at">xlab=</span><span class="st">"Plant Height (cm)"</span>,      <span class="co"># label your x-axis                   </span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>        <span class="at">ylab=</span><span class="st">"Fertilization Method"</span>,   <span class="co"># label your y-axis</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>        <span class="at">main=</span><span class="st">""</span>,                       <span class="co"># give visual a title</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>        <span class="at">col=</span><span class="fu">c</span>(<span class="st">"light green"</span>,<span class="st">"purple"</span>), <span class="co"># color your boxplots</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>        <span class="at">range =</span> <span class="dv">0</span>,                     <span class="co"># a rang of 0 extends whiskers to the extremes of your data</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>        <span class="at">horizontal=</span><span class="cn">TRUE</span>)               <span class="co"># create a horizontal box plot. The default is vertical.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>Question 4:</strong> Based on the boxplots, what is the approximate interquartile range of treatment group 2? (‘A’, ‘B’, ‘C’, or ‘D’)</p>
+<ol type="A">
+<li><p>32-52</p></li>
+<li><p>41-47</p></li>
+<li><p>50-56</p></li>
+<li><p>35-60</p></li>
+</ol>
+<div id="c432d222-6036-4a42-a2ec-4fbcf09c9fd7" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>answer_4 <span class="ot">&lt;-</span> <span class="st">''</span> <span class="co"># your answer here ('A', 'B', 'C', or 'D')</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_4</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>F)</strong> While box plots are good for visualizing basic distributions and comparing summary statistics, they do not let us see variations in the data very well. The violin plot is a hybrid of a box plot and a kernel density plot, which allows us to see peaks in the data and visualize its distribution. Use the code below to create violin plots for the two different fertilization methods.</p>
+<div id="361b197a-71bd-46b9-ad07-4ef7b6f9303b" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>dat<span class="sc">$</span>Fertil <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(dat<span class="sc">$</span>Fertil) <span class="co"># Change the fetilization method variable to a factor which is used for categorical data</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>vp <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(dat, <span class="fu">aes</span>(<span class="at">x=</span>Fertil, <span class="at">y=</span>height_cm, <span class="at">fill=</span>Fertil)) <span class="sc">+</span>   <span class="co"># Create a variable 'vp' to hold the violin plot and assign your x and y axis    </span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>      <span class="fu">geom_violin</span>(<span class="at">trim=</span><span class="cn">FALSE</span>) <span class="sc">+</span>   <span class="co"># set the trim argument to FALSE to prevent the ends of your distribution from being cut off</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>      <span class="fu">scale_fill_manual</span>(<span class="at">values=</span><span class="fu">c</span>(<span class="st">"light green"</span>, <span class="st">"purple"</span>)) <span class="sc">+</span>   <span class="co"># set the colors of the violin plots</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>      <span class="fu">geom_boxplot</span>(<span class="at">width=</span><span class="fl">0.1</span>, <span class="at">fill=</span><span class="st">"white"</span>) <span class="sc">+</span> <span class="co"># style the box plot</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>      <span class="fu">labs</span>(<span class="at">title=</span><span class="st">"Plant height by breeding method"</span>,<span class="at">x=</span><span class="st">"Fertilization method"</span>, <span class="at">y =</span> <span class="st">"Height (cm)"</span>)  <span class="co"># title your plot and axis.</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>vp <span class="sc">+</span> <span class="fu">coord_flip</span>()   <span class="co"># Flip the violin plots so they are displayed horizontally</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>Question 5:</strong> Are the data normally distributed? (‘yes’ or ‘no’)</p>
+<div id="dc2d10a1-5d18-4c7d-94e0-1ca38d28d57d" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>answer_5 <span class="ot">&lt;-</span> <span class="st">''</span> <span class="co"># your answer here ('yes' or 'no')</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_5</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>F)</strong> Let’s attempt to transform the data to see if it will become normally distributed after logging it. We will use the <code>mutate()</code> function to create a new column in our data and populate it by logging the heights of both groups.</p>
+<div id="50409c81-8805-4f7f-9010-0fdd224b0f66" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>dat <span class="ot">=</span> <span class="fu">read.csv</span>(<span class="st">"../datasets/Lab_06_darwin.csv"</span>) <span class="sc">%&gt;%</span> <span class="co"># we are reading in our data again and using a piping operator '%&gt;%' to then use the mutate function on it.</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mutate</span>(<span class="at">height_log=</span><span class="fu">log</span>(height_cm)) <span class="co"># mutate creates a new column called height_log and this is equal to the log of each heigh_cm record.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>G)</strong> Create another violin plot with the logged height data to check if it is normally distributed.</p>
+<div id="fd6f4ca2-d154-42c7-9237-d49eb4601df8" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>dat<span class="sc">$</span>Fertil <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(dat<span class="sc">$</span>Fertil) <span class="co"># Change the fetilization method variable to a factor which is used for categorical data</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>vp2 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(dat, <span class="fu">aes</span>(<span class="at">x=</span>Fertil, <span class="at">y=</span>height_log, <span class="at">fill=</span>Fertil)) <span class="sc">+</span>   <span class="co"># Create a variable 'vp' to hold the violin plot and assign your x and y axis    </span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>      <span class="fu">geom_violin</span>(<span class="at">trim=</span><span class="cn">FALSE</span>) <span class="sc">+</span>   <span class="co"># set the trim argument to FALSE to prevent the ends of your distribution from being cut off</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>      <span class="fu">scale_fill_manual</span>(<span class="at">values=</span><span class="fu">c</span>(<span class="st">"light green"</span>, <span class="st">"purple"</span>)) <span class="sc">+</span>   <span class="co"># set the colors of the violin plots</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>      <span class="fu">geom_boxplot</span>(<span class="at">width=</span><span class="fl">0.1</span>, <span class="at">fill=</span><span class="st">"white"</span>) <span class="sc">+</span> <span class="co"># style the box plot</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>      <span class="fu">labs</span>(<span class="at">title=</span><span class="st">"Plant height by breeding method"</span>,<span class="at">x=</span><span class="st">"Fertilization method"</span>, <span class="at">y =</span> <span class="st">"Height (cm)"</span>)  <span class="co"># title your plot and axis.</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>vp2 <span class="sc">+</span> <span class="fu">coord_flip</span>()   <span class="co"># Flip the violin plots so they are displayed horizontally</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>Question 6:</strong> Are the data normally distributed? (‘yes’ or ‘no’)</p>
+<div id="be39d62c-3842-43ca-9a2f-1476db823fed" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>answer_6 <span class="ot">&lt;-</span> <span class="st">''</span> <span class="co"># your answer here ('yes' or 'no')</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_6</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="exercise-2-two-sample-t-test-and-mann-whitney-wilcoxon-test" class="level3">
+<h3 class="anchored" data-anchor-id="exercise-2-two-sample-t-test-and-mann-whitney-wilcoxon-test">Exercise 2: Two-Sample T-test and Mann-Whitney-Wilcoxon Test</h3>
+<p>Now we will investigate whether the heights of cross-pollinated and self-fertilized plants are significantly different.</p>
+<p><strong>Question 7:</strong> Is a t-test appropriate to determine if there is a significant difference in this case?</p>
+<div id="46f74568-48a5-46b2-9d46-23057500d6a5" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>answer_7 <span class="ot">&lt;-</span> <span class="st">''</span> <span class="co"># your answer here ('yes' or 'no')</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_7</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>Question 8:</strong> Explain your answer to question 7.</p>
+<p><font color="red">Write your answer here</font></p>
+<p><strong>A)</strong> For questions 9-12, assume that the data had been normally distributed.</p>
+<p><strong>Question 9:</strong> You have been asked to determine if there is a difference in height between the two fertilization methods. Would you use a one or two-tailed t-test to determine this?</p>
+<ol type="A">
+<li><p>One-tailed</p></li>
+<li><p>Two-tailed</p></li>
+</ol>
+<div id="66d2d869-cb65-44d9-83e4-093e343e8a62" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>answer_9 <span class="ot">&lt;-</span> <span class="st">''</span> <span class="co"># your answer here ('A' or 'B')</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_9</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>Question 10:</strong> What is your null hypothesis? (‘A’, ‘B’, ‘C’, or ‘D’)</p>
+<ol type="A">
+<li><p><span class="math inline">\(Ho: \mu_1 - \mu_2 \neq 0\)</span></p></li>
+<li><p><span class="math inline">\(H_0: \mu = 0\)</span></p></li>
+<li><p><span class="math inline">\(H_0: \mu_2 - \mu_1 &gt; 0\)</span></p></li>
+<li><p><span class="math inline">\(Ho: \mu_1 - \mu_2 = 0\)</span></p></li>
+</ol>
+<div id="97ef698b-3cc2-4402-b763-b70b5af60a80" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>answer_10 <span class="ot">&lt;-</span> <span class="st">''</span> <span class="co"># your answer here ('A', 'B', 'C', or 'D')</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_10</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>Question 11:</strong> What is your alternative hypothesis? (‘A’, ‘B’, ‘C’, or ‘D’)</p>
+<ol type="A">
+<li><p>$Ha: _1 - _2 &gt; 0 $</p></li>
+<li><p>$Ha: _1 - _2 &lt; 0 $</p></li>
+<li><p>$Ha: _1 - _2 $</p></li>
+<li><p><span class="math inline">\(Ho: \mu_1 - \mu_2 = 0\)</span></p></li>
+</ol>
+<div id="bed37261-52c1-4dd3-92e3-ef0941203e6b" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>answer_11 <span class="ot">&lt;-</span> <span class="st">''</span> <span class="co"># your answer here ('A', 'B', 'C', or 'D')</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_11</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>B)</strong> Conduct a two sample t-test using the <code>t.test()</code> function.</p>
+<div id="02194190-ceed-41d5-a65e-eb5ef3ecfb35" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">t.test</span>(height_log <span class="sc">~</span> Fertil, <span class="at">data =</span> dat)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>Question 12:</strong> Can you reject your null hypothesis? (‘yes’ or ‘no’)</p>
+<div id="49614569-eae6-4408-9cf4-97c9fe529428" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>answer_12 <span class="ot">&lt;-</span> <span class="st">''</span> <span class="co"># your answer here ('yes' or 'no')</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_12</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>C)</strong> As the data was not actually normally distributed, the appropriate response would have been to run a non-parametric test as opposed to a t-test. In this case, we will run a Mann-Whitney-Wilcoxon Test. As this test is for non-normal data, we will not use the logged heights in our test.</p>
+<div id="b297a512-88d1-4458-8c9e-14b3d4c43c0c" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">wilcox.test</span>(height_cm <span class="sc">~</span> Fertil, <span class="at">data=</span>dat, <span class="at">exact=</span><span class="cn">FALSE</span>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>Question 13:</strong> In 2-3 sentences, summarize your findings with regard to fertilization method. Be sure to state your p-value, alpha value, and explain what this means based on the background information provided for this lab.</p>
+<p><font color="red">Write your answer here</font></p>
+<p><strong>Question 14:</strong> As a researcher, what could you do to improve the chances that your data were normally distributed?</p>
+<p><font color="red">Write your answer here</font></p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, function() {
+      let href = xref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children.length > 2) {
+          for (let i = 0; i < 2; i++) {
+            container.appendChild(note.children[i].cloneNode(true));
+          }
+          return container.innerHTML
+        } else {
+          return note.innerHTML;
+        }
+      } else {
+        return note.innerHTML;
+      }
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+          // target, if specified
+          link.setAttribute("target", "_blank");
+      }
+    }
+});
+</script>
+<nav class="page-navigation column-body">
+  <div class="nav-page nav-page-previous">
+      <a href="../../../docs/geog_374/Lab_02_ANOVA/Lab_02_ANOVA.html" class="pagination-link">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">ANOVA Methods</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../../../docs/geog_374/Lab_05_Chisquare/Lab_05_Chisquare.html" class="pagination-link">
+        <span class="nav-page-text">Chi-squared Tests</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item">
+ <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/80x15.png"></a>.  <a rel="license" href="https://comet.arts.ubc.ca/pages/copyright.html">See details.</a>
+  </li>  
+</ul>
+    </div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item">
+ The COMET Project and the UBC Vancouver School of Economics are located on the traditional, ancestral and unceded territory of the xʷməθkʷəy̓əm (Musqueam) and Sḵwx̱wú7mesh (Squamish) peoples.
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+</body></html>

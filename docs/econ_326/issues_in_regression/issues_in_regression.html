@@ -1,0 +1,1353 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-GB" xml:lang="en-GB"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.36">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="COMET Team   Emrul Hasan, Jonah Heyl, Shiming Wu, William Co, Jonathan Graves">
+<meta name="dcterms.date" content="2022-12-08">
+<meta name="keywords" content="economics, econometrics, R, data, machine learning, UBC, COMET, geog 374, econ 325, econ 326, learning, teaching, learn r, r help, help, tutorial, r tutorial for beginners,learning statistics with r, learn r programming, learn statistics, linear regression, r machine learning, learn machine learning, university of british columbia, british columbia, r programming for beginners, r language tutorial, r tutorial for beginners, economic data, econometrics tutoring, economics help for students, economics homework help, oer resources for teachers, open educational resources for teachers, educational resource, oer project, oer materials, oer resources, learn economics online, learn econometrics, teach yourself economics, teach yourself econometrics, econometrics basics for beginners">
+<meta name="description" content="What are the key issues with a regression model? This notebook discusses collinearity, heteroskedasticity, and model specification.">
+
+<title>COMET - 04 - ECON 326: Issues in Regression using R</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<link href="../../../docs/econ_326/interactions/interactions.html" rel="next">
+<link href="../../../docs/econ_326/multiple_regression/multiple_regression1.html" rel="prev">
+<link href="../../../media/comet_favicon.png" rel="icon" type="image/png">
+<script src="../../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<link rel="stylesheet" href="../../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a href="../../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../../media/logo_no_tiny_text.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">COMET</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../index.html" rel="" target=""><i class="bi bi-house-door" role="img">
+</i> 
+ <span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-get-started" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Get Started</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-get-started">    
+        <li>
+    <a class="dropdown-item" href="../../../pages/quickstart.html" rel="" target="">
+ <span class="dropdown-text">Quickstart Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../pages/installing_locally.html" rel="" target="">
+ <span class="dropdown-text">Install and Use COMET</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/intro_jupyter/intro_to_jupyter.html" rel="" target="">
+ <span class="dropdown-text">Learn about Jupyter</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/intro_r/introduction_to_R.html" rel="" target="">
+ <span class="dropdown-text">Learn about R</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/econ_prep/Introduction to Statistical Concepts.html" rel="" target="">
+ <span class="dropdown-text">Review High School Statistics</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-basics" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Basics</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-basics">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/index_intro.html" rel="" target="">
+ <span class="dropdown-text">Preliminary Material</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_325/index_325.html" rel="" target="">
+ <span class="dropdown-text">Introduction to Econometrics (ECON 325)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/econ_prep/Introduction to Statistical Concepts.html" rel="" target="">
+ <span class="dropdown-text">Review of Statistics</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-fundamentals" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Fundamentals</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-fundamentals">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_326/index_326.html" rel="" target="">
+ <span class="dropdown-text">Introduction to Empirical Models (ECON 326)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/geog_374/index_374.html" rel="" target="">
+ <span class="dropdown-text">Geographic Computation (GEOG 374)</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-projects" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Projects</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-projects">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_490/index_490.html" rel="" target="">
+ <span class="dropdown-text">Overview of ECON 490</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_490/index_490_r.html" rel="" target="">
+ <span class="dropdown-text">R Modules</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_490/index_490_stata.html" rel="" target="">
+ <span class="dropdown-text">STATA Modules</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-advanced" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Advanced</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-advanced">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_adv/index_adv.html" rel="" target="">
+ <span class="dropdown-text">Advanced Topics</span></a>
+  </li>  
+    </ul>
+  </li>
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-launch-comet" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+      <i class="bi bi-play" role="img">
+</i> 
+ <span class="menu-text">Launch COMET</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-launch-comet">    
+        <li>
+    <a class="dropdown-item" href="https://open.jupyter.ubc.ca/jupyter/hub/user-redirect/git-pull?repo=https%3A%2F%2Fgithub.com%2Fubcecon%2Fcomet-project&amp;urlpath=lab%2Ftree%2Fcomet-project%2F&amp;branch=main" rel="" target=""><i class="bi bi-cloud-check" role="img">
+</i> 
+ <span class="dropdown-text">Launch on JupyterOpen</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://ubc.syzygy.ca/jupyter/hub/user-redirect/git-pull?repo=https%3A%2F%2Fgithub.com%2Fubcecon%2Fcomet-project&amp;urlpath=lab%2Ftree%2Fcomet-project%2F&amp;branch=main" rel="" target=""><i class="bi bi-gear" role="img">
+</i> 
+ <span class="dropdown-text">Launch on Syzygy</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://colab.research.google.com/github/ubcecon/comet-project/blob/main/" rel="" target=""><i class="bi bi-google" role="img">
+</i> 
+ <span class="dropdown-text">Launch on Collab</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://github.com/ubcecon/comet-project/archive/refs/heads/main.zip" rel="" target=""><i class="bi bi-cloud-download" role="img">
+</i> 
+ <span class="dropdown-text">Launch Locally</span></a>
+  </li>  
+        <li><hr class="dropdown-divider"></li>
+        <li>
+    <a class="dropdown-item" href="https://github.com/ubcecon/comet-project/archive/refs/heads/data-only.zip" rel="" target=""><i class="bi bi-clipboard-data" role="img">
+</i> 
+ <span class="dropdown-text">Project Datasets</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="../../../#" rel="" target="">
+ <span class="menu-text">|</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-about" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">About</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-about">    
+        <li>
+    <a class="dropdown-item" href="../../../pages/team.html" rel="" target="">
+ <span class="dropdown-text">COMET Team</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../pages/using_comet.html" rel="" target="">
+ <span class="dropdown-text">Teach With COMET</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../pages/copyright.html" rel="" target="">
+ <span class="dropdown-text">Copyright Information</span></a>
+  </li>  
+    </ul>
+  </li>
+</ul>
+            <div class="quarto-navbar-tools">
+</div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../docs/econ_326/review/review_of_basic_stats.html">Method Modules</a></li><li class="breadcrumb-item"><a href="../../../docs/econ_326/issues_in_regression/issues_in_regression.html">Issues in Regression</a></li></ol></nav>
+      <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+      </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation docked overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_326/index_326.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Methods Of Empirical Research In Economics (ECON 326)</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true">
+ <span class="menu-text">Method Modules</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_326/review/review_of_basic_stats.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Review of Econometrics</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_326/simple_regression/simple_regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Simple Regression</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_326/multiple_regression/multiple_regression1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Multiple Regression</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_326/issues_in_regression/issues_in_regression.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Issues in Regression</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_326/interactions/interactions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Interactions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_326/project/project_1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Example Project</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="px-0"><hr class="sidebar-divider hi "></li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true">
+ <span class="menu-text">Geographic Computation</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/geog_374/index_374.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Geographic Computation (GEOG 374)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/geog_374/Lab_02_ANOVA/Lab_02_ANOVA.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">ANOVA Methods</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/geog_374/Lab_06_Ttest/Lab_06_Ttest.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="math inline">\(t\)</span>-test Methods</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/geog_374/Lab_05_Chisquare/Lab_05_Chisquare.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Chi-squared Tests</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/geog_374/Lab_03_Regression/Lab_03_Regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Regression Methods</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#outline" id="toc-outline" class="nav-link active" data-scroll-target="#outline">Outline</a>
+  <ul class="collapse">
+  <li><a href="#prerequisites" id="toc-prerequisites" class="nav-link" data-scroll-target="#prerequisites">Prerequisites</a></li>
+  <li><a href="#outcomes" id="toc-outcomes" class="nav-link" data-scroll-target="#outcomes">Outcomes</a></li>
+  <li><a href="#notes" id="toc-notes" class="nav-link" data-scroll-target="#notes">Notes</a></li>
+  </ul></li>
+  <li><a href="#part-1-multicollinearity" id="toc-part-1-multicollinearity" class="nav-link" data-scroll-target="#part-1-multicollinearity">Part 1: Multicollinearity</a>
+  <ul class="collapse">
+  <li><a href="#perfect-multicollinearity-in-models" id="toc-perfect-multicollinearity-in-models" class="nav-link" data-scroll-target="#perfect-multicollinearity-in-models">Perfect Multicollinearity in Models</a></li>
+  <li><a href="#imperfect-multicollinearity" id="toc-imperfect-multicollinearity" class="nav-link" data-scroll-target="#imperfect-multicollinearity">Imperfect Multicollinearity</a></li>
+  </ul></li>
+  <li><a href="#part-2-heteroskedasticity" id="toc-part-2-heteroskedasticity" class="nav-link" data-scroll-target="#part-2-heteroskedasticity">Part 2: Heteroskedasticity</a>
+  <ul class="collapse">
+  <li><a href="#testing-for-heteroskedasticity" id="toc-testing-for-heteroskedasticity" class="nav-link" data-scroll-target="#testing-for-heteroskedasticity">Testing for Heteroskedasticity</a></li>
+  <li><a href="#linear-probability-models" id="toc-linear-probability-models" class="nav-link" data-scroll-target="#linear-probability-models">Linear Probability Models</a></li>
+  </ul></li>
+  <li><a href="#part-3-exercises" id="toc-part-3-exercises" class="nav-link" data-scroll-target="#part-3-exercises">Part 3: Exercises</a>
+  <ul class="collapse">
+  <li><a href="#activity-1" id="toc-activity-1" class="nav-link" data-scroll-target="#activity-1">Activity 1</a></li>
+  <li><a href="#short-answer-1" id="toc-short-answer-1" class="nav-link" data-scroll-target="#short-answer-1">Short Answer 1</a></li>
+  <li><a href="#activity-2" id="toc-activity-2" class="nav-link" data-scroll-target="#activity-2">Activity 2</a></li>
+  <li><a href="#short-answer-2" id="toc-short-answer-2" class="nav-link" data-scroll-target="#short-answer-2">Short Answer 2</a></li>
+  <li><a href="#short-answer-3" id="toc-short-answer-3" class="nav-link" data-scroll-target="#short-answer-3">Short Answer 3</a></li>
+  <li><a href="#short-answer-5" id="toc-short-answer-5" class="nav-link" data-scroll-target="#short-answer-5">Short Answer 5</a></li>
+  <li><a href="#short-answer-6" id="toc-short-answer-6" class="nav-link" data-scroll-target="#short-answer-6">Short Answer 6</a></li>
+  <li><a href="#short-answer-7" id="toc-short-answer-7" class="nav-link" data-scroll-target="#short-answer-7">Short Answer 7</a></li>
+  <li><a href="#short-answer-8" id="toc-short-answer-8" class="nav-link" data-scroll-target="#short-answer-8">Short Answer 8</a></li>
+  <li><a href="#short-answer-9" id="toc-short-answer-9" class="nav-link" data-scroll-target="#short-answer-9">Short Answer 9</a></li>
+  <li><a href="#activity-3" id="toc-activity-3" class="nav-link" data-scroll-target="#activity-3">Activity 3</a></li>
+  </ul></li>
+  </ul>
+<div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/ubcecon/comet-project/issues/new" class="toc-action">Report an issue</a></p></div></div><div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="issues_in_regression.ipynb" download="issues_in_regression.ipynb"><i class="bi bi-journal-code"></i>Jupyter</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content column-body" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">04 - ECON 326: Issues in Regression using R</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">introduction</div>
+    <div class="quarto-category">econ 326</div>
+    <div class="quarto-category">multiple regression</div>
+    <div class="quarto-category">regression</div>
+    <div class="quarto-category">collinearity</div>
+    <div class="quarto-category">controls</div>
+    <div class="quarto-category">heteroskedasticity</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    What are the key issues with a regression model? This notebook discusses collinearity, heteroskedasticity, and model specification.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>COMET Team <br> <em>Emrul Hasan, Jonah Heyl, Shiming Wu, William Co, Jonathan Graves</em> </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">8 December 2022</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+</header>
+
+<section id="outline" class="level2">
+<h2 class="anchored" data-anchor-id="outline">Outline</h2>
+<section id="prerequisites" class="level3">
+<h3 class="anchored" data-anchor-id="prerequisites">Prerequisites</h3>
+<ul>
+<li>Multiple regression</li>
+<li>Simple regression</li>
+<li>Data analysis and introduction</li>
+</ul>
+</section>
+<section id="outcomes" class="level3">
+<h3 class="anchored" data-anchor-id="outcomes">Outcomes</h3>
+<ul>
+<li>Understand the origin and meaning of multicollinearity in regression models</li>
+<li>Perform simple tests for multicollinerarity using VIF</li>
+<li>Be able to demonstrate common methods to fix or resolve collinear data</li>
+<li>Understand the origin and meaning of heteroskedasticity in regression models</li>
+<li>Perform a variety of tests for heteroskedasticity</li>
+<li>Compute robust standard errors for regression models</li>
+<li>Understand other techniques for resolving heteroskedasticity in regression models</li>
+</ul>
+</section>
+<section id="notes" class="level3">
+<h3 class="anchored" data-anchor-id="notes">Notes</h3>
+<p>Note that the data in this exercise is provided under the Statistics Canada Open License: &gt; <span id="fn1"><a href="#fn1s"><sup>1</sup></a>Statistics Canada, Survey of Financial Security, 2019, 2021. Reproduced and distributed on an “as is” basis with the permission of Statistics Canada.Adapted from Statistics Canada, Survey of Financial Security, 2019, 2021. This does not constitute an endorsement by Statistics Canada of this product.</span></p>
+<blockquote class="blockquote">
+<p><span id="fn2"><a href="#fn2s"><sup>2</sup></a>Stargazer package is due to: Hlavac, Marek (2018). stargazer: Well-Formatted Regression and Summary Statistics Tables. R package version 5.2.2. https://CRAN.R-project.org/package=stargazer </span></p>
+</blockquote>
+<div class="cell" data-pycharm="{&quot;name&quot;:&quot;#%%\n&quot;}" data-tags="[]" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">#load the data and set it up</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(car)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(haven)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(stargazer)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lmtest)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sandwich)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-pycharm="{&quot;name&quot;:&quot;#%%\n&quot;}" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"functions4.r"</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>SFS_data <span class="ot">&lt;-</span> <span class="fu">read_dta</span>(<span class="st">"../datasets/SFS_2019_Eng.dta"</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>SFS_data <span class="ot">&lt;-</span> <span class="fu">clean_up_data</span>(SFS_data) <span class="co">#this function is explained in module 1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-pycharm="{&quot;name&quot;:&quot;#%%\n&quot;}" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(SFS_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>In this notebook, we will explore several important issues in multiple regression models, and explore how to identify, evaluate, and correct them where appropriate. It is important to remember that there can be many other issues that arise in specific regression models; as you learn more about econometrics and create your own research questions, different issues will arise. Consider these as “examples” for some of the most common issues that arise in regression models.</p>
+</section>
+</section>
+<section id="part-1-multicollinearity" class="level2">
+<h2 class="anchored" data-anchor-id="part-1-multicollinearity">Part 1: Multicollinearity</h2>
+<p>Multi-collinearity is a surprisingly common issue in applied regression analysis, where several explanatory variables are correlated to each other. For example, suppose we are interested at regressing one’s marriage rate against years of education and annual income. In this case, the two explanatory variables income and years of education are highly correlated. It refers to the situation where a variable is “overdetermined” by the other variables in a model, which will result in less reliable regression output. For example, if we have a high coefficient on education. How certain are we that this coefficient was not the result of having a high annual income as well? Let’s look at this problem mathematically; in calculating an OLS estimation, you are estimating a relationship like:</p>
+<p><span class="math display">\[Y_i = \beta_a + \beta_1 X_1 + \epsilon_i\]</span></p>
+<p>You find the estimates of the coefficients in this model using OLS; i.e.&nbsp;solving an equation like:</p>
+<p><span class="math display">\[ \min_{b_0, b_1} \sum_{i=1}^n(Y_i - b_0 -b_1 X_i)^2 \]</span></p>
+<p>Under the OLS regression assumptions, this has a unique solution; i.e you can find unique values for <span class="math inline">\(b_0\)</span> and <span class="math inline">\(b_1\)</span>.</p>
+<p>However, what if you wrote an equation like this: <span class="math display">\[\beta a=\beta_0+\beta_1 \]</span> We can then rewrite as <span class="math display">\[Y_i = \beta_0 + \beta_1 + \beta_2 X_i + \epsilon_i\]</span></p>
+<p>This <em>seems</em> like it would be fine, but remember what you are doing: trying to find a <em>line</em> of best fit. The problem is that this equation does not define a unique line; the “intercept” is <span class="math inline">\(\beta_0 + \beta_1\)</span>. There are two “parameters” (<span class="math inline">\(\beta_0, \beta_1\)</span>) for a single “characteristics” (the intercept). This means that the resulting OLS problem:</p>
+<p><span class="math display">\[ \min_{b_0, b_1, b_2} \sum_{i=1}^n(Y_i - b_0 -b_1 -b_2 X_i)^2 \]</span></p>
+<p>Does not have a unique solution. In algebraic terms, it means you can find many representations of a line with two intercept parameters. This is referred to in econometrics as a lack of <strong>identification</strong>; multicollinearity is one way that identification can fail in regression models.</p>
+<p>You can see this in the following example, which fits an OLS estimate of <code>wealth</code> and <code>income_before_tax</code> then compares the fit to a regression with two intercepts. Try changing the values to see what happens.</p>
+<blockquote class="blockquote">
+<p><strong>Note</strong>: Make sure to understand what the example below is doing. Notice how the results are exactly the same, no matter what the value of <code>k</code> is?</p>
+</blockquote>
+<div class="cell" data-pycharm="{&quot;name&quot;:&quot;#%%\n&quot;}" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>reg <span class="ot">&lt;-</span> <span class="fu">lm</span>(wealth <span class="sc">~</span> income_before_tax, <span class="at">data =</span> SFS_data)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>b_0 <span class="ot">&lt;-</span> reg<span class="sc">$</span>coef[[<span class="dv">1</span>]]</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>b_1 <span class="ot">&lt;-</span> reg<span class="sc">$</span>coef[[<span class="dv">2</span>]]</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>resid1 <span class="ot">&lt;-</span> SFS_data<span class="sc">$</span>wealth <span class="sc">-</span> b_0 <span class="sc">-</span> b_1<span class="sc">*</span>SFS_data<span class="sc">$</span>income_before_tax</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>k <span class="ot">&lt;-</span> <span class="dv">90</span> <span class="co">#change me! </span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>b_0 <span class="ot">=</span> (reg<span class="sc">$</span>coef[[<span class="dv">1</span>]])<span class="sc">/</span><span class="dv">2</span> <span class="sc">-</span> k</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>b_1 <span class="ot">=</span> (reg<span class="sc">$</span>coef[[<span class="dv">1</span>]])<span class="sc">/</span><span class="dv">2</span> <span class="sc">+</span> k </span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>b_2 <span class="ot">=</span> reg<span class="sc">$</span>coef[[<span class="dv">2</span>]]</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>resid2 <span class="ot">&lt;-</span>SFS_data<span class="sc">$</span>wealth <span class="sc">-</span> b_0 <span class="sc">-</span> b_1 <span class="sc">-</span> b_2<span class="sc">*</span>SFS_data<span class="sc">$</span>income_before_tax</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span> <span class="fu">geom_density</span>(<span class="fu">aes</span>(<span class="at">x =</span> resid1), <span class="at">color =</span> <span class="st">"blue"</span>) <span class="sc">+</span> <span class="fu">xlab</span>(<span class="st">"Residuals from 1 Variable Model"</span>) <span class="sc">+</span> <span class="fu">ylab</span>(<span class="st">"Density"</span>)</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span> <span class="fu">geom_density</span>(<span class="fu">aes</span>(<span class="at">x =</span> resid2), <span class="at">color =</span> <span class="st">"red"</span>)  <span class="sc">+</span> <span class="fu">xlab</span>(<span class="st">"Residuals from 2 Variable Model"</span>) <span class="sc">+</span> <span class="fu">ylab</span>(<span class="st">"Density"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Notice how the residuals look <em>exactly</em> the same - despite these being from (purportedly) two different models. This is because they not really two different models! They <em>identify</em> the same model!</p>
+<p>Okay, you’re probably thinking, that makes sense - but just don’t write down an equation like that. After all, it seems somewhat artificial that we added an extra intercept term.</p>
+<p>However, multicollinearly can occur with <em>any</em> set of variables in the model; not just the intercept. For example, suppose you have a multiple regression:</p>
+<p><span class="math display">\[Y_ i = \beta_0 + \beta_1 X_{1,i} + \beta_2  X_{2,i} + \beta_3  X_{3,i} + \epsilon_i\]</span></p>
+<p>What would happen if there was a relationship between <span class="math inline">\(X_1, X_2\)</span> and <span class="math inline">\(X_3\)</span> like:</p>
+<p><span class="math display">\[X_{1,i} = 0.4 X_{2,i} + 12 X_{3,i}\]</span></p>
+<p>When, we could then re-write the equation as:</p>
+<p><span class="math display">\[Y_ i = \beta_0 + \beta_1 (0.4 X_{2,i} + 12 X_{3,i}) + \beta_2  X_{2,i} + \beta_3  X_{3,i} + \epsilon_i\]</span></p>
+<p><span class="math display">\[\implies Y_ i = \beta_0 + (\beta_2 + 0.4 \beta_1)  X_{2,i} + (\beta_3 + 12 \beta_1)X_{3,i} + \epsilon_i\]</span></p>
+<p>The same problem is now occuring, but with <span class="math inline">\(X_2\)</span> and <span class="math inline">\(X_3\)</span>: the slope coefficients depend on a free parameter (<span class="math inline">\(\beta_1\)</span>). You cannot uniquely find the equation of a line (c.f. plane) with this kind of equation.</p>
+<p>Basically what is happening, is you are trying to solve a system of equations for 3 variables (or n variables), but only 2 (or n-1) are used in the equation (are independent). So what would you do, well you would leave one of the dependent variables out, so you could solve for all of your variables, this is exactly what R does.</p>
+<p>You can also intuitively see the condition here: multicollinearity occurs when you can express one variable as a <em>linear</em> combination of the other variables in the model.</p>
+<ul>
+<li>This is sometimes referred to as <strong>perfect multicollinearity</strong>, since the variable is <em>perfectly</em> expressed as a linear combination of the other variable.</li>
+<li>The linearity is important because this is a linear model; you can have similar issues in other models, but it has a special name in linear regression</li>
+</ul>
+<section id="perfect-multicollinearity-in-models" class="level3">
+<h3 class="anchored" data-anchor-id="perfect-multicollinearity-in-models">Perfect Multicollinearity in Models</h3>
+<p>In general, most statistical packages (like R) will automatically detect, warn, and remove perfectly multicollinear variables from a model; this is because the algorithm they use to solve problems like the OLS estimation equation detects the problem and avoids a “crash”. This is fine, from a mathematical perspective - since mathematically the two results are the same (in a well-defined sense, as we saw above).</p>
+<p>However, from an economic perspective this is very bad - it indicates that there was a problem with the <em>model</em> that you defined in the first place. Usually, this means one of three things:</p>
+<ol type="1">
+<li>You included a set of variables which were, in combination, identical. For example, including “family size” and then “number of children” and “number of adults” in a regression</li>
+<li>You did not understand the data well enough, and variables had less variation than you thought they did - conditional on the other variables in the model. For example, maybe you thought people in the dataset could have both graduate and undergraduate degrees - so there was variation in “higher than high-school” but that wasn’t true</li>
+<li>You wrote down a model which was poorly defined in terms of the variables. For example, you including all levels of a dummy variable, or included the same variable measured in two different units (wages in dollars and wages in 1000s of dollars).</li>
+</ol>
+<p>In all of these cases, you need to go back to your original regression model and re-evaluate what you are trying to do in order to simplify the model or correct the error.</p>
+<p>Consider the following regression model, in which we want to study whether or not there is a penalty for families led by someone who is younger is the SFS Data:</p>
+<div class="cell" data-pycharm="{&quot;name&quot;:&quot;#%%\n&quot;}" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>SFS_data <span class="ot">&lt;-</span> SFS_data <span class="sc">%&gt;%</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">ya =</span> <span class="fu">case_when</span>(</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>        education <span class="sc">==</span> <span class="st">"Less than high school"</span>  <span class="sc">~</span> <span class="st">"Yes"</span>,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>        education <span class="sc">==</span> <span class="st">"High school"</span> <span class="sc">~</span> <span class="st">"Yes"</span>,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>        education <span class="sc">==</span> <span class="st">"Non-university post-secondary"</span> <span class="sc">~</span> <span class="st">"No"</span>, <span class="co">#this is for all other cases</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>        <span class="cn">TRUE</span> <span class="sc">~</span> <span class="st">"No"</span> <span class="co">#this is for all other cases</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    )) <span class="sc">%&gt;%</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">ya =</span> <span class="fu">as_factor</span>(ya))</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>regression2 <span class="ot">&lt;-</span> <span class="fu">lm</span>(income_before_tax <span class="sc">~</span> ya <span class="sc">+</span> education , <span class="at">data =</span> SFS_data)</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(regression2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Can you see why the multi-collinearity is occurring here? Try to write down an equation which points out what the problem is in this regression - why is it multi-collinear? How could you fix this problem by changing the model?</p>
+<blockquote class="blockquote">
+<p><em>Think Deeper</em>: You will notice, above, that it excluded the “University” education. Did it have to exclude that one? Could it have excluded another one instead? What do you think?</p>
+</blockquote>
+</section>
+<section id="imperfect-multicollinearity" class="level3">
+<h3 class="anchored" data-anchor-id="imperfect-multicollinearity">Imperfect Multicollinearity</h3>
+<p>A related issue to perfect multicollinearity is “near” (or <strong>imperfect</strong>) multicollinearity. If you recall from the above, perfect multicollinearity occurs when you have a relationship like:</p>
+<p><span class="math display">\[X_{1,i} = 0.4 X_{2,i} + 12 X_{3,i}\]</span></p>
+<p>Notice that in this relationship it holds <em>for all</em> values of <span class="math inline">\(i\)</span>. However, what if it held for <em>nearly</em> all <span class="math inline">\(i\)</span> instead? In that case, we would still have a solution to the equation… but there would be a problem. Let’s look at this in the simple regression case.</p>
+<p><span class="math display">\[Y_i = \beta_0 + \beta_1 X_i + \epsilon_i\]</span></p>
+<p>Now, let’s suppose that <span class="math inline">\(X_i\)</span> is “almost” collinear with <span class="math inline">\(\beta_0\)</span>. To be precise, suppose that <span class="math inline">\(X_i = 15\)</span> for <span class="math inline">\(k\)</span>-% of the data (<span class="math inline">\(k\)</span> will be large) and <span class="math inline">\(X_i = 20\)</span> for <span class="math inline">\((1-k)\)</span>-% of the data. This is <em>almost</em> constant, and so it is <em>almost</em> collinear with <span class="math inline">\(\beta_0\)</span> (the constant). Let’s also make the values of <span class="math inline">\(Y_i\)</span> so that <span class="math inline">\(Y_i(X_i) = X_i + \epsilon_i\)</span> (so <span class="math inline">\(\beta_1 = 1\)</span>), and we will set <span class="math inline">\(\sigma_Y = 1\)</span></p>
+<p>This implies that (applying some of the formulas from class):</p>
+<p><span class="math display">\[\beta_1 = \frac{Cov(X_i,Y_i)}{Var(X_i)} = 1\]</span></p>
+<p><span class="math display">\[s_b = \frac{1}{\sqrt{n-2}}\sqrt{\frac{1}{r^2}-1}\]</span></p>
+<p><span class="math display">\[r = \frac{\sigma_X}{\sigma_Y}\]</span></p>
+<p>As you can see, when <span class="math inline">\(Var(X_i)\)</span> goes down, <span class="math inline">\(\sigma_X\)</span> falls, and the value of <span class="math inline">\(r\)</span> falls; intuitively, when <span class="math inline">\(k\)</span> rises, the variance will go to zero, which makes <span class="math inline">\(r\)</span> go to zero as well (since there’s no variation). You can then see that <span class="math inline">\(s_b\)</span> diverges to infinity.</p>
+<p>We can make this more precise. In this model, how does <span class="math inline">\(Var(X_i)\)</span> depend on <span class="math inline">\(k\)</span>? Well, first notice that <span class="math inline">\(\bar{X_i} = 15\cdot k + 20 \cdot (1-k)\)</span>. Then,</p>
+<p><span class="math display">\[Var(X_i) = (X_i - \bar{X_i})^2 = k (15 - \bar{X_i})^2 + (1-k)(20 - \bar{X_i})^2\]</span></p>
+<p><span class="math display">\[\implies Var(X_i) = 25[k(1-k)^2 + (1-k)k^2]\]</span></p>
+<p>Okay, that looks awful - so let’s plot a graph of <span class="math inline">\(s_b\)</span> versus <span class="math inline">\(k\)</span> (when <span class="math inline">\(n = 1000\)</span>):</p>
+<div class="cell" data-pycharm="{&quot;name&quot;:&quot;#%%\n&quot;}" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">repr.plot.width=</span><span class="dv">6</span>,<span class="at">repr.plot.height=</span><span class="dv">4</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>r <span class="ot">=</span> <span class="fl">0.01</span> </span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>eq <span class="ot">=</span> <span class="cf">function</span>(k){(<span class="dv">1</span><span class="sc">/</span><span class="fu">sqrt</span>(<span class="dv">1000-2</span>))<span class="sc">*</span>(<span class="dv">1</span><span class="sc">/</span>(<span class="dv">25</span><span class="sc">*</span>(k<span class="sc">*</span>(<span class="dv">1</span><span class="sc">-</span>k)<span class="sc">^</span><span class="dv">2</span> <span class="sc">+</span> (<span class="dv">1</span><span class="sc">-</span>k)<span class="sc">*</span>k<span class="sc">^</span><span class="dv">2</span>))<span class="sc">-</span><span class="dv">1</span>)}</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>s <span class="ot">=</span> <span class="fu">seq</span>(<span class="fl">0.5</span>, <span class="fl">1.00</span>, <span class="at">by =</span> r)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>n <span class="ot">=</span> <span class="fu">length</span>(s)</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">eq</span>(s), <span class="at">type=</span><span class="st">'l'</span>,  <span class="at">xlab=</span><span class="st">"Values of K"</span>, <span class="at">ylab=</span><span class="st">"Standard Error"</span>, <span class="at">xaxt =</span> <span class="st">"n"</span>)</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="fu">axis</span>(<span class="dv">1</span>, <span class="at">at=</span><span class="fu">seq</span>(<span class="dv">0</span>, n<span class="dv">-1</span>, <span class="at">by =</span> <span class="dv">10</span>), <span class="at">labels=</span><span class="fu">seq</span>(<span class="fl">0.5</span>, <span class="fl">1.00</span>, <span class="at">by =</span> <span class="dv">10</span><span class="sc">*</span>r))</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="co"># You will notice that the plot actually diverges to infinity</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Try making R smaller to show this fact!</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="co">#Notice the value at 1 increases</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Why does this happen? The reason actually has to do with <em>information</em>.</p>
+<p>When you estimate a regression, you are using the variation in the data to estimate each of the parameters. As the variation falls, the estimation gets less and less precise, because you are using less and less data to make an evaluation. The magnitude of this problem can be quantified using the <strong>VIF</strong> or <strong>variance inflation factor</strong> for each of the variables in question.Graphically you can think of regression as drawing a best fit line through data points. Now if the variance is <span class="math inline">\(0\)</span> in the data, there is just one data point.If you remember from high school you need two points to draw a line, so with <span class="math inline">\(0\)</span> variance the OLS problem becomes ill-defined.</p>
+<p>We can calculate this directly in R by using the <code>vif</code> function. Let’s look at the collinearity in our model:</p>
+<div class="cell" data-pycharm="{&quot;name&quot;:&quot;#%%\n&quot;}" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>regression2 <span class="ot">&lt;-</span> <span class="fu">lm</span>(wealth <span class="sc">~</span>  income_before_tax <span class="sc">+</span>income_after_tax, <span class="at">data =</span> SFS_data)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(regression2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-pycharm="{&quot;name&quot;:&quot;#%%\n&quot;}" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Variance inflation factor of income after tax on wealth: "</span>,<span class="fu">vif</span>(regression2,SFS_data<span class="sc">$</span>income_after_tax,SFS_data<span class="sc">$</span>wealth),<span class="st">'</span><span class="sc">\n</span><span class="st">'</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Variance inflation factor of income before tax on wealth: "</span>,<span class="fu">vif</span>(regression2,SFS_data<span class="sc">$</span>income_before_tax,SFS_data<span class="sc">$</span>wealth),<span class="st">'</span><span class="sc">\n</span><span class="st">'</span>)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Variance inflation factor of income before tax on income after tax: "</span>,<span class="fu">vif</span>(regression2,SFS_data<span class="sc">$</span>income_before_tax,SFS_data<span class="sc">$</span>income_after_tax),<span class="st">'</span><span class="sc">\n</span><span class="st">'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Notice the extremely large VIF. This would indicate that you have a problem with collinearity in your data.</p>
+<blockquote class="blockquote">
+<p><em>Think Deeper</em>: What happens to the VIF as <code>k</code> changes? Why? Can you explain?</p>
+</blockquote>
+<p>There are no “hard” rules for what makes a VIF too large - you should think about your model holistically, and use it as a way to investigate whether you have any problems with your model evaluation and analysis.</p>
+</section>
+</section>
+<section id="part-2-heteroskedasticity" class="level2">
+<h2 class="anchored" data-anchor-id="part-2-heteroskedasticity">Part 2: Heteroskedasticity</h2>
+<p><strong>Heteroskedasticity</strong> (Het-er-o-sked-as-ti-city) is another common problem in many economic models. It refers to the situation in which the distribution of the residuals changes as the explanatory variables change. Usually, we could visualize this problem by drawing a residual plot and a fan or cone shape indicates the presence of heteroskedasticity. For example, consider this regression:</p>
+<div class="cell" data-pycharm="{&quot;name&quot;:&quot;#%%\n&quot;}" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>regression3 <span class="ot">&lt;-</span> <span class="fu">lm</span>(income_before_tax <span class="sc">~</span> income_after_tax, <span class="at">data =</span> SFS_data)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data =</span> SFS_data, <span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">as.numeric</span>(income_after_tax), <span class="at">y =</span> <span class="fu">as.numeric</span>(regression3<span class="sc">$</span>residuals))) <span class="sc">+</span> <span class="fu">geom_point</span>() <span class="sc">+</span> <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"After-tax income"</span>, <span class="at">y =</span> <span class="st">"Residuals"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>This obviously does not look like a distribution which is unchanging as market income changes. This is a good “eyeball test” for heteroskedasticty. Why does heteroskedasticity arise? For many reasons:</p>
+<ol type="1">
+<li><p>It can be a property of the data; it just happens that some values show more variation, due to the process which creates the data. One of the most common ways this can arise is where there are several different economic processes creating the data.</p></li>
+<li><p>It can be because of an unobserved variable. This is similar to above; if we can quantify that process in a variable or a description, we have left it out. This could create bias in our model, but it will also show up in the standard errors in this way.</p></li>
+<li><p>It can be because of your model specification. Models, by their very nature, can be heteroskedastic (or not); we will explore one important example later in this worksheet.</p></li>
+<li><p>There are many other reasons, which we won’t get into here.</p></li>
+</ol>
+<p>Whatever the reason it exists, you need to correct for it - if you don’t, while your coefficients will be OK, your standard errors will be incorrect. You can do this in a few ways. The first way is to try to change your variables that the “transformed” model (a) makes economic sense, and (b) no longer suffers from heteroskedasticity. For example, perhaps a <em>log-log</em> style model might work here:</p>
+<div class="cell" data-pycharm="{&quot;name&quot;:&quot;#%%\n&quot;}" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>SFS_data <span class="ot">&lt;-</span> SFS_data <span class="sc">%&gt;%</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>               <span class="fu">filter</span>(income_before_tax <span class="sc">&gt;</span> <span class="dv">0</span>) <span class="sc">%&gt;%</span> <span class="co">#getting rid of NAs</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>               <span class="fu">mutate</span>(<span class="at">lnincome_before_tax =</span> <span class="fu">log</span>(income_before_tax))</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>SFS_data <span class="ot">&lt;-</span> SFS_data <span class="sc">%&gt;%</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>               <span class="fu">filter</span>(income_after_tax <span class="sc">&gt;</span> <span class="dv">0</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>               <span class="fu">mutate</span>(<span class="at">lnincome_after_tax =</span> <span class="fu">log</span>(income_after_tax))</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>regression4 <span class="ot">&lt;-</span> <span class="fu">lm</span>(lnincome_before_tax <span class="sc">~</span> lnincome_after_tax, <span class="at">data =</span> SFS_data)</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data =</span> SFS_data, <span class="fu">aes</span>(<span class="at">x =</span> lnincome_before_tax, <span class="at">y =</span> regression4<span class="sc">$</span>residuals)) <span class="sc">+</span> <span class="fu">geom_point</span>() <span class="sc">+</span> <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Log of before-tax income"</span>, <span class="at">y =</span> <span class="st">"Residuals"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<blockquote class="blockquote">
+<p><em>Think Deeper</em>: Does the errors of this model seem homoskedastic?</p>
+</blockquote>
+<p>As you can see, that didn’t work out. This is pretty typical: when you transform a model by changing the variables, what you are really doing is adjusting how you think the data process should be described so that it’s no longer heteroskedastic. If you aren’t correct with this, you won’t fix the problem.</p>
+<p>For example, in a <em>log-log</em> model, we are saying “there’s a multiplicative relationship”… but that probably doesn’t make sense here. This is one of the reasons why data transformations are not usually a good way to fix this problem unless you have a very clear idea of what the transformation <em>should</em> be.</p>
+<p>The most robust (no pun intended) way is to simply use standard errors which are robust to heteroskedasticity. There are actually a number of different versions of these (which you don’t need to know about), but they are all called <strong>HC</strong> or <strong>hetereoskedasticity-corrected</strong> standard errors. In economics, we typically adopt White’s versions of these (called <strong>HC1</strong> in the literature); these are often referred to in economics papers as “robust” standard errors (for short).</p>
+<p>This is relatively easy to do in R. Basically, you run your model, as normal, and then re-test the coefficients to get the correct error using the <code>coeftest</code> command, but specifying which kind of errors you want to use. Here is an example:</p>
+<div class="cell" data-pycharm="{&quot;name&quot;:&quot;#%%\n&quot;}" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>regression5 <span class="ot">&lt;-</span> <span class="fu">lm</span>(income_before_tax <span class="sc">~</span> income_after_tax, <span class="at">data =</span> SFS_data)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(regression5)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="fu">coeftest</span>(regression5, <span class="at">vcov =</span> <span class="fu">vcovHC</span>(regression5, <span class="at">type =</span> <span class="st">"HC1"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>As you can see, the standard errors (and significance tests) give different results; in particular, the HC1 errors are almost 10-times larger than the uncorrected errors. In this particular model, it didn’t make much of a different to the conclusions (even though it changed the <span class="math inline">\(t\)</span> statistics a lot), but it can sometimes change your results.</p>
+<section id="testing-for-heteroskedasticity" class="level3">
+<h3 class="anchored" data-anchor-id="testing-for-heteroskedasticity">Testing for Heteroskedasticity</h3>
+<p>You can also perform some formal tests for heteroskedasticity. We learned about two of them in class:</p>
+<ol type="1">
+<li>White’s Test, which relies on performing a regression using the residuals</li>
+<li>Breusch-Pagan Test, which also relies on performing a simpler regression using the residuals</li>
+</ol>
+<p>Both of them are, conceptually, very similar. Let’s try (2) for the above regression:</p>
+<div class="cell" data-pycharm="{&quot;name&quot;:&quot;#%%\n&quot;}" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>regression2 <span class="ot">&lt;-</span> <span class="fu">lm</span>(income_before_tax <span class="sc">~</span> income_after_tax, <span class="at">data =</span> SFS_data) </span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>SFS_data<span class="sc">$</span>resid_sq <span class="ot">&lt;-</span> (regression2<span class="sc">$</span>residuals)<span class="sc">^</span><span class="dv">2</span> <span class="co">#get the residuals then square it</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>regression3 <span class="ot">&lt;-</span> <span class="fu">lm</span>(resid_sq <span class="sc">~</span> income_after_tax, <span class="at">data =</span> SFS_data) <span class="co">#make the residuals a function of X</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(regression3)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Inspecting the results, we can see from the <span class="math inline">\(F\)</span>-statistic that we can strongly reject the assumption of homoskedasticity. This is denoted by the 3 asterisks. This data looks like it’s heteroskedastic, because the residuals can be predicted using the explanatory variables.</p>
+<p>There is one very important note:</p>
+<ul>
+<li>If you <strong>fail</strong> one of these tests, it implies that your data is heteroskedastic</li>
+<li>If you <strong>pass</strong> one of these tests, it <em>does not</em> imply that your data is homoskedastic (i.e.&nbsp;not heteroskedastic)</li>
+</ul>
+<p>This is because these are statistical tests, and the null hypothesis is “not heteroskedastic”. Failing to reject the null does not mean that the null hypothesis is correct - it just means that you can’t rule it out. This is one of the reasons many economists recommend that you <em>always</em> use robust standard errors unless you have a really compelling reason to believe otherwise.</p>
+</section>
+<section id="linear-probability-models" class="level3">
+<h3 class="anchored" data-anchor-id="linear-probability-models">Linear Probability Models</h3>
+<p>How can a model naturally have heteroskedastic standard errors? It turns out that many common, and important, models have this issue. In particular, the <strong>linear probability</strong> model has this problem. If you recall, a linear probability model is a linear regression in which the dependent variable is a dummy. For example:</p>
+<p><span class="math display">\[D_i = \beta_0 + \beta_1 X_{1,i} + \beta_2 X_{2,i} + \epsilon_i\]</span></p>
+<p>These model are quite useful because the coefficients have the interpretation as being the change in the probability of the dummy condition occurring. For example, we previously regressed <code>gender</code> (of male or female) in these models to investigate the wealth gap. However, this can easily cause a problem when estimated using OLS - the value of <span class="math inline">\(D_i\)</span> must be 0 or 1, and the fitted values (which are probabilities) must be between 0 and 1.</p>
+<p>However, <em>nothing</em> in the OLS model forces this to be true. If you estimate a value for <span class="math inline">\(\beta_1\)</span>, if you have an <span class="math inline">\(X_{1,i}\)</span> that is high or low enough, the fitted values will be above or below 1 or 0 (respectively). This implies that <em>mechanically</em> you have heteroskedasticity because high or low values of the explanatory variables will ALWAYS fit worse than intermediate values. For example, let’s look at the fitted values from this regression:</p>
+<div class="cell" data-pycharm="{&quot;name&quot;:&quot;#%%\n&quot;}" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>SFS_data <span class="ot">&lt;-</span> SFS_data <span class="sc">%&gt;%</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">M_F =</span> <span class="fu">case_when</span>(</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>        gender <span class="sc">==</span> <span class="st">"Male"</span>  <span class="sc">~</span> <span class="dv">0</span>,</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>        gender <span class="sc">==</span> <span class="st">"Female"</span> <span class="sc">~</span> <span class="dv">1</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    ))</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>SFS_data <span class="ot">&lt;-</span> SFS_data[<span class="fu">complete.cases</span>(SFS_data<span class="sc">$</span>gender,SFS_data<span class="sc">$</span>income_before_tax), ]</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>SFS_data<span class="sc">$</span>gender <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(SFS_data<span class="sc">$</span>gender)</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>SFS_data<span class="sc">$</span>income_before_tax <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(SFS_data<span class="sc">$</span>income_before_tax)</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>regression6 <span class="ot">&lt;-</span> <span class="fu">lm</span>(gender <span class="sc">~</span> income_before_tax, <span class="at">data =</span> SFS_data)</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>SFS_data<span class="sc">$</span>fitted <span class="ot">&lt;-</span> <span class="fu">predict</span>(regression6, SFS_data)</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(regression6)</span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data =</span> SFS_data, <span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">as.numeric</span>(income_before_tax), <span class="at">y =</span> fitted)) <span class="sc">+</span> <span class="fu">geom_point</span>() <span class="sc">+</span> <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"before tax income"</span>, <span class="at">y =</span> <span class="st">"Predicted Probability"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Notice how that as <span class="math inline">\(y\)</span> gets larger as the fitted value drops. If someone has an income of over 1 million dollars, they would be predicted to have a negative probability of being a female - which is impossible.</p>
+<p>This is why you <em>always</em> must use robust standard errors in these models - even if a test says otherwise. Let’s think about what is happening here, well remember the example of imperfect collinearity, we’re the was <span class="math inline">\(1-k\)</span> chance of <span class="math inline">\(x\)</span> being 15 and k of <span class="math inline">\(x\)</span> being 20. Now remember x was co-linear to <span class="math inline">\(\beta_0\)</span>, and this caused large standard errors. In this scenario the probability of a someone being female given they earn over a million dollars a year is very small. This because few female lead has household earn over a million dollars a year as a percent of the total households earning over a million dollars a year.</p>
+</section>
+</section>
+<section id="part-3-exercises" class="level2">
+<h2 class="anchored" data-anchor-id="part-3-exercises">Part 3: Exercises</h2>
+<p>In these exercises, you will get some hands-on experience with testing and correcting for heteroskedasticity and multicollinearity. You will also start to think about the mechanics and uses of non-linear regressions.</p>
+<section id="activity-1" class="level3">
+<h3 class="anchored" data-anchor-id="activity-1">Activity 1</h3>
+<p>Multicollinearity may seem to be an abstract concept, so let’s explore this issue with a practical example.</p>
+<p>Suppose that we are looking to explore the relationship between a families income the gender of the major earner. For instance, we want to know whether families with higher incomes in Canada are more likely to be male. Recall that we have two measures of income: <code>income_before_tax</code> and <code>income_after_tax</code>. Both measures of income are informative: <code>income_before_tax</code> refers to gross annual income (before taxes) that employers pay to employees; <code>income_after_tax</code> refers to net income after taxes have been deducted.</p>
+<p>Since they are both good measures of income, we decide to put them both in our regression:</p>
+<p><span class="math display">\[M_F = \beta_0 + \beta_1 I_{bi} + \beta_2 I_{ai} + \epsilon_i\]</span></p>
+<p><span class="math inline">\(M_F\)</span> denotes the dummy variable for whether the person is male or female, <span class="math inline">\(I_{ai}\)</span> denotes income after taxes, and <span class="math inline">\(I_{bi}\)</span> denotes income before taxes.</p>
+</section>
+<section id="short-answer-1" class="level3">
+<h3 class="anchored" data-anchor-id="short-answer-1">Short Answer 1</h3>
+<p><em>Prompt:</em> What concern should we have about this regression equation? Explain your intuition.</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>answer_1 <span class="ot">&lt;-</span> <span class="co">#fill in your short answer</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="answer">
+<p>Answer: These two variables, being before tax and after tax income, may be close to co-linear, which will increase the error terms.This could even lead to r omitting one of the variables from the regression.</p>
+</div>
+<p>Before we continue, let’s reduce the sample size of our data set to 200 observations. We will also revert <code>gender</code> into a numeric variable:</p>
+<div class="cell" data-pycharm="{&quot;name&quot;:&quot;#%%\n&quot;}" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Run this!</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>SFS_data200 <span class="ot">&lt;-</span> <span class="fu">head</span>(SFS_data, <span class="dv">200</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">M_F =</span> <span class="fu">as.numeric</span>(gender)) <span class="co">#everyone in the first 200 observations as, male or female</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="activity-2" class="level3">
+<h3 class="anchored" data-anchor-id="activity-2">Activity 2</h3>
+<p>Run the regression described above.</p>
+<p><em>Tested Objects:</em> <code>reg1</code>.</p>
+<div class="cell" data-tags="question" data-pycharm="{&quot;name&quot;:&quot;#%%\n&quot;}" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Quiz 1</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>reg1 <span class="ot">&lt;-</span> <span class="fu">lm</span>(???, <span class="at">data =</span> SFS_data200) <span class="co">#fill me in</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(reg1)</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="fu">test_1</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="answer">
+<div class="cell" data-tags="answer">
+
+</div>
+</div>
+</section>
+<section id="short-answer-2" class="level3">
+<h3 class="anchored" data-anchor-id="short-answer-2">Short Answer 2</h3>
+<p><em>Prompt:</em> What do you notice about the characteristics of the estimated regression? Does anything point to your concern being valid?</p>
+<p><font color="red">Answer here in red</font></p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>answer_2 <span class="ot">&lt;-</span> <span class="co">#fill in your short answer</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="answer">
+<p>Answer: The main concern is that there is not alot of data here only 200 observations.Also income before and after taxes are collinear in this dataset, we can see this since income after tax was omitted.</p>
+</div>
+<p>Now, let’s suppose we drop 50 more observations:</p>
+<div class="cell" data-pycharm="{&quot;name&quot;:&quot;#%%\n&quot;}" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Run this!</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>SFS_data150 <span class="ot">&lt;-</span> <span class="fu">head</span>(SFS_data200, <span class="dv">150</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Run the regression model again and compare it with the previous regression.</p>
+<p><em>Tested Objects:</em> <code>reg2</code>.</p>
+<div class="cell" data-tags="question" data-pycharm="{&quot;name&quot;:&quot;#%%\n&quot;}" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Quiz 2</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>reg2 <span class="ot">&lt;-</span> <span class="fu">lm</span>(???) <span class="co"># fill me in</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(reg2)</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a><span class="fu">test_2</span>() </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="answer">
+<div class="cell" data-tags="answer">
+
+</div>
+</div>
+</section>
+<section id="short-answer-3" class="level3">
+<h3 class="anchored" data-anchor-id="short-answer-3">Short Answer 3</h3>
+<p><em>Prompt:</em> What happened to the regression estimates when we dropped 50 observations? Does this point to your concern being valid?</p>
+<p><font color="red">Answer here in red</font></p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>answer_3 <span class="ot">&lt;-</span> <span class="co">#fill in your short answer</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="answer">
+<p>Answer: Well, we can’t say much for the co-linearity problem. But you can see that the standard errors have increased, which supports the idea that we are not using enough data.</p>
+</div>
+<p>Next, increase the sample size back to its full size and run the regression once again.</p>
+<p><em>Tested Objects:</em> <code>reg3</code></p>
+<div class="cell" data-tags="question" data-pycharm="{&quot;name&quot;:&quot;#%%\n&quot;}" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Quiz 3</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>SFS_data <span class="ot">&lt;-</span> SFS_data[<span class="fu">complete.cases</span>(SFS_data<span class="sc">$</span>income_after_tax), ] <span class="co">#do not modify this code</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>SFS_data<span class="sc">$</span>income_after_tax <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(SFS_data<span class="sc">$</span>income_after_tax) <span class="co">#do not modify this code</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>reg3 <span class="ot">&lt;-</span> <span class="fu">lm</span>(???) <span class="co">#fill me in</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(reg3)</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="fu">test_3</span>() </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="answer">
+<div class="cell" data-tags="answer">
+
+</div>
+</div>
+</section>
+<section id="short-answer-5" class="level3">
+<h3 class="anchored" data-anchor-id="short-answer-5">Short Answer 5</h3>
+<p><em>Prompt:</em> Did this change eliminate the concern? How do you know?</p>
+<p><font color="red">Answer here in red </font></p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>answer_5 <span class="ot">&lt;-</span> <span class="co">#fill in your short answer</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="answer">
+<p>Answer: The main concern was that after tax income is co-linear with before tax income. Now it’s included in the regression. This is because as when we look across many observations before income tax stops being a linear function of after income tax, since tax is a step function ( if you don’t know what that means, I am just saying that taxation is done in brackets).Now we could run some tests and see how co-linear, after-tax-income and before-tax-income, but a more important question is: in-terms of economics what does after-tax-income add to the model ? If female lead households tend to pay a different tax rate than male lead households (once we control for after tax income), this adds something to the model, but this seem rather absurd. Thus it makes sense to just leave after tax income out of the model. If we did believe that supposition than we would leave out before tax income.</p>
+</div>
+<p>Heteroskedasticity is another issue that researchers frequently deal with when they estimate regression models. Consider the following regression model:</p>
+<p><span class="math display">\[I_i = \alpha_0 + \alpha_1 E_i + \alpha_2 G_i  + \epsilon_i\]</span></p>
+<p><span class="math inline">\(I_i\)</span> denotes before tax income, <span class="math inline">\(E_i\)</span> is level of education, <span class="math inline">\(D_i\)</span> is a dummy variable for being female.</p>
+</section>
+<section id="short-answer-6" class="level3">
+<h3 class="anchored" data-anchor-id="short-answer-6">Short Answer 6</h3>
+<p><em>Prompt:</em> Should we be concerned about heteroskedasticity in this model? If so, what is the potential source of heteroskedasticity, and what do we suspect to be the relationship between the regressor and the error term?</p>
+<p><font color="red">Answer here in red</font></p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>answer_6 <span class="ot">&lt;-</span> <span class="co">#fill in your short answer</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="answer">
+<p>Answer: The distribution of residuals will likely change relative to education. This because the higher the level of education the more additional factors will be required to predict the persons income. For instance, if someone has a 4 year degree what that degree is in will have a large impact on their income; however, every high school diploma is effectively the same.</p>
+</div>
+</section>
+<section id="short-answer-7" class="level3">
+<h3 class="anchored" data-anchor-id="short-answer-7">Short Answer 7</h3>
+<p><em>Prompt:</em> If we suppose that heteroskedasticity is a problem in this regression, what consequences will this have for our regression estimates?</p>
+<p><font color="red">Answer here in red </font></p>
+<p>#short answer template</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>answer_7 <span class="ot">&lt;-</span> <span class="co">#fill in your short answer</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="answer">
+<p>Answer: If we do not use robust standard errors, the standards errors will be understated.</p>
+</div>
+<p>Run the regression below, and graph the residuals against the level of schooling.</p>
+<p><em>Tested Objects:</em> <code>reg5</code>. The graph will be graded manually.</p>
+<div class="cell" data-pycharm="{&quot;name&quot;:&quot;#%%\n&quot;}" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Run the regression</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>reg5 <span class="ot">&lt;-</span> <span class="fu">lm</span>(income_before_tax <span class="sc">~</span> education, <span class="at">data =</span> SFS_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="question" data-pycharm="{&quot;name&quot;:&quot;#%%\n&quot;}" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Quiz 5</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>resiplot <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(reg5, <span class="fu">aes</span>(<span class="at">x =</span> ???, <span class="at">y =</span> .resid)) <span class="sc">+</span> <span class="fu">xlab</span>(<span class="st">"Education Level"</span>) <span class="sc">+</span> <span class="fu">ylab</span>(<span class="st">"Income (Residuals)"</span>)</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>resiplot <span class="sc">+</span> <span class="fu">geom_point</span>() <span class="sc">+</span> <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">0</span>) <span class="sc">+</span> <span class="fu">scale_x_discrete</span>(<span class="at">guide =</span> <span class="fu">guide_axis</span>(<span class="at">n.dodge=</span><span class="dv">3</span>))</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> ???</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="answer">
+<div class="cell" data-tags="answer">
+
+</div>
+</div>
+</section>
+<section id="short-answer-8" class="level3">
+<h3 class="anchored" data-anchor-id="short-answer-8">Short Answer 8</h3>
+<p><em>Prompt:</em> Describe the relationship between education level and the residuals in the graph above. What does the graph tell us about the presence and nature of heteroskedasticity in the regression model?</p>
+<p><font color="red">Answer here in red: </font></p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>answer_8 <span class="ot">&lt;-</span> <span class="co">#fill in your short answer</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="answer">
+<p>Answer: We can see that the residuals are increasing as the level of education increases, this supports heterskedasticity, as the distribution of errors is clearly not constant.</p>
+</div>
+<p>To test for heteroskedasticity formally, let’s perform the White Test. First, store the residuals from the previous regression in <code>SFS_data</code>.</p>
+<p><em> Tested Objects: <code>SFS_data</code> (checks to see that residuals were added properly).</em></p><em>
+<div class="cell" data-tags="question" data-pycharm="{&quot;name&quot;:&quot;#%%\n&quot;}" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Quiz 6</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>SFS_data <span class="ot">&lt;-</span> <span class="fu">mutate</span>(SFS_data, <span class="at">resid =</span> ???)</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(SFS_data<span class="sc">$</span>resid, <span class="dv">10</span>) <span class="co">#Displays the residuals in the dataframe</span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a><span class="fu">test_6</span>() </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="answer">
+<div class="cell" data-tags="answer">
+
+</div>
+</div>
+<p>Next, generate a variable for the squared residuals, then run the required auxiliary regression.</p>
+<p><em>Tested Objects:</em> <code>WT</code> (the auxiliary regression).</p>
+<div class="cell" data-pycharm="{&quot;name&quot;:&quot;#%%\n&quot;}" data-scrolled="true" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Quiz 7</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>model<span class="ot">=</span><span class="fu">lm</span>(income_before_tax<span class="sc">~</span>gender<span class="sc">^</span><span class="dv">2</span> <span class="sc">+</span> gender <span class="sc">+</span> education<span class="sc">^</span><span class="dv">2</span> <span class="sc">+</span>education<span class="sc">+</span> education<span class="sc">*</span>gender, <span class="at">data =</span> SFS_data) <span class="co"># fill me in</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>resid <span class="ot">=</span> reg5<span class="sc">$</span>residuals</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>rsq<span class="ot">=</span>(resid)<span class="sc">^</span><span class="dv">2</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="question" data-pycharm="{&quot;name&quot;:&quot;#%%\n&quot;}" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>SFS_data<span class="sc">$</span>rsq<span class="ot">=</span>rsq</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>WT <span class="ot">&lt;-</span> <span class="fu">lm</span>(rsq<span class="sc">~</span> ???, <span class="at">data =</span>SFS_data) <span class="co"># fill me in</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(WT)</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a><span class="fu">test_7</span>() </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="answer">
+<div class="cell" data-tags="answer">
+
+</div>
+</div>
+</em></section><em>
+<section id="short-answer-9" class="level3">
+<h3 class="anchored" data-anchor-id="short-answer-9">Short Answer 9</h3>
+<p><em>Prompt:</em> What does the white test suggest?</p>
+</section>
+<section id="activity-3" class="level3">
+<h3 class="anchored" data-anchor-id="activity-3">Activity 3</h3>
+<p>Finish filling in this table:</p>
+<table class="table">
+<colgroup>
+<col style="width: 6%">
+<col style="width: 27%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 24%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Formal Issue Name</th>
+<th>Problem</th>
+<th>Meaning</th>
+<th>Test</th>
+<th>Solution</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>???</td>
+<td>Incorrect Standard errors, which can lead to incorrect confidence intervals etc</td>
+<td>The distribution of residuals is not constant</td>
+<td>White’s Test and Breusch-Pagan: <code>bptest()</code></td>
+<td>Add additional factors to regression or use robust standard errors</td>
+</tr>
+<tr class="even">
+<td>Perfect Collinearity</td>
+<td>???</td>
+<td>One variable in the regression is a linear function of another variable in the regression</td>
+<td>Collinearity test on the model, <code>ols_vif_tol(model)</code></td>
+<td>???</td>
+</tr>
+<tr class="odd">
+<td>Imperfect Collinearity</td>
+<td>The model will have very large standard errors. R may need to omit a variable</td>
+<td>One variable can almost be fully predicted with a linear function of another variable in the model</td>
+<td>???</td>
+<td>Omit one of the collinear variables, try using more data, or consider transformations (e.g., logarithms)</td>
+</tr>
+</tbody>
+</table>
+<p><span id="fn1"><a href="#fn1s"><sup>1</sup></a>Provided under the Statistics Canada Open License. Adapted from Statistics Canada, Statistics Canada Open License (Public) Adapted from Statistics Canada, 2021 Census Public Use Microdata File (PUMF). This does not constitute an endorsement by Statistics Canada of this product.</span></p>
+
+
+</section>
+</em></section><em>
+
+</em></main><em> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, function() {
+      let href = xref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children.length > 2) {
+          for (let i = 0; i < 2; i++) {
+            container.appendChild(note.children[i].cloneNode(true));
+          }
+          return container.innerHTML
+        } else {
+          return note.innerHTML;
+        }
+      } else {
+        return note.innerHTML;
+      }
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+          // target, if specified
+          link.setAttribute("target", "_blank");
+      }
+    }
+});
+</script>
+<nav class="page-navigation column-body">
+  <div class="nav-page nav-page-previous">
+      <a href="../../../docs/econ_326/multiple_regression/multiple_regression1.html" class="pagination-link">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Multiple Regression</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../../../docs/econ_326/interactions/interactions.html" class="pagination-link">
+        <span class="nav-page-text">Interactions</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</em></div><em> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item">
+ <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/80x15.png"></a>.  <a rel="license" href="https://comet.arts.ubc.ca/pages/copyright.html">See details.</a>
+  </li>  
+</ul>
+    </div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item">
+ The COMET Project and the UBC Vancouver School of Economics are located on the traditional, ancestral and unceded territory of the xʷməθkʷəy̓əm (Musqueam) and Sḵwx̱wú7mesh (Squamish) peoples.
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+</em></body></html>

@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-GB" xml:lang="en-GB"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.36">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="COMET Team   Colin Grimes, Valeria Zolla, Rathin Dharani, Jonathan Graves">
+<meta name="dcterms.date" content="2023-01-12">
+<meta name="keywords" content="economics, econometrics, R, data, machine learning, UBC, COMET, geog 374, econ 325, econ 326, learning, teaching, learn r, r help, help, tutorial, r tutorial for beginners,learning statistics with r, learn r programming, learn statistics, linear regression, r machine learning, learn machine learning, university of british columbia, british columbia, r programming for beginners, r language tutorial, r tutorial for beginners, economic data, econometrics tutoring, economics help for students, economics homework help, oer resources for teachers, open educational resources for teachers, educational resource, oer project, oer materials, oer resources, learn economics online, learn econometrics, teach yourself economics, teach yourself econometrics, econometrics basics for beginners">
+<meta name="description" content="What is a sampling distribution? This notebook tackles, using a simulation-based approach, the most complex idea in this course. It is code-heavy, but most of it is in the service of running a simulation, so don’t worry!">
+
+<title>COMET - 10 - ECON 325: Sampling Distributions</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<link href="../../../docs/econ_325/03_confidence_intervals/confidence_intervals.html" rel="next">
+<link href="../../../docs/econ_325/02_dispersion_and_dependence/dispersion_and_dependence.html" rel="prev">
+<link href="../../../media/comet_favicon.png" rel="icon" type="image/png">
+<script src="../../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<link rel="stylesheet" href="../../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a href="../../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../../media/logo_no_tiny_text.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">COMET</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../index.html" rel="" target=""><i class="bi bi-house-door" role="img">
+</i> 
+ <span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-get-started" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Get Started</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-get-started">    
+        <li>
+    <a class="dropdown-item" href="../../../pages/quickstart.html" rel="" target="">
+ <span class="dropdown-text">Quickstart Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../pages/installing_locally.html" rel="" target="">
+ <span class="dropdown-text">Install and Use COMET</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/intro_jupyter/intro_to_jupyter.html" rel="" target="">
+ <span class="dropdown-text">Learn about Jupyter</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/intro_r/introduction_to_R.html" rel="" target="">
+ <span class="dropdown-text">Learn about R</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/econ_prep/Introduction to Statistical Concepts.html" rel="" target="">
+ <span class="dropdown-text">Review High School Statistics</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-basics" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Basics</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-basics">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/index_intro.html" rel="" target="">
+ <span class="dropdown-text">Preliminary Material</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_325/index_325.html" rel="" target="">
+ <span class="dropdown-text">Introduction to Econometrics (ECON 325)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/econ_prep/Introduction to Statistical Concepts.html" rel="" target="">
+ <span class="dropdown-text">Review of Statistics</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-fundamentals" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Fundamentals</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-fundamentals">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_326/index_326.html" rel="" target="">
+ <span class="dropdown-text">Introduction to Empirical Models (ECON 326)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/geog_374/index_374.html" rel="" target="">
+ <span class="dropdown-text">Geographic Computation (GEOG 374)</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-projects" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Projects</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-projects">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_490/index_490.html" rel="" target="">
+ <span class="dropdown-text">Overview of ECON 490</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_490/index_490_r.html" rel="" target="">
+ <span class="dropdown-text">R Modules</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_490/index_490_stata.html" rel="" target="">
+ <span class="dropdown-text">STATA Modules</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-advanced" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Advanced</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-advanced">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_adv/index_adv.html" rel="" target="">
+ <span class="dropdown-text">Advanced Topics</span></a>
+  </li>  
+    </ul>
+  </li>
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-launch-comet" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+      <i class="bi bi-play" role="img">
+</i> 
+ <span class="menu-text">Launch COMET</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-launch-comet">    
+        <li>
+    <a class="dropdown-item" href="https://open.jupyter.ubc.ca/jupyter/hub/user-redirect/git-pull?repo=https%3A%2F%2Fgithub.com%2Fubcecon%2Fcomet-project&amp;urlpath=lab%2Ftree%2Fcomet-project%2F&amp;branch=main" rel="" target=""><i class="bi bi-cloud-check" role="img">
+</i> 
+ <span class="dropdown-text">Launch on JupyterOpen</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://ubc.syzygy.ca/jupyter/hub/user-redirect/git-pull?repo=https%3A%2F%2Fgithub.com%2Fubcecon%2Fcomet-project&amp;urlpath=lab%2Ftree%2Fcomet-project%2F&amp;branch=main" rel="" target=""><i class="bi bi-gear" role="img">
+</i> 
+ <span class="dropdown-text">Launch on Syzygy</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://colab.research.google.com/github/ubcecon/comet-project/blob/main/" rel="" target=""><i class="bi bi-google" role="img">
+</i> 
+ <span class="dropdown-text">Launch on Collab</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://github.com/ubcecon/comet-project/archive/refs/heads/main.zip" rel="" target=""><i class="bi bi-cloud-download" role="img">
+</i> 
+ <span class="dropdown-text">Launch Locally</span></a>
+  </li>  
+        <li><hr class="dropdown-divider"></li>
+        <li>
+    <a class="dropdown-item" href="https://github.com/ubcecon/comet-project/archive/refs/heads/data-only.zip" rel="" target=""><i class="bi bi-clipboard-data" role="img">
+</i> 
+ <span class="dropdown-text">Project Datasets</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="../../../#" rel="" target="">
+ <span class="menu-text">|</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-about" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">About</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-about">    
+        <li>
+    <a class="dropdown-item" href="../../../pages/team.html" rel="" target="">
+ <span class="dropdown-text">COMET Team</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../pages/using_comet.html" rel="" target="">
+ <span class="dropdown-text">Teach With COMET</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../pages/copyright.html" rel="" target="">
+ <span class="dropdown-text">Copyright Information</span></a>
+  </li>  
+    </ul>
+  </li>
+</ul>
+            <div class="quarto-navbar-tools">
+</div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../docs/econ_325/index_325.html">Introduction to Econometrics</a></li><li class="breadcrumb-item"><a href="../../../docs/econ_325/10_sampling_distributions/Sampling_distributions.html">6 - Sampling Distributions</a></li></ol></nav>
+      <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+      </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation docked overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_intro/index_intro.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true">
+ <span class="menu-text">Preliminary Material</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_intro/intro_r/introduction_to_R.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">0 - Intro to R</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_intro/intro_to_data/intro_to_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1 - Intro to Data (Part 1)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_intro/intro_to_data/intro_to_data2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2 - Intro to Data (Part 2)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_intro/econ_prep/Introduction to Statistical Concepts.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3 - Review of Basic Statistics</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="px-0"><hr class="sidebar-divider hi "></li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true">
+ <span class="menu-text">Introduction to Econometrics</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/index_325.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">0 - Overview of ECON 325</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/08_distribution/distribution.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1 - Distribution</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/06_visualization_1/intro_to_visualization1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2 - Visualization I</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/07_visualization_2/intro_to_visualization2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3 - Visualization II</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/01_central_tendency/central_tendency.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4 - Central Tendency</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/02_dispersion_and_dependence/dispersion_and_dependence.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">5 - Dispersion and Dependence</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/10_sampling_distributions/Sampling_distributions.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">6 - Sampling Distributions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/03_confidence_intervals/confidence_intervals.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">7 - Confidence Intervals</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/04_hypothesis_testing/hypothesis_testing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">8 - Hypothesis Testing</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/09_regression/simple_regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">9 - Simple Regression</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#outline" id="toc-outline" class="nav-link active" data-scroll-target="#outline">Outline</a>
+  <ul class="collapse">
+  <li><a href="#prerequisites" id="toc-prerequisites" class="nav-link" data-scroll-target="#prerequisites">Prerequisites</a></li>
+  <li><a href="#learning-objectives" id="toc-learning-objectives" class="nav-link" data-scroll-target="#learning-objectives">Learning Objectives</a></li>
+  </ul></li>
+  <li><a href="#introduction-to-statistical-inference" id="toc-introduction-to-statistical-inference" class="nav-link" data-scroll-target="#introduction-to-statistical-inference">Introduction to Statistical Inference</a>
+  <ul class="collapse">
+  <li><a href="#simple-random-samples" id="toc-simple-random-samples" class="nav-link" data-scroll-target="#simple-random-samples">Simple Random Samples</a></li>
+  <li><a href="#simulating-data" id="toc-simulating-data" class="nav-link" data-scroll-target="#simulating-data">Simulating Data</a></li>
+  <li><a href="#example-1-simulating-a-distribution" id="toc-example-1-simulating-a-distribution" class="nav-link" data-scroll-target="#example-1-simulating-a-distribution">Example 1: Simulating a Distribution</a>
+  <ul class="collapse">
+  <li><a href="#exercise-1-simple-random-samples" id="toc-exercise-1-simple-random-samples" class="nav-link" data-scroll-target="#exercise-1-simple-random-samples">Exercise 1: Simple random samples</a></li>
+  </ul></li>
+  <li><a href="#repeated-random-samples-and-sampling-distributions" id="toc-repeated-random-samples-and-sampling-distributions" class="nav-link" data-scroll-target="#repeated-random-samples-and-sampling-distributions">Repeated Random Samples and Sampling Distributions</a>
+  <ul class="collapse">
+  <li><a href="#scenario-1-population-is-normally-distributed" id="toc-scenario-1-population-is-normally-distributed" class="nav-link" data-scroll-target="#scenario-1-population-is-normally-distributed">Scenario 1: Population is normally distributed</a></li>
+  <li><a href="#exercise-2-taking-random-samples" id="toc-exercise-2-taking-random-samples" class="nav-link" data-scroll-target="#exercise-2-taking-random-samples">Exercise 2: Taking Random Samples</a></li>
+  <li><a href="#scenario-2-population-is-not-normally-distributed" id="toc-scenario-2-population-is-not-normally-distributed" class="nav-link" data-scroll-target="#scenario-2-population-is-not-normally-distributed">Scenario 2: Population is not normally distributed</a></li>
+  <li><a href="#exercise-3-taking-samples-and-visualizing-the-sampling-distribution" id="toc-exercise-3-taking-samples-and-visualizing-the-sampling-distribution" class="nav-link" data-scroll-target="#exercise-3-taking-samples-and-visualizing-the-sampling-distribution">Exercise 3: Taking Samples and Visualizing the Sampling Distribution</a></li>
+  <li><a href="#exercise-4-understanding-standard-error" id="toc-exercise-4-understanding-standard-error" class="nav-link" data-scroll-target="#exercise-4-understanding-standard-error">Exercise 4: Understanding Standard Error</a></li>
+  </ul></li>
+  <li><a href="#quick-review" id="toc-quick-review" class="nav-link" data-scroll-target="#quick-review">Quick Review</a></li>
+  <li><a href="#central-limit-theorem-clt-and-the-law-of-large-numbers-lln" id="toc-central-limit-theorem-clt-and-the-law-of-large-numbers-lln" class="nav-link" data-scroll-target="#central-limit-theorem-clt-and-the-law-of-large-numbers-lln">Central Limit Theorem (CLT) and the Law of Large Numbers (LLN)</a>
+  <ul class="collapse">
+  <li><a href="#interactive-exercise-demonstrating-clt" id="toc-interactive-exercise-demonstrating-clt" class="nav-link" data-scroll-target="#interactive-exercise-demonstrating-clt">INTERACTIVE EXERCISE DEMONSTRATING CLT</a></li>
+  </ul></li>
+  <li><a href="#bootstrapping" id="toc-bootstrapping" class="nav-link" data-scroll-target="#bootstrapping">Bootstrapping</a>
+  <ul class="collapse">
+  <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example">Example</a></li>
+  <li><a href="#exercise-5-taking-bootstrap-samples" id="toc-exercise-5-taking-bootstrap-samples" class="nav-link" data-scroll-target="#exercise-5-taking-bootstrap-samples">Exercise 5: Taking Bootstrap Samples</a></li>
+  </ul></li>
+  </ul></li>
+  </ul>
+<div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/ubcecon/comet-project/issues/new" class="toc-action">Report an issue</a></p></div></div><div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="Sampling_distributions.ipynb" download="Sampling_distributions.ipynb"><i class="bi bi-journal-code"></i>Jupyter</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content column-body" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">10 - ECON 325: Sampling Distributions</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">econ 325</div>
+    <div class="quarto-category">sampling distributions</div>
+    <div class="quarto-category">large-sample</div>
+    <div class="quarto-category">asymptotics</div>
+    <div class="quarto-category">distributions</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    What is a sampling distribution? This notebook tackles, using a simulation-based approach, the most complex idea in this course. It is code-heavy, but most of it is in the service of running a simulation, so don’t worry!
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>COMET Team <br> <em>Colin Grimes, Valeria Zolla, Rathin Dharani, Jonathan Graves</em> </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">12 January 2023</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+</header>
+
+<section id="outline" class="level2">
+<h2 class="anchored" data-anchor-id="outline">Outline</h2>
+<section id="prerequisites" class="level3">
+<h3 class="anchored" data-anchor-id="prerequisites">Prerequisites</h3>
+<ul>
+<li>Introduction to Jupyter</li>
+<li>Introduction to R</li>
+<li>Introduction to Visualization</li>
+<li>Introduction to Central Tendency</li>
+<li>Introduction to Distribution</li>
+<li>Dispersion and Dependence</li>
+</ul>
+</section>
+<section id="learning-objectives" class="level3">
+<h3 class="anchored" data-anchor-id="learning-objectives">Learning Objectives</h3>
+<ul>
+<li>Define a simple random sample and why it is useful in econometrics</li>
+<li>Use a simple random sample to infer population parameters</li>
+<li>Produce a sampling distribution through repeated random sampling</li>
+<li>Understand how sampling distributions relate to the Law of Large Numbers and the Central Limit Theorem</li>
+</ul>
+</section>
+</section>
+<section id="introduction-to-statistical-inference" class="level1">
+<h1>Introduction to Statistical Inference</h1>
+<p>It’s important to begin with the fundamental problem of statistical inference. Let’s start with a <strong>population</strong>, which is commonly defined as the complete collection of all individuals or entities we are studying. From here, we want to determine a particular characteristic of the population, the <strong>population parameter</strong>. For example, if we want to determine the average height of a Canadian resident, our population would be every Canadian resident and our population parameter would be average height. Imagine how easy life would be for economists if we had access to any population parameter we desired. If we had perfect data from our population, we would be able to determine the average returns to education, the impact of stimulus checks for every resident, and so much more with absolute certainty all by surveying every member of the population.</p>
+<p>Unfortunately collecting data from the entire population is often too expensive and impractical. A more realistic way to find what we’re looking is to survey a <strong>sample</strong>, a subset of individuals or entities from the population. Through this sample, we can gather a <strong>sample estimate</strong>, an estimate of the population parameter from our sample. From our example, it would be much more practical to survey a 1000 people in Canada and calculate their average height. Evidently, this won’t exactly the match the true average height of a Canadian resident, because we haven’t based our calculation off every Canadian resident, but it’s probably a good estimate. But how do we know we picked a representative sample of the Canadian population?</p>
+<section id="simple-random-samples" class="level2">
+<h2 class="anchored" data-anchor-id="simple-random-samples">Simple Random Samples</h2>
+<p>A <strong>simple random sample</strong> is a subset of a population, in which each member of the population has an equal chance of being selected for the sample. It’s important that this condition is met when selecting a sample. Imagine if we try to determine the average height of the Canadian population by only sampling professional athletes. We wouldn’t get a very good estimate of our population parameter. Simple random samples allow us to create sample parameters, which are <strong>unbiased estimators</strong> of the population parameter.</p>
+<p>There are two statistical approaches:</p>
+<ol type="1">
+<li><p>We could conduct a census. To do this, we would need to measure the height of all 38 million people living in Canada. This technique produces little error, but comes at a very high cost. Moreover, we may not actually be able to collect all of this data - what if we miss someone?</p></li>
+<li><p>We could take a <strong>simple random sample</strong> of the Canadian population, in which all 38 million Canadians have an equal probability of being chosen. This would allow us to make <strong>statistical inferences</strong> on the population mean, without the cost of conducting a census.</p></li>
+</ol>
+<blockquote class="blockquote">
+<p><strong>Note</strong>: It’s important to keep in mind that there are other types of sampling in economics. Simple random sampling is just a good starting point for our discussion! In econometrics, it is crucial that we try to get as close as possible to an unbiased estimator through a random sample. Imagine if we are trying to determine the gender pay gap in British Columbia and we only take a sample from those living in downtown Vancouver or we only took a sample from those working in blue collar jobs. That wouldn’t give us very accurate results. You will learn more about this in ECON 326.</p>
+</blockquote>
+</section>
+<section id="simulating-data" class="level2">
+<h2 class="anchored" data-anchor-id="simulating-data">Simulating Data</h2>
+<p>It will be helpful in this notebook to work with <strong>simulated data</strong>. We can simulate data by drawing from some well known distributions such as normal and uniform. Before we begin simulating data to work with, we need to be familar the concept of a <strong>random number seed</strong>. Setting a random number seed allows us to reproduce results drawn from a distribution of a random variable.</p>
+<p>In R and all programming languages, random numbers are not truly random, they are known as <strong>pseudo-random numbers</strong>. R uses a random number generator that produces a sequence of numbers that are completely determined by a seed value - they are effectively random, but also reproducible. Once you set the seed value using the <code>set.seed</code> function, everything after that point may look random, but is actually totally reproducible. For example, if you were to pick a random sample out of a 100,000 data points, every time we ran the code we would get a different random sample. You would never be able to check the work of your classmates or ever attain the same results again. By using the same seed before conducting our analyses, we are able to reproduce the results we attained earlier.</p>
+<p>See <a href="https://datasciencebook.ca/classification2.html#randomseeds">this reference</a> for more information on how the <code>set.seed()</code> function achieves reproducible randomness in R.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"sampling_tests.r"</span>) <span class="co"># load some background tests</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(infer)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">#install.packages("gridExtra") #uncomment these to run the section</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">#library(gridExtra)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>seed_number <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="co"># my seed number</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(seed_number) <span class="co"># set the random number seed to reproduce results</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>In the following, you can try changing the seed number and seeing how some of the results are different. Remember that the default seed we used was <code>seed_number &lt;- 1</code>.</p>
+</section>
+<section id="example-1-simulating-a-distribution" class="level2">
+<h2 class="anchored" data-anchor-id="example-1-simulating-a-distribution">Example 1: Simulating a Distribution</h2>
+<p>Let’s now imagine that we want to create a hypothetical population with a variable called <code>x</code> of size 10,000, distributed normally with mean 0 and standard deviation 1. Just to give an example, we can imagine <code>x</code> to represent “household indebtedness.” In our example, this variable is normally distributed, meaning that most households have close to no debt, but few households have an extreme amount of debt and few others have large investments with consistent cash flow (negative debt). Below, we will create an data frame <code>population</code>, using the <code>rnorm</code> function.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="dv">10000</span>, <span class="dv">0</span>, <span class="dv">1</span>)  <span class="co"># Draw 10,000 observations from the random normal distribution with mean 0, and variance 1.</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>population <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(x) <span class="co">#store it in a data frame</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Let’s ensure that our function has worked as expected. We should have a population mean of 0, and standard deviation of 1. Additionally, we will visualize our distribution using a histogram, otherwise known as a <strong>population distribution</strong>. In this example, our population distribution should be normally distributed, centered around 0. We will visually depict the mean as a blue line on the histogram.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>table <span class="ot">&lt;-</span> population <span class="sc">%&gt;%</span> </span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>        <span class="fu">summarize</span>(<span class="at">mean =</span> <span class="fu">mean</span>(x), <span class="at">sd =</span> <span class="fu">sd</span>(x)) <span class="sc">%&gt;%</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>        <span class="fu">round</span>(<span class="at">digits =</span> <span class="dv">2</span>) <span class="co">#two decimal places</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>table </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>pop_dist <span class="ot">&lt;-</span> population <span class="sc">%&gt;%</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>            <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> x)) <span class="sc">+</span>  </span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>            <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">50</span>, <span class="at">color =</span> <span class="st">"black"</span>, <span class="at">fill =</span> <span class="st">"gray"</span>) <span class="sc">+</span>  </span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>            <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="fu">mean</span>(population<span class="sc">$</span>x), <span class="at">colour=</span><span class="st">"blue"</span>, <span class="at">linetype =</span> <span class="st">"solid"</span>, <span class="at">lwd =</span> <span class="dv">1</span>)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>pop_dist</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Now suppose we would like to estimate the population mean above, however, we do not have the time nor money to conduct a census of the population. Additionally, we <strong>are</strong> able to randomly sample everyone in the population with equal probability.</p>
+<p>To take a simple random sample in R, we can use the <code>slice_sample</code> function. Let’s start with a very small sample of size 5, and see how it compares to our population mean. We will select the observations from the data set by their number.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>sample_data <span class="ot">&lt;-</span> population <span class="sc">%&gt;%</span> </span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>               <span class="fu">slice_sample</span>(<span class="at">n =</span> <span class="dv">5</span>) <span class="co"># 5 observations in our sample</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>               </span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>s_table <span class="ot">&lt;-</span> sample_data <span class="sc">%&gt;%</span> </span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>        <span class="fu">summarize</span>(<span class="at">mean =</span> <span class="fu">mean</span>(x), <span class="at">sd =</span> <span class="fu">sd</span>(x)) <span class="sc">%&gt;%</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>        <span class="fu">round</span>(<span class="at">digits =</span> <span class="dv">2</span>) <span class="co"># two decimal places </span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>s_table </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Notice the sample average is very different from our true population average. Because we have taken such a small sample, we have introduced bias into the estimation of our population parameter - this error is commonly referred to as <strong>small sample bias</strong>. To produce a more unbiased estimate of the population mean, we must take a larger sample.</p>
+<p>We will now take another simple random sample with a larger sample of size 30.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>sample_data <span class="ot">&lt;-</span> population <span class="sc">%&gt;%</span> </span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>               <span class="fu">slice_sample</span>(<span class="at">n =</span> <span class="dv">30</span>,  <span class="co"># 30 observations in our sample</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>               <span class="at">replace =</span> <span class="cn">TRUE</span>) <span class="co"># with replacement</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>s_table <span class="ot">&lt;-</span> sample_data <span class="sc">%&gt;%</span> </span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>        <span class="fu">summarize</span>(<span class="at">mean =</span> <span class="fu">mean</span>(x), <span class="at">sd =</span> <span class="fu">sd</span>(x)) <span class="sc">%&gt;%</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>        <span class="fu">round</span>(<span class="at">digits =</span> <span class="dv">2</span>) <span class="co"># two decimal places</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>s_table</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Just by increasing our sample from n = 5, to n = 30, our estimate has gotten much closer to the population mean. We will soon see with even greater confidence that having a larger sample size gets us closer and closer to the true mean of the population.</p>
+<p>In this exercise, we have accomplished the following:</p>
+<ol type="1">
+<li>Simulated a standard normally distributed population of size 10,000.</li>
+<li>Estimated the population mean, using the sample mean as an unbiased estimator.</li>
+</ol>
+<p>Next we will create a distribution of sample means through repeated random samples from our population.</p>
+<section id="exercise-1-simple-random-samples" class="level3">
+<h3 class="anchored" data-anchor-id="exercise-1-simple-random-samples">Exercise 1: Simple random samples</h3>
+<p>In this exercise:</p>
+<ol type="1">
+<li>Create an object <code>a</code> which is a draw from the unifom distribution, with 5,000 observations between 10 and 20, using the random seed 20.</li>
+<li>Take a simple random sample of size 30 from our population, and calculate the sample mean and store it in an object <code>answer_1</code></li>
+</ol>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(...)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>a <span class="ot">&lt;-</span> <span class="fu">runif</span>(... , ... , ...) <span class="co"># variable you are creating</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>eg_data_frame <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(a)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>answer_1 <span class="ot">&lt;-</span> eg_data_frame <span class="sc">%&gt;%</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>            <span class="fu">slice_sample</span>(<span class="at">n =</span> ...) <span class="sc">%&gt;%</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>            <span class="fu">summarize</span>(<span class="at">mean =</span> <span class="fu">mean</span>(...)) <span class="sc">%&gt;%</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>            <span class="fu">pull</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>            <span class="fu">round</span>(<span class="dv">3</span>)</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>answer_1 </span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="fu">test_1</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="repeated-random-samples-and-sampling-distributions" class="level2">
+<h2 class="anchored" data-anchor-id="repeated-random-samples-and-sampling-distributions">Repeated Random Samples and Sampling Distributions</h2>
+<p>Remember that when we survey a sample, we are only observing a subset of the population and determining a sample estimate based off that sample. If we surveyed a different 1000 Canadian residents every time, we would certainly get a different estimate for the average height of a Canadian resident. Let’s assume for now that we can draw many samples of size <span class="math inline">\(n\)</span> from our normal distribution population. Every time we draw a new sample, we will get a different estimate of the mean. Now, if we were to plot each of those estimates onto a histogram, we would get a <strong>sampling distribution</strong>. A sampling distribution of a statistic is a probability distribution based on repeated independent samples of size <span class="math inline">\(n\)</span> from a population of size <span class="math inline">\(N\)</span>. Using the example introduced above, we can produce a distribution of sample means, based on repeated and independent simple random samples from our population. If we take enough samples, we will find that the mean of the sampling distribution will be nearly equal the mean of our population distribution (our population parameter). Amazing, isn’t it? With an infinite number of random samples, the mean of the sampling distribution will be exactly equal to the population parameter.</p>
+<p>We are more interested in the effect of increasing sample size. We will find that with larger and larger samples sizes, the standard error of the sampling distribution decreases. In other words, in a given sample of a larger sized <span class="math inline">\(n\)</span>, the probability of having a sample estimate far away from the true population parameter decreases. This is a very important concept in statistical inference and econometrics.</p>
+<section id="scenario-1-population-is-normally-distributed" class="level3">
+<h3 class="anchored" data-anchor-id="scenario-1-population-is-normally-distributed">Scenario 1: Population is normally distributed</h3>
+<p>We will need to take <span class="math inline">\(R\)</span> independent simple random samples of size <span class="math inline">\(n\)</span> from our <code>population</code> of size <span class="math inline">\(N\)</span>, to produce our sampling distribution (<span class="math inline">\(R\)</span> observations). To do this in R, we will need to take a simple random sample of size <span class="math inline">\(n\)</span>, compute the sample mean, and store it in a vector. We will then repeat this <span class="math inline">\(R\)</span> times, appending each sample mean into our vector. Our vector, in this case, will represent the observations of our sampling distribution!</p>
+<p>We can define the <strong>standard error</strong> as the standard deviation of the sampling distribution. The standard error will inform us on how much our sample mean will vary from sample to sample. For this exercise, we will keep the number of samples constant and progressively increase our sample size to see how it affects the standard error of the sampling distribution.</p>
+<p>We will use the <code>rep_sample_n</code> function from the <code>infer</code> package in R. This function allows us to repeatedly take samples from a population. The <code>size</code> parameter indicates the sample size and the <code>reps</code> parameter indicates the number of samples we wish to draw from our population. The solid blue line represents the true mean of the normal distribution population (0) and the dashed red line shows us the mean of the sampling distribution. Given that we are taking many samples, these two values should be very similar.</p>
+<section id="suppose-we-take-1000-simple-random-samples-r-1000-with-a-sample-size-of-5-n-5" class="level4">
+<h4 class="anchored" data-anchor-id="suppose-we-take-1000-simple-random-samples-r-1000-with-a-sample-size-of-5-n-5">1. Suppose we take 1000 simple random samples (<span class="math inline">\(R = 1000\)</span>), with a sample size of 5 (<span class="math inline">\(n = 5\)</span>):</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># CREATES A DATA FRAME WITH ALL 1000 RANDOM SAMPLES, AND CALCULATES MEAN AND STANDARD DEVIATION OF EACH SAMPLE </span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>reps_5_1000 <span class="ot">&lt;-</span> population <span class="sc">%&gt;%</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>        <span class="fu">rep_sample_n</span>(<span class="at">size =</span> <span class="dv">5</span>, <span class="at">reps =</span> <span class="dv">1000</span>) <span class="sc">%&gt;%</span>  <span class="co"># creates 5 samples of size 5</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>        <span class="fu">group_by</span>(replicate) <span class="sc">%&gt;%</span>                  <span class="co"># groups each of the samples </span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>        <span class="fu">summarize</span>(<span class="at">mean =</span> <span class="fu">mean</span>(x), <span class="at">sd =</span> <span class="fu">sd</span>(x))    <span class="co"># calculates the mean of each sample</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co">#CALCULATES THE MEAN AND STANDARD ERROR OF THE SAMPLING DISTRIBUTION</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>sample_5_mean_se <span class="ot">&lt;-</span> reps_5_1000 <span class="sc">%&gt;%</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>        <span class="fu">summarize</span>(<span class="at">sd_mean =</span> <span class="fu">mean</span>(mean), <span class="at">se =</span> <span class="fu">sd</span>(mean))</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>sample_5_mean_se</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="co">#VISUAL DEPICTION OF SAMPLING DISTRIBUTION</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>sampling_dist_5_1000 <span class="ot">&lt;-</span> reps_5_1000 <span class="sc">%&gt;%</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> mean)) <span class="sc">+</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">50</span>, <span class="at">color =</span> <span class="st">"black"</span>, <span class="at">fill =</span> <span class="st">"gray"</span>) <span class="sc">+</span> </span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="dv">0</span>, <span class="at">colour=</span><span class="st">"blue"</span>, <span class="at">linetype =</span> <span class="st">"solid"</span>, <span class="at">lwd =</span> <span class="dv">1</span>) <span class="sc">+</span> </span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="fu">mean</span>(reps_5_1000<span class="sc">$</span>mean), <span class="at">colour=</span><span class="st">"red"</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">lwd =</span> <span class="dv">1</span>)                  </span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>sampling_dist_5_1000</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="suppose-we-take-1000-simple-random-samples-r-1000-with-a-sample-size-of-50-n-50" class="level4">
+<h4 class="anchored" data-anchor-id="suppose-we-take-1000-simple-random-samples-r-1000-with-a-sample-size-of-50-n-50">2. Suppose we take 1,000 simple random samples (<span class="math inline">\(R = 1000\)</span>), with a sample size of 50 (<span class="math inline">\(n = 50\)</span>):</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># CREATES A DATA FRAME WITH ALL 1000 RANDOM SAMPLES, AND CALCULATES MEAN AND STANDARD DEVIATION OF EACH SAMPLE </span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>reps_50_1000 <span class="ot">&lt;-</span> population <span class="sc">%&gt;%</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>        <span class="fu">rep_sample_n</span>(<span class="at">size =</span> <span class="dv">50</span>, <span class="at">reps =</span> <span class="dv">1000</span>) <span class="sc">%&gt;%</span>  <span class="co"># creates 1000 samples of size 5</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>        <span class="fu">group_by</span>(replicate) <span class="sc">%&gt;%</span>                   <span class="co"># groups each of the samples </span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>        <span class="fu">summarize</span>(<span class="at">mean =</span> <span class="fu">mean</span>(x), <span class="at">sd =</span> <span class="fu">sd</span>(x))     <span class="co"># calculates the mean of each sample</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co"># CALCULATES THE MEAN AND STANDARD ERROR OF THE SAMPLING DISTRIBUTION</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>sample_50_mean_se <span class="ot">&lt;-</span> reps_50_1000 <span class="sc">%&gt;%</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>        <span class="fu">summarize</span>(<span class="at">sd_mean =</span> <span class="fu">mean</span>(mean), <span class="at">se =</span> <span class="fu">sd</span>(mean))</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>sample_50_mean_se</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="co"># VISUAL DEPICTION OF SAMPLING DISTRIBUTION</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>sampling_dist_50_1000 <span class="ot">&lt;-</span> reps_50_1000 <span class="sc">%&gt;%</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> mean)) <span class="sc">+</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">50</span>, <span class="at">color =</span> <span class="st">"black"</span>, <span class="at">fill =</span> <span class="st">"gray"</span>) <span class="sc">+</span> </span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="dv">0</span>, <span class="at">colour=</span><span class="st">"blue"</span>, <span class="at">linetype =</span> <span class="st">"solid"</span>, <span class="at">lwd =</span> <span class="dv">1</span>) <span class="sc">+</span> </span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="fu">mean</span>(reps_50_1000<span class="sc">$</span>mean), <span class="at">colour=</span><span class="st">"red"</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">lwd =</span> <span class="dv">1</span>)                  </span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>sampling_dist_50_1000</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<blockquote class="blockquote">
+<p><strong>Pro tip:</strong> See how the scale of the x axis for <span class="math inline">\(n = 50\)</span> has adjusted from <span class="math inline">\(n = 5\)</span> in response to the reduction in error?</p>
+</blockquote>
+<p>Now that we have increased the number of repeated and independent simple random samples from 5 to 1000, notice that the mean of our sampling distribution is much closer to our population mean. Let’s further increase our sample size to see how we can reduce the standard error of our estimate.</p>
+</section>
+<section id="suppose-we-take-1000-simple-random-samples-r-1000-with-a-sample-size-of-500-n-500" class="level4">
+<h4 class="anchored" data-anchor-id="suppose-we-take-1000-simple-random-samples-r-1000-with-a-sample-size-of-500-n-500">3. Suppose we take 1,000 simple random samples (<span class="math inline">\(R = 1000\)</span>), with a sample size of 500 (<span class="math inline">\(n = 500\)</span>):</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># CREATES A DATA FRAME WITH ALL 1000 RANDOM SAMPLES, AND CALCULATES MEAN AND STANDARD DEVIATION OF EACH SAMPLE </span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>reps_500_1000 <span class="ot">&lt;-</span> population <span class="sc">%&gt;%</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>        <span class="fu">rep_sample_n</span>(<span class="at">size =</span> <span class="dv">500</span>, <span class="at">reps =</span> <span class="dv">1000</span>, <span class="at">replace =</span> <span class="cn">FALSE</span>) <span class="sc">%&gt;%</span>  <span class="co">#creates 1000 samples of size 5</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>        <span class="fu">group_by</span>(replicate) <span class="sc">%&gt;%</span>                                     <span class="co">#groups each of the samples </span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>        <span class="fu">summarize</span>(<span class="at">mean =</span> <span class="fu">mean</span>(x))                                   <span class="co">#calculates the mean of each sample</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="co"># CALCULATES THE MEAN AND STANDARD ERROR OF THE SAMPLING DISTRIBUTION</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>sample_500_mean_se <span class="ot">&lt;-</span> reps_500_1000 <span class="sc">%&gt;%</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>        <span class="fu">summarize</span>(<span class="at">sd_mean =</span> <span class="fu">mean</span>(mean), <span class="at">se =</span> <span class="fu">sd</span>(mean))</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>sample_500_mean_se</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a><span class="co"># VISUAL DEPICTION OF SAMPLING DISTRIBUTION</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>sampling_dist_500_1000 <span class="ot">&lt;-</span> reps_500_1000 <span class="sc">%&gt;%</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> mean)) <span class="sc">+</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">50</span>, <span class="at">color =</span> <span class="st">"black"</span>, <span class="at">fill =</span> <span class="st">"gray"</span>) <span class="sc">+</span> </span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="dv">0</span>, <span class="at">colour=</span><span class="st">"blue"</span>, <span class="at">linetype =</span> <span class="st">"solid"</span>, <span class="at">lwd =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="fu">mean</span>(reps_500_1000<span class="sc">$</span>mean), <span class="at">colour=</span><span class="st">"red"</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">lwd =</span> <span class="dv">1</span>)                  </span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>sampling_dist_500_1000</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="exercise-2-taking-random-samples" class="level3">
+<h3 class="anchored" data-anchor-id="exercise-2-taking-random-samples">Exercise 2: Taking Random Samples</h3>
+<p>Let’s try it for ourselves. Take a sample of size 50 with 1000 reps from the same <code>population</code> data frame and produce a data frame with only the means. Assign your answer to the object <code>answer_2</code>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># FILL IN THE BLANKS</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">30</span>)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>answer_2 <span class="ot">&lt;-</span> population <span class="sc">%&gt;%</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>        <span class="fu">rep_sample_n</span>(<span class="at">... =</span> ..., <span class="at">... =</span> ...) <span class="sc">%&gt;%</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>        <span class="fu">group_by</span>(...) <span class="sc">%&gt;%</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>        <span class="fu">summarize</span>(<span class="at">mean =</span> <span class="fu">...</span>(x))</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="fu">test_2</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Because the number of samples we drew from our population is constant, we saw that the mean of our sampling distribution was roughly equivalent to the true population mean for all of our examples. However, we varied our sample sizes. It’s important to notice that as we increased our samples size, the standard error decreased. As a reminder, having a low standard error means that the probability of having a sample produce a sample estimate that is far away from the true population parameter is very low. In the previous examples with a sample size of 500, we can see that the sample means are mostly between -0.1 and +0.1. With a sample size of 5, the sample means are mostly between -1 and 1.</p>
+<p>Having a low standard error is something we economists seek to have in our experiments. Because it’s often only possible to collect <em>one</em> sample in real life, we tend to collect as large a sample as possible to minimize the standard error. This gives us high confidence that our sample estimate will be close to the true population parameter.</p>
+<p>You may have wondered how economists calculate the standard error of a sample estimate using only one sample. We will get to that in the section about Bootstrapping later in this lesson.</p>
+</section>
+<section id="scenario-2-population-is-not-normally-distributed" class="level3">
+<h3 class="anchored" data-anchor-id="scenario-2-population-is-not-normally-distributed">Scenario 2: Population is not normally distributed</h3>
+<p>Another important concept in statistics is that as the number of samples drawn from the population increases, the mean of the sampling distribution converges to the true value of the population parameter. Furthermore, by increasing the number of samples, the sampling distribution become a closer resemblance of a normal distribution curve. This is true regardless of the shape of the original population distribution - again here, it is just the <em>sampling distribution</em> that starts to look more like a normal curve, and not the <em>population distribution</em>.</p>
+<p>This exercise will be nearly identical to above, with the difference being our population will now be random uniformly distributed. Similar to the previous example, increasing the the sample size will reduce the standard error of the sampling distribution. For this exercise, we will see how varying the samples taken affects the sampling distribution. We can achieve this in R using the <code>runif()</code> function to create a uniform distribution.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> <span class="fu">runif</span>(<span class="dv">10000</span>, <span class="dv">0</span>, <span class="dv">1</span>)  <span class="co"># Draw 10,000 observations from the random uniform distribution between 0 and 1</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>population_unif <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(y)</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>unif_pop_dist <span class="ot">&lt;-</span> population_unif <span class="sc">%&gt;%</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>                 <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> y)) <span class="sc">+</span> </span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>                 <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">20</span>, <span class="at">color =</span> <span class="st">"black"</span>, <span class="at">fill =</span> <span class="st">"gray"</span>)</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>unif_pop_dist</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>unif_pop_mean_se <span class="ot">&lt;-</span> population_unif <span class="sc">%&gt;%</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>        <span class="fu">summarize</span>(<span class="at">true_mean =</span> <span class="fu">mean</span>(y))</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>unif_pop_mean_se</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="suppose-we-take-100-simple-random-samples-reps-100-with-a-sample-size-of-100-size-100" class="level4">
+<h4 class="anchored" data-anchor-id="suppose-we-take-100-simple-random-samples-reps-100-with-a-sample-size-of-100-size-100">1. Suppose we take 100 simple random samples (<code>reps</code> = 100), with a sample size of 100 (<code>size</code> = 100):</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># CREATES A DATA FRAME WITH ALL 100 RANDOM SAMPLES, AND CALCULATES MEAN AND STANDARD DEVIATION OF EACH SAMPLE </span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>unif_reps_100_100 <span class="ot">&lt;-</span> population_unif <span class="sc">%&gt;%</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>        <span class="fu">rep_sample_n</span>(<span class="at">size =</span> <span class="dv">100</span>, <span class="at">reps =</span> <span class="dv">100</span>) <span class="sc">%&gt;%</span>               <span class="co">#creates 5 samples of size 5</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>        <span class="fu">group_by</span>(replicate) <span class="sc">%&gt;%</span>                                <span class="co">#groups each of the samples </span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>        <span class="fu">summarize</span>(<span class="at">mean =</span> <span class="fu">mean</span>(y))                              <span class="co">#calculates the mean of each sample</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="co"># MEAN AND STANDARD ERROR OF SAMPLING DIST</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>sample_100_mean_se <span class="ot">&lt;-</span> unif_reps_100_100 <span class="sc">%&gt;%</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>        <span class="fu">summarize</span>(<span class="at">sd_mean =</span> <span class="fu">mean</span>(mean), <span class="at">se =</span> <span class="fu">sd</span>(mean))</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>sample_100_mean_se</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="co"># VISUAL DEPICTION OF SAMPLING DISTRIBUTION</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>unif_sampling_dist_100_100 <span class="ot">&lt;-</span> unif_reps_100_100 <span class="sc">%&gt;%</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> mean)) <span class="sc">+</span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">50</span>, <span class="at">color =</span> <span class="st">"black"</span>, <span class="at">fill =</span> <span class="st">"gray"</span>) <span class="sc">+</span> </span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="fu">mean</span>(population_unif<span class="sc">$</span>y), <span class="at">colour=</span><span class="st">"blue"</span>, <span class="at">linetype =</span> <span class="st">"solid"</span>, <span class="at">lwd =</span> <span class="dv">1</span>) <span class="sc">+</span> </span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="fu">mean</span>(unif_reps_100_100<span class="sc">$</span>mean), <span class="at">colour=</span><span class="st">"red"</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">lwd =</span> <span class="dv">1</span>)  </span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>unif_sampling_dist_100_100</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="suppose-we-take-1000-simple-random-samples-r-1000-with-a-sample-size-of-5-n-5-1" class="level4">
+<h4 class="anchored" data-anchor-id="suppose-we-take-1000-simple-random-samples-r-1000-with-a-sample-size-of-5-n-5-1">2. Suppose we take 1,000 simple random samples (<span class="math inline">\(R = 1000\)</span>), with a sample size of 5 (<span class="math inline">\(n = 5\)</span>):</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># CREATES A DATA FRAME WITH ALL 100 RANDOM SAMPLES, AND CALCULATES MEAN AND STANDARD DEVIATION OF EACH SAMPLE </span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>unif_reps_100_1000 <span class="ot">&lt;-</span> population_unif <span class="sc">%&gt;%</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>        <span class="fu">rep_sample_n</span>(<span class="at">size =</span> <span class="dv">100</span>, <span class="at">reps =</span> <span class="dv">1000</span>) <span class="sc">%&gt;%</span>   <span class="co"># creates 5 samples of size 5</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>        <span class="fu">group_by</span>(replicate) <span class="sc">%&gt;%</span>                     <span class="co"># groups each of the samples </span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>        <span class="fu">summarize</span>(<span class="at">mean =</span> <span class="fu">mean</span>(y))                   <span class="co"># calculates the mean of each sample</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="co"># MEAN AND STANDARD ERROR OF SAMPLING DIST</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>sample_1000_mean_se <span class="ot">&lt;-</span> unif_reps_100_1000 <span class="sc">%&gt;%</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>        <span class="fu">summarize</span>(<span class="at">sd_mean =</span> <span class="fu">mean</span>(mean), <span class="at">se =</span> <span class="fu">sd</span>(mean))</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>sample_1000_mean_se</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="co"># VISUAL DEPICTION OF SAMPLING DISTRIBUTION</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>unif_sampling_dist_100_1000 <span class="ot">&lt;-</span> unif_reps_100_1000 <span class="sc">%&gt;%</span></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> mean)) <span class="sc">+</span></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">50</span>, <span class="at">color =</span> <span class="st">"black"</span>, <span class="at">fill =</span> <span class="st">"gray"</span>) <span class="sc">+</span> </span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="fu">mean</span>(population_unif<span class="sc">$</span>y), <span class="at">colour=</span><span class="st">"blue"</span>, <span class="at">linetype =</span> <span class="st">"solid"</span>, <span class="at">lwd =</span> <span class="dv">1</span>) <span class="sc">+</span> </span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="fu">mean</span>(unif_reps_100_1000<span class="sc">$</span>mean), <span class="at">colour=</span><span class="st">"red"</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">lwd =</span> <span class="dv">1</span>)  </span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>unif_sampling_dist_100_1000</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="suppose-we-take-20000-simple-random-samples-reps-20000-with-a-sample-size-of-500-size-500" class="level4">
+<h4 class="anchored" data-anchor-id="suppose-we-take-20000-simple-random-samples-reps-20000-with-a-sample-size-of-500-size-500">3. Suppose we take 20,000 simple random samples (<code>reps</code> = 20,000), with a sample size of 500 (<code>size</code> = 500$):</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># CREATES A DATA FRAME WITH ALL 100 RANDOM SAMPLES, AND CALCULATES MEAN AND STANDARD DEVIATION OF EACH SAMPLE </span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>unif_reps_100_20000 <span class="ot">&lt;-</span> population_unif <span class="sc">%&gt;%</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>        <span class="fu">rep_sample_n</span>(<span class="at">size =</span> <span class="dv">100</span>, <span class="at">reps =</span> <span class="dv">20000</span>) <span class="sc">%&gt;%</span>               <span class="co">#creates 5 samples of size 5</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>        <span class="fu">group_by</span>(replicate) <span class="sc">%&gt;%</span>                                <span class="co">#groups each of the samples </span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>        <span class="fu">summarize</span>(<span class="at">mean =</span> <span class="fu">mean</span>(y))                              <span class="co">#calculates the mean of each sample</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="co"># MEAN AND STANDARD ERROR OF SAMPLING DIST</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>sample_20000_mean_se <span class="ot">&lt;-</span> unif_reps_100_20000 <span class="sc">%&gt;%</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>        <span class="fu">summarize</span>(<span class="at">sd_mean =</span> <span class="fu">mean</span>(mean), <span class="at">se =</span> <span class="fu">sd</span>(mean))</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>sample_20000_mean_se</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a><span class="co">#VISUAL DEPICTION OF SAMPLING DISTRIBUTION</span></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>unif_sampling_dist_100_20000 <span class="ot">&lt;-</span> unif_reps_100_20000 <span class="sc">%&gt;%</span></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> mean)) <span class="sc">+</span></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">50</span>, <span class="at">color =</span> <span class="st">"black"</span>, <span class="at">fill =</span> <span class="st">"gray"</span>) <span class="sc">+</span> </span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="fu">mean</span>(population_unif<span class="sc">$</span>y), <span class="at">colour=</span><span class="st">"blue"</span>, <span class="at">linetype =</span> <span class="st">"solid"</span>, <span class="at">lwd =</span> <span class="dv">1</span>) <span class="sc">+</span> </span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="fu">mean</span>(unif_reps_100_20000<span class="sc">$</span>mean), <span class="at">colour=</span><span class="st">"red"</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">lwd =</span> <span class="dv">1</span>)  </span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>unif_sampling_dist_100_20000</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Notice how the difference between the mean of the sampling distribution and the true value of the population parameter become closer and closer as we increase the number of samples drawn. As mentioned above, we can also see that the sampling distribution curve more strongly resembles a normal distribution curve as we increase the number of samples drawn - pretty neat! This is true regardless of the fact that we began with a population that was uniformly distributed.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>SIZE <span class="ot">&lt;-</span> <span class="dv">500</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>REPS <span class="ot">&lt;-</span> <span class="dv">2000</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>pop_dist_eg <span class="ot">&lt;-</span> population <span class="sc">%&gt;%</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>        <span class="fu">rep_sample_n</span>(<span class="at">size =</span> SIZE, <span class="at">reps =</span> REPS) <span class="sc">%&gt;%</span>  <span class="co"># CHANGE PARAMETERS HERE</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>        <span class="fu">group_by</span>(replicate) <span class="sc">%&gt;%</span>                                  </span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>        <span class="fu">summarize</span>(<span class="at">mean =</span> <span class="fu">mean</span>(x)) <span class="sc">%&gt;%</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>        <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> mean)) <span class="sc">+</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>        <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">50</span>, <span class="at">color =</span> <span class="st">"black"</span>, <span class="at">fill =</span> <span class="st">"gray"</span>) <span class="sc">+</span> </span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>        <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="dv">0</span>, <span class="at">colour=</span><span class="st">"blue"</span>, <span class="at">linetype =</span> <span class="st">"solid"</span>, <span class="at">lwd =</span> <span class="dv">1</span>) </span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>unif_dist_eg <span class="ot">&lt;-</span> population_unif <span class="sc">%&gt;%</span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>        <span class="fu">rep_sample_n</span>(<span class="at">size =</span> SIZE, <span class="at">reps =</span> REPS) <span class="sc">%&gt;%</span>  <span class="co"># CHANGE PARAMETERS HERE</span></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>        <span class="fu">group_by</span>(replicate) <span class="sc">%&gt;%</span>                                  </span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>        <span class="fu">summarize</span>(<span class="at">mean =</span> <span class="fu">mean</span>(y)) <span class="sc">%&gt;%</span></span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>        <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> mean)) <span class="sc">+</span></span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>        <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">50</span>, <span class="at">color =</span> <span class="st">"black"</span>, <span class="at">fill =</span> <span class="st">"gray"</span>) <span class="sc">+</span> </span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>        <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="fu">mean</span>(population_unif<span class="sc">$</span>y), <span class="at">colour=</span><span class="st">"blue"</span>, <span class="at">linetype =</span> <span class="st">"solid"</span>, <span class="at">lwd =</span> <span class="dv">1</span>) </span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a><span class="fu">grid.arrange</span>(pop_dist_eg, unif_dist_eg, <span class="at">ncol =</span> <span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>In the above graph, we fixed the sample size and number of samples for both the normal distribution and uniform distribution examples, and we attained two sampling distributions that are strikingly similar to a normal distribution curve. You have just witnessed something magical in statistics ✨! Regardless of the initial population distribution, as we increase our sample size and the number of simple and independent simple random samples, our sampling distribution converges to our population mean! Try it out yourself by increasing <code>SIZE</code> and <code>REPS</code> to see how higher values make the distribution become tighter around the true population mean.</p>
+<p>This converging of the sample mean to a normal distribution is referred to as the <strong>Central Limit Theorem</strong> in statistics.</p>
+</section>
+</section>
+<section id="exercise-3-taking-samples-and-visualizing-the-sampling-distribution" class="level3">
+<h3 class="anchored" data-anchor-id="exercise-3-taking-samples-and-visualizing-the-sampling-distribution">Exercise 3: Taking Samples and Visualizing the Sampling Distribution</h3>
+<p>Use the <code>population_unif</code> data frame and draw 500 samples of sample size 50. Then create a visualization of the sampling distribution. Finally, calculate the standard error of this sampling distribution and assign it to the object <code>answer_3</code>. Remember the <code>sd</code> function calculates the standard deviation of a column. Template code has been provided.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">40</span>) <span class="co"># don't change this</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>eg_3 <span class="ot">&lt;-</span> ... <span class="sc">%&gt;%</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>        <span class="fu">...</span>(<span class="at">... =</span> ..., <span class="at">... =</span> ...) <span class="sc">%&gt;%</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>        <span class="fu">...</span>(...) <span class="sc">%&gt;%</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>        <span class="fu">summarize</span>(<span class="at">mean =</span> <span class="fu">mean</span>(y)) </span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>eg_3_graph <span class="ot">&lt;-</span> eg_3 <span class="sc">%&gt;%</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>        <span class="fu">ggplot</span>(<span class="fu">...</span>(<span class="at">x =</span> mean)) <span class="sc">+</span> </span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>        <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">50</span>, <span class="at">color =</span> <span class="st">"black"</span>, <span class="at">fill =</span> <span class="st">"gray"</span>) <span class="sc">+</span> </span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>        <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="fu">mean</span>(population_unif<span class="sc">$</span>y), <span class="at">colour=</span><span class="st">"blue"</span>, <span class="at">linetype =</span> <span class="st">"solid"</span>, <span class="at">lwd =</span> <span class="dv">1</span>) </span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>answer_3 <span class="ot">&lt;-</span> eg_3 <span class="sc">%&gt;%</span></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>            <span class="fu">summarize</span>(<span class="at">se =</span> <span class="fu">...</span>(mean)) <span class="sc">%&gt;%</span></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>            <span class="fu">pull</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>            <span class="fu">round</span>(<span class="dv">5</span>)</span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a><span class="fu">test_3</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="exercise-4-understanding-standard-error" class="level3">
+<h3 class="anchored" data-anchor-id="exercise-4-understanding-standard-error">Exercise 4: Understanding Standard Error</h3>
+<p>What does the standard error tell us?</p>
+<p><strong>A</strong>: the average variation in the population distribution<br>
+<strong>B</strong>: the average variation in our sample estimates of the population parameter<br>
+<strong>C</strong>: the probability that our sample estimate is correct<br>
+<strong>D</strong>: exactly what the sample estimate tells us</p>
+<p>Answer in capital letters surrounded by quotation marks. eg… <code>"E"</code></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>answer_4 <span class="ot">&lt;-</span> <span class="st">"..."</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_4</span>(answer_4)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="quick-review" class="level2">
+<h2 class="anchored" data-anchor-id="quick-review">Quick Review</h2>
+<p>We just learned a lot of new terms which all sound very similar, so let’s take a moment to review. The <strong>population</strong> is the collection of all individuals or entities we are interested in studying. From the above example, the population is entire population of Canada. From the population, we are interested in knowing a particular quantity, the <strong>population parameter</strong>. From our example, this is the height.</p>
+<p>A <strong>simple sample</strong> is a small subset of the population which we use to get an estimate of the parameter we are interested. This is the <strong>sample estimate</strong> for the population parameter. Because we are often unable to conduct a comprehensive census in the real world, we have to use the sample estimate as an estimate for the population parameter.</p>
+<p>In a hypothetical world, we assume that we are able to take many samples of size <code>n</code> from the same population and attain a sample estimate from all of those samples. When we plot those sample estimates on a histogram, we get a <strong>sampling distribution</strong>. When we take many samples, we find that the mean of the sampling distribution (the most frequently observed estimate of the population parameter) is very close to the actual value of the population parameter.</p>
+<p>We have also noticed that as we increase sample size, our standard error decreases. When we increase the number of samples drawn from the population, the mean of the sampling distribution progresses closer and closer to the population parameter and our sampling distribution has a closer resemblance to a normal distribution curve.</p>
+</section>
+<section id="central-limit-theorem-clt-and-the-law-of-large-numbers-lln" class="level2">
+<h2 class="anchored" data-anchor-id="central-limit-theorem-clt-and-the-law-of-large-numbers-lln">Central Limit Theorem (CLT) and the Law of Large Numbers (LLN)</h2>
+<p>The <strong>Central Limit Theorem</strong> tells us that no matter the distribution of the population, with sufficient sample size (usually above 30 and no more than 5% of the population), the distribution of sample means will tend toward normal.</p>
+<blockquote class="blockquote">
+<p>Note: When sampling more than 5% of a population, we should use the Finite Population Correct Factor (FPC). This is because the Central Limit Thereom does not hold, and the standard error will be too large: FPC = <span class="math inline">\(((N-n)/(N-1))^{1/2}\)</span></p>
+</blockquote>
+<p>The <strong>Law of Large Numbers</strong> tells us that with a sufficiently large number of repeated and independent random samples, the mean of our distribution of sample means will tend toward the population mean! Notice the visualization of our sample mean as we increase <span class="math inline">\(R\)</span> in the example below!</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">55</span>)</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="co"># RUN THIS CODE. </span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>r <span class="ot">=</span> <span class="dv">1000</span> <span class="co"># Number of iterations (number of sample means produced for our distribution)</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>num <span class="ot">=</span> <span class="dv">10</span> <span class="co"># Sample size</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>R <span class="ot">=</span> <span class="dv">1</span><span class="sc">:</span>r <span class="co"># Range of iterations</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>means <span class="ot">&lt;-</span> <span class="fu">vector</span>(,r) <span class="co"># Create empty vector to store sample means</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>sample_mean <span class="ot">&lt;-</span> <span class="fu">vector</span>(,r)</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (val <span class="cf">in</span> R) { <span class="co"># loop over all values in R </span></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>    means[val] <span class="ot">=</span> <span class="fu">mean</span>(<span class="fu">slice_sample</span>(population_unif, <span class="at">n =</span> num)<span class="sc">$</span>y) <span class="co"># Take a sample of size n from the population, caluclate the mean, and store in vector means, with index of the current iteration</span></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>    sample_mean[val] <span class="ot">&lt;-</span> <span class="fu">mean</span>(means[<span class="dv">1</span><span class="sc">:</span>val]) <span class="co"># Running value of sample mean at index equal to current iteration</span></span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">scipen =</span> <span class="dv">10</span>)</span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(sample_mean, <span class="at">cex=</span><span class="fl">0.5</span>, <span class="at">col=</span><span class="st">"darkblue"</span>)</span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">h =</span> <span class="fu">mean</span>(population_unif<span class="sc">$</span>y))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>See how many many iterations (in this case, 1000) eventually produce a relatively stable line around 0.5 for this example?</p>
+<section id="interactive-exercise-demonstrating-clt" class="level3">
+<h3 class="anchored" data-anchor-id="interactive-exercise-demonstrating-clt">INTERACTIVE EXERCISE DEMONSTRATING CLT</h3>
+<p>In this exercise, we will create a new simulation for you to play around with <span class="math inline">\(R\)</span> and <span class="math inline">\(n\)</span> to get a better understanding of how sampling distribution changes with sample size and the number of repeated independent random samples. You can alter the values by changing the <code>SIZE</code> and <code>REPS</code> constants at the top of the code block. Try different values and see for yourself how the shape of the sampling distribution changes.</p>
+<p>Note: You can also try different distributions of our population, try the following: <code>rchisq(n, df)</code>, <code>rexp(n, rate)</code>, <code>rf(n, df1, df2)</code></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>population_ex <span class="ot">&lt;-</span> <span class="fu">rexp</span>(<span class="dv">10000</span>, <span class="fl">0.2</span>)  <span class="co"># Draw 10,000 observations from the random uniform distribution between 0 and 1</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>population_ex <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(x)</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>pop_dist_int <span class="ot">&lt;-</span> population_ex <span class="sc">%&gt;%</span> </span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>                <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> x)) <span class="sc">+</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>                <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">50</span>) <span class="sc">+</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>                <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="fu">mean</span>(population_ex<span class="sc">$</span>x), <span class="at">colour=</span><span class="st">"blue"</span>, <span class="at">linetype =</span> <span class="st">"solid"</span>, <span class="at">lwd =</span> <span class="dv">1</span>) </span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>pop_dist_int</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>SIZE <span class="ot">=</span> <span class="dv">50</span> <span class="co"># change me here</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>REPS <span class="ot">=</span> <span class="dv">5000</span> <span class="co"># change me here</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>population_sample_estimates <span class="ot">&lt;-</span> population_ex <span class="sc">%&gt;%</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>                 <span class="fu">rep_sample_n</span>(<span class="at">size =</span> SIZE, <span class="at">reps =</span> REPS) <span class="sc">%&gt;%</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>                 <span class="fu">group_by</span>(replicate) <span class="sc">%&gt;%</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>                 <span class="fu">summarize</span>(<span class="at">mean =</span> <span class="fu">mean</span>(x))</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>pop_mean_se <span class="ot">&lt;-</span> population_sample_estimates <span class="sc">%&gt;%</span></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>               <span class="fu">summarize</span>(<span class="at">sd_mean =</span> <span class="fu">mean</span>(mean), <span class="at">se =</span> <span class="fu">sd</span>(mean))</span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>pop_mean_se </span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>samp_dist_int <span class="ot">&lt;-</span> population_sample_estimates <span class="sc">%&gt;%</span></span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>                 <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> mean)) <span class="sc">+</span></span>
+<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a>                 <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">50</span>, <span class="at">color =</span> <span class="st">"black"</span>, <span class="at">fill =</span> <span class="st">"gray"</span>) <span class="sc">+</span> </span>
+<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a>                 <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="fu">mean</span>(population_ex<span class="sc">$</span>x), <span class="at">colour=</span><span class="st">"blue"</span>, <span class="at">linetype =</span> <span class="st">"solid"</span>, <span class="at">lwd =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a>                 <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="fu">mean</span>(population_sample_estimates<span class="sc">$</span>mean), <span class="at">colour=</span><span class="st">"red"</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">lwd =</span> <span class="dv">1</span>)</span>
+<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-20"><a href="#cb22-20" aria-hidden="true" tabindex="-1"></a>samp_dist_int</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="bootstrapping" class="level2">
+<h2 class="anchored" data-anchor-id="bootstrapping">Bootstrapping</h2>
+<p>From the previous examples, it was quite a process to calculate the standard error. We had to first have access to the population and draw hundreds of samples from that population to make a sampling distribution. This is impossible for multiple reasons (1) we almost never access to the entire population (2) drawing two samples of 10 individuals is the same as drawing one sample of 20. Naturally, you may have been wondering how economists calculate the standard error of their sample estimates. One common technique is <strong>bootstrapping</strong> samples.</p>
+<p>In the bootstrapping process, we start off by taking one sample of size <span class="math inline">\(n\)</span> from our population. We then take a sample of size <span class="math inline">\(n\)</span> from our sample, with replacement. Let’s imagine we have a paper bag with 5 red balls and 5 green balls, which we will treat as our sample. In order to draw a bootstrap sample, we pick 1 ball out of the bag ten times while allowing replacement. We take out the first ball, note whether it’s a red or green ball, then put it back in the bag and repeat the process 9 more times to arrive at our bootstrap sample. Note that with this method, it is entirely possible to draw any combination of red and green balls. The bootstrap sampling method introduces sampling variability to our sample.</p>
+<p>If we repeat this process by drawing many bootstrap samples, we can arrive at a bootstrap distribution which serves as an approximation of our sampling distribution.</p>
+<section id="example" class="level3">
+<h3 class="anchored" data-anchor-id="example">Example</h3>
+<p>Let’s demonstrate this using our normal distribution data frame <code>population</code>. We first start off by taking a sample from our population. Once again we use the <code>slice_sample</code> function to achieve this. To connect it back to the average height example, imagine that we had resources to sample 100 people about their height out of the entire Canadian population.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>boot_main_sample <span class="ot">&lt;-</span> population <span class="sc">%&gt;%</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>        <span class="fu">slice_sample</span>(<span class="at">n =</span> <span class="dv">100</span>)</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(boot_main_sample)</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="fu">paste</span>(<span class="st">"This is the mean of our sample: "</span>, <span class="fu">mean</span>(boot_main_sample<span class="sc">$</span>x))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Now, we want to know the uncertainty behind this estimate. Thinking back to our sampling distribution, how would we know if our sample estimate of 0.008 is close to the true population parameter. It’s entirely possible we got a sample estimate far off from our true population parameter - for example, we could have gotten a value in the tails of the sampling distribution. To begin to understand the uncertainty around our sample estimate, we must compute the standard error.</p>
+<p>Let’s draw bootstrap samples from our sample. The code is largely similar from before, except the key difference that we now add <code>replace = TRUE</code> to our <code>rep_sample_n</code> function. This tells R to allow replacement when taking samples.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>boot_samples <span class="ot">&lt;-</span> boot_main_sample <span class="sc">%&gt;%</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>        <span class="fu">rep_sample_n</span>(<span class="at">size =</span> <span class="dv">500</span>, <span class="at">reps =</span> <span class="dv">1000</span>, <span class="at">replace =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(boot_samples)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Now that we have our bootstrap samples, let’s calculate the bootstrap sample means and make a bootstrap sampling distribution. We use the same methods as we used above.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>boot_means <span class="ot">&lt;-</span> boot_samples <span class="sc">%&gt;%</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>        <span class="fu">group_by</span>(replicate) <span class="sc">%&gt;%</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>        <span class="fu">summarize</span>(<span class="at">mean =</span> <span class="fu">mean</span>(x))</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>boot_mean_se <span class="ot">&lt;-</span> boot_means <span class="sc">%&gt;%</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>        <span class="fu">summarize</span>(<span class="at">sd_mean =</span> <span class="fu">mean</span>(mean), <span class="at">se =</span> <span class="fu">sd</span>(mean)) </span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>boot_mean_se</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>boot_sampling_dist <span class="ot">&lt;-</span> boot_means <span class="sc">%&gt;%</span></span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> mean)) <span class="sc">+</span></span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">50</span>, <span class="at">color =</span> <span class="st">"black"</span>, <span class="at">fill =</span> <span class="st">"gray"</span>) <span class="sc">+</span> </span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="dv">0</span>, <span class="at">colour=</span><span class="st">"blue"</span>, <span class="at">linetype =</span> <span class="st">"solid"</span>, <span class="at">lwd =</span> <span class="dv">1</span>) <span class="sc">+</span> </span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="fu">mean</span>(boot_means<span class="sc">$</span>mean), <span class="at">colour=</span><span class="st">"red"</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">lwd =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">ggtitle</span>(<span class="st">"Boostrap Sampling Distribution"</span>)</span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a><span class="fu">grid.arrange</span>(boot_sampling_dist, sampling_dist_500_1000 <span class="sc">+</span> <span class="fu">ggtitle</span>(<span class="st">"Sampling Distribution"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>There are many things to unpack here. Notice from the graphs that our bootstrap sampling distribution visually serves as a good approximation of our sampling distribution. We can also see that the standard error for the bootstrap sampling distribution (0.00402) is very close to our sampling distribution standard error, which was (0.0433).</p>
+<p>The key difference in the graphs is the mean of the distributions. The mean of the sampling distribution is nearly equivalent to the population parameter. However, the mean of the bootstrap distribution will be the value of the sample estimate from the first sample we took from the population. This is the reason why the bootstrap distribution sits to the right of the sampling distribution.</p>
+<p>The key takeaway here is that the standard error of the bootstrap sampling distribution serves as a great approximation of the standard error of the sampling distribution.</p>
+<p>This gives us a solid foundation to learn about confidence intervals and hypothesis testing in the coming weeks.</p>
+</section>
+<section id="exercise-5-taking-bootstrap-samples" class="level3">
+<h3 class="anchored" data-anchor-id="exercise-5-taking-bootstrap-samples">Exercise 5: Taking Bootstrap Samples</h3>
+<p>For this exercise, we have taken a sample from the <code>population</code> data frame and assigned it to the object <code>boot_eg_sample</code> of sample size 50. You are going to make a data frame of bootstrap sample estimates with 1000 reps. Afterwards, you will assign the standard error of the bootstrap sampling distribution to <code>answer_5</code>. We have provided a code template below.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">60</span>)</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>boot_eg_sample <span class="ot">&lt;-</span> ... <span class="sc">%&gt;%</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>        <span class="fu">slice_sample</span>(<span class="at">n =</span> ...)</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>boot_eg_sample_est <span class="ot">&lt;-</span> boot_eg_sample <span class="sc">%&gt;%</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>        <span class="fu">...</span>(<span class="at">... =</span> ..., <span class="at">... =</span> ..., <span class="at">replace =</span> ...) <span class="sc">%&gt;%</span></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>        <span class="fu">...</span>(...) <span class="sc">%&gt;%</span></span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>        <span class="fu">summarize</span>(<span class="at">mean =</span> <span class="fu">...</span>(x))</span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>answer_5 <span class="ot">&lt;-</span> boot_eg_sample_est <span class="sc">%&gt;%</span></span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a>        <span class="fu">summarize</span>(<span class="at">se =</span> <span class="fu">...</span>(mean)) <span class="sc">%&gt;%</span></span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>        <span class="fu">pull</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a>        <span class="fu">round</span>(<span class="dv">3</span>)</span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a><span class="fu">test_5</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+
+
+</section>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, function() {
+      let href = xref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children.length > 2) {
+          for (let i = 0; i < 2; i++) {
+            container.appendChild(note.children[i].cloneNode(true));
+          }
+          return container.innerHTML
+        } else {
+          return note.innerHTML;
+        }
+      } else {
+        return note.innerHTML;
+      }
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+          // target, if specified
+          link.setAttribute("target", "_blank");
+      }
+    }
+});
+</script>
+<nav class="page-navigation column-body">
+  <div class="nav-page nav-page-previous">
+      <a href="../../../docs/econ_325/02_dispersion_and_dependence/dispersion_and_dependence.html" class="pagination-link">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">5 - Dispersion and Dependence</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../../../docs/econ_325/03_confidence_intervals/confidence_intervals.html" class="pagination-link">
+        <span class="nav-page-text">7 - Confidence Intervals</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item">
+ <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/80x15.png"></a>.  <a rel="license" href="https://comet.arts.ubc.ca/pages/copyright.html">See details.</a>
+  </li>  
+</ul>
+    </div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item">
+ The COMET Project and the UBC Vancouver School of Economics are located on the traditional, ancestral and unceded territory of the xʷməθkʷəy̓əm (Musqueam) and Sḵwx̱wú7mesh (Squamish) peoples.
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+</body></html>

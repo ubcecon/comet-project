@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-GB" xml:lang="en-GB"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.36">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="COMET Team   Oliver (Junye) Xu, Colby Chambers, Jonathan Graves, Jasmine Arora">
+<meta name="dcterms.date" content="2023-01-12">
+<meta name="keywords" content="economics, econometrics, R, data, machine learning, UBC, COMET, geog 374, econ 325, econ 326, learning, teaching, learn r, r help, help, tutorial, r tutorial for beginners,learning statistics with r, learn r programming, learn statistics, linear regression, r machine learning, learn machine learning, university of british columbia, british columbia, r programming for beginners, r language tutorial, r tutorial for beginners, economic data, econometrics tutoring, economics help for students, economics homework help, oer resources for teachers, open educational resources for teachers, educational resource, oer project, oer materials, oer resources, learn economics online, learn econometrics, teach yourself economics, teach yourself econometrics, econometrics basics for beginners">
+<meta name="description" content="What is a hypothesis? How do we test it? This notebook introduces hypothesis testing in two different ways, outlining the connection between them and how we can use this technique to answer economic questions.">
+
+<title>COMET - 04 - ECON 325: Hypothesis Testing</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<link href="../../../docs/econ_325/09_regression/simple_regression.html" rel="next">
+<link href="../../../docs/econ_325/03_confidence_intervals/confidence_intervals.html" rel="prev">
+<link href="../../../media/comet_favicon.png" rel="icon" type="image/png">
+<script src="../../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<link rel="stylesheet" href="../../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a href="../../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../../media/logo_no_tiny_text.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">COMET</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../index.html" rel="" target=""><i class="bi bi-house-door" role="img">
+</i> 
+ <span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-get-started" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Get Started</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-get-started">    
+        <li>
+    <a class="dropdown-item" href="../../../pages/quickstart.html" rel="" target="">
+ <span class="dropdown-text">Quickstart Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../pages/installing_locally.html" rel="" target="">
+ <span class="dropdown-text">Install and Use COMET</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/intro_jupyter/intro_to_jupyter.html" rel="" target="">
+ <span class="dropdown-text">Learn about Jupyter</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/intro_r/introduction_to_R.html" rel="" target="">
+ <span class="dropdown-text">Learn about R</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/econ_prep/Introduction to Statistical Concepts.html" rel="" target="">
+ <span class="dropdown-text">Review High School Statistics</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-basics" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Basics</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-basics">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/index_intro.html" rel="" target="">
+ <span class="dropdown-text">Preliminary Material</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_325/index_325.html" rel="" target="">
+ <span class="dropdown-text">Introduction to Econometrics (ECON 325)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/econ_prep/Introduction to Statistical Concepts.html" rel="" target="">
+ <span class="dropdown-text">Review of Statistics</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-fundamentals" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Fundamentals</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-fundamentals">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_326/index_326.html" rel="" target="">
+ <span class="dropdown-text">Introduction to Empirical Models (ECON 326)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/geog_374/index_374.html" rel="" target="">
+ <span class="dropdown-text">Geographic Computation (GEOG 374)</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-projects" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Projects</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-projects">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_490/index_490.html" rel="" target="">
+ <span class="dropdown-text">Overview of ECON 490</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_490/index_490_r.html" rel="" target="">
+ <span class="dropdown-text">R Modules</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_490/index_490_stata.html" rel="" target="">
+ <span class="dropdown-text">STATA Modules</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-advanced" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Advanced</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-advanced">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_adv/index_adv.html" rel="" target="">
+ <span class="dropdown-text">Advanced Topics</span></a>
+  </li>  
+    </ul>
+  </li>
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-launch-comet" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+      <i class="bi bi-play" role="img">
+</i> 
+ <span class="menu-text">Launch COMET</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-launch-comet">    
+        <li>
+    <a class="dropdown-item" href="https://open.jupyter.ubc.ca/jupyter/hub/user-redirect/git-pull?repo=https%3A%2F%2Fgithub.com%2Fubcecon%2Fcomet-project&amp;urlpath=lab%2Ftree%2Fcomet-project%2F&amp;branch=main" rel="" target=""><i class="bi bi-cloud-check" role="img">
+</i> 
+ <span class="dropdown-text">Launch on JupyterOpen</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://ubc.syzygy.ca/jupyter/hub/user-redirect/git-pull?repo=https%3A%2F%2Fgithub.com%2Fubcecon%2Fcomet-project&amp;urlpath=lab%2Ftree%2Fcomet-project%2F&amp;branch=main" rel="" target=""><i class="bi bi-gear" role="img">
+</i> 
+ <span class="dropdown-text">Launch on Syzygy</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://colab.research.google.com/github/ubcecon/comet-project/blob/main/" rel="" target=""><i class="bi bi-google" role="img">
+</i> 
+ <span class="dropdown-text">Launch on Collab</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://github.com/ubcecon/comet-project/archive/refs/heads/main.zip" rel="" target=""><i class="bi bi-cloud-download" role="img">
+</i> 
+ <span class="dropdown-text">Launch Locally</span></a>
+  </li>  
+        <li><hr class="dropdown-divider"></li>
+        <li>
+    <a class="dropdown-item" href="https://github.com/ubcecon/comet-project/archive/refs/heads/data-only.zip" rel="" target=""><i class="bi bi-clipboard-data" role="img">
+</i> 
+ <span class="dropdown-text">Project Datasets</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="../../../#" rel="" target="">
+ <span class="menu-text">|</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-about" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">About</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-about">    
+        <li>
+    <a class="dropdown-item" href="../../../pages/team.html" rel="" target="">
+ <span class="dropdown-text">COMET Team</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../pages/using_comet.html" rel="" target="">
+ <span class="dropdown-text">Teach With COMET</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../pages/copyright.html" rel="" target="">
+ <span class="dropdown-text">Copyright Information</span></a>
+  </li>  
+    </ul>
+  </li>
+</ul>
+            <div class="quarto-navbar-tools">
+</div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../docs/econ_325/index_325.html">Introduction to Econometrics</a></li><li class="breadcrumb-item"><a href="../../../docs/econ_325/04_hypothesis_testing/hypothesis_testing.html">8 - Hypothesis Testing</a></li></ol></nav>
+      <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+      </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation docked overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_intro/index_intro.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true">
+ <span class="menu-text">Preliminary Material</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_intro/intro_r/introduction_to_R.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">0 - Intro to R</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_intro/intro_to_data/intro_to_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1 - Intro to Data (Part 1)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_intro/intro_to_data/intro_to_data2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2 - Intro to Data (Part 2)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_intro/econ_prep/Introduction to Statistical Concepts.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3 - Review of Basic Statistics</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="px-0"><hr class="sidebar-divider hi "></li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true">
+ <span class="menu-text">Introduction to Econometrics</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/index_325.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">0 - Overview of ECON 325</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/08_distribution/distribution.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1 - Distribution</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/06_visualization_1/intro_to_visualization1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2 - Visualization I</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/07_visualization_2/intro_to_visualization2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3 - Visualization II</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/01_central_tendency/central_tendency.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4 - Central Tendency</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/02_dispersion_and_dependence/dispersion_and_dependence.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">5 - Dispersion and Dependence</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/10_sampling_distributions/Sampling_distributions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6 - Sampling Distributions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/03_confidence_intervals/confidence_intervals.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">7 - Confidence Intervals</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/04_hypothesis_testing/hypothesis_testing.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">8 - Hypothesis Testing</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/09_regression/simple_regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">9 - Simple Regression</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#outline" id="toc-outline" class="nav-link active" data-scroll-target="#outline">Outline</a>
+  <ul class="collapse">
+  <li><a href="#prerequisites" id="toc-prerequisites" class="nav-link" data-scroll-target="#prerequisites">Prerequisites</a></li>
+  <li><a href="#outcomes" id="toc-outcomes" class="nav-link" data-scroll-target="#outcomes">Outcomes</a></li>
+  </ul></li>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#the-hypothesis-testing-procedure" id="toc-the-hypothesis-testing-procedure" class="nav-link" data-scroll-target="#the-hypothesis-testing-procedure">The Hypothesis Testing Procedure</a></li>
+  <li><a href="#steps-in-hypothesis-testing" id="toc-steps-in-hypothesis-testing" class="nav-link" data-scroll-target="#steps-in-hypothesis-testing">Steps in Hypothesis Testing</a>
+  <ul class="collapse">
+  <li><a href="#our-example" id="toc-our-example" class="nav-link" data-scroll-target="#our-example">Our Example</a></li>
+  <li><a href="#step-1-state-the-null-hypothesis-and-alternative-hypothesis" id="toc-step-1-state-the-null-hypothesis-and-alternative-hypothesis" class="nav-link" data-scroll-target="#step-1-state-the-null-hypothesis-and-alternative-hypothesis">Step 1: State the Null Hypothesis and Alternative Hypothesis</a></li>
+  <li><a href="#exercise" id="toc-exercise" class="nav-link" data-scroll-target="#exercise">Exercise</a></li>
+  </ul></li>
+  <li><a href="#step-2-choose-a-significance-level-alpha" id="toc-step-2-choose-a-significance-level-alpha" class="nav-link" data-scroll-target="#step-2-choose-a-significance-level-alpha">Step 2: Choose a Significance Level <span class="math inline">\(\alpha\)</span></a>
+  <ul class="collapse">
+  <li><a href="#step-3-compute-the-test-statistic" id="toc-step-3-compute-the-test-statistic" class="nav-link" data-scroll-target="#step-3-compute-the-test-statistic">Step 3: Compute the Test Statistic</a></li>
+  <li><a href="#step-4-interpret-the-results" id="toc-step-4-interpret-the-results" class="nav-link" data-scroll-target="#step-4-interpret-the-results">Step 4: Interpret the Results</a></li>
+  <li><a href="#the-critical-value-or-rejection-region-approach" id="toc-the-critical-value-or-rejection-region-approach" class="nav-link" data-scroll-target="#the-critical-value-or-rejection-region-approach">The Critical Value (or Rejection Region) Approach:</a></li>
+  <li><a href="#the-p-value-approach" id="toc-the-p-value-approach" class="nav-link" data-scroll-target="#the-p-value-approach">The <span class="math inline">\(p\)</span>-value Approach:</a></li>
+  </ul></li>
+  <li><a href="#exercise-1" id="toc-exercise-1" class="nav-link" data-scroll-target="#exercise-1">Exercise</a></li>
+  <li><a href="#applications-of-the-procedure-with-the-r-function-t.test" id="toc-applications-of-the-procedure-with-the-r-function-t.test" class="nav-link" data-scroll-target="#applications-of-the-procedure-with-the-r-function-t.test">Applications of the Procedure with the R function <code>t.test()</code></a></li>
+  <li><a href="#example-1-one-sample-t-test" id="toc-example-1-one-sample-t-test" class="nav-link" data-scroll-target="#example-1-one-sample-t-test">Example 1: One Sample <span class="math inline">\(t\)</span>-test</a></li>
+  <li><a href="#example-2-two-sample-t-test" id="toc-example-2-two-sample-t-test" class="nav-link" data-scroll-target="#example-2-two-sample-t-test">Example 2: Two Sample <span class="math inline">\(t\)</span>-test</a></li>
+  <li><a href="#exercise-2" id="toc-exercise-2" class="nav-link" data-scroll-target="#exercise-2">Exercise</a></li>
+  <li><a href="#applications-of-hypothesis-testing-with-pearsons-correlation-coefficient" id="toc-applications-of-hypothesis-testing-with-pearsons-correlation-coefficient" class="nav-link" data-scroll-target="#applications-of-hypothesis-testing-with-pearsons-correlation-coefficient">Applications of Hypothesis Testing with Pearson’s Correlation Coefficient</a>
+  <ul class="collapse">
+  <li><a href="#pearson-correlation-test" id="toc-pearson-correlation-test" class="nav-link" data-scroll-target="#pearson-correlation-test">Pearson Correlation Test</a></li>
+  </ul></li>
+  <li><a href="#type-i-and-type-ii-errors" id="toc-type-i-and-type-ii-errors" class="nav-link" data-scroll-target="#type-i-and-type-ii-errors">Type I and Type II Errors</a>
+  <ul class="collapse">
+  <li><a href="#exercise-3" id="toc-exercise-3" class="nav-link" data-scroll-target="#exercise-3">Exercise</a></li>
+  </ul></li>
+  </ul>
+<div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/ubcecon/comet-project/issues/new" class="toc-action">Report an issue</a></p></div></div><div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="hypothesis_testing.ipynb" download="hypothesis_testing.ipynb"><i class="bi bi-journal-code"></i>Jupyter</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content column-body" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">04 - ECON 325: Hypothesis Testing</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">econ 325</div>
+    <div class="quarto-category">confidence</div>
+    <div class="quarto-category">hypothesis testing</div>
+    <div class="quarto-category">t-tests</div>
+    <div class="quarto-category">errors</div>
+    <div class="quarto-category">type-I and II</div>
+    <div class="quarto-category">p-values</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    What is a hypothesis? How do we test it? This notebook introduces hypothesis testing in two different ways, outlining the connection between them and how we can use this technique to answer economic questions.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>COMET Team <br> <em>Oliver (Junye) Xu, Colby Chambers, Jonathan Graves, Jasmine Arora</em> </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">12 January 2023</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+</header>
+
+<section id="outline" class="level2">
+<h2 class="anchored" data-anchor-id="outline">Outline</h2>
+<section id="prerequisites" class="level3">
+<h3 class="anchored" data-anchor-id="prerequisites">Prerequisites</h3>
+<ul>
+<li>Introduction to Jupyter</li>
+<li>Introduction to R</li>
+<li>Introduction to Visualization</li>
+<li>Central Tendency</li>
+<li>Distribution</li>
+<li>Dispersion and Dependence</li>
+<li>Confidence Intervals</li>
+</ul>
+</section>
+<section id="outcomes" class="level3">
+<h3 class="anchored" data-anchor-id="outcomes">Outcomes</h3>
+<p>After completing this notebook, you will be able to:</p>
+<ul>
+<li>Set up hypotheses to address a research question</li>
+<li>Conduct 1-sample and 2-sample <span class="math inline">\(t\)</span>-tests to address these questions in the context of population means</li>
+<li>Use the critical value and <span class="math inline">\(p\)</span>-value approaches to determine whether or not to reject a null hypothesis</li>
+<li>Interpret type I and type II errors in order to explore how sample and population statistics relate</li>
+</ul>
+</section>
+</section>
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>In the previous notebook, we covered a fundamental tool in statistics: <em>confidence intervals</em>. In this notebook, we will build on this knowledge and learn about an important inference technique, perhaps one of the most important concepts in elementary statistics: <strong>hypothesis testing</strong>.</p>
+<p>Hypothesis testing allows us to test precise statements about data, using a straight-forward process.</p>
+<ol type="1">
+<li>We first create a hypothesis about some phenomenon (i.e.&nbsp;the relationship between two variables in our dataset).</li>
+<li>We then select a test to determine whether the sample data gives us credible reason to reject this initial hypothesis.</li>
+<li>Finally, we conduct our test and draw conclusions about the validity of our hypothesis.</li>
+</ol>
+<p>This is a very high-level summary of hypothesis testing: we will dive into the concept in much more detail throughout this notebook; along the way, we will rely on some helpful built-in functions in R to make this process more convenient.</p>
+<p>However, as you go through this notebook, pay careful attention to not just the mechanics but also the <strong>logic</strong> of hypothesis testing. This is perhaps the single most important concept in introductory econometrics, so a careful understanding of this material will serve you well in future courses and beyond. Let’s get started!</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># loading tests</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"testing_hypothesis_testing.r"</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># importing packages</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(haven)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># reading in the data</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>census_data <span class="ot">&lt;-</span> <span class="fu">read_dta</span>(<span class="st">"../datasets/01_census2016.dta"</span>)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>census_data <span class="ot">&lt;-</span> <span class="fu">filter</span>(census_data, <span class="sc">!</span><span class="fu">is.na</span>(census_data<span class="sc">$</span>wages))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="the-hypothesis-testing-procedure" class="level2">
+<h2 class="anchored" data-anchor-id="the-hypothesis-testing-procedure">The Hypothesis Testing Procedure</h2>
+<p>A hypothesis test always involves two hypotheses: the <strong>null hypothesis</strong> and the <strong>alternative hypothesis</strong>. The null hypothesis (<span class="math inline">\({H_0}\)</span>) expresses a “default” claim which is to be tested, while the alternative hypothesis (<span class="math inline">\({H_1}\)</span>) expresses the contrary to the null hypothesis. Typically, our alternative hypothesis expresses what we may hope to prove about our data.</p>
+<blockquote class="blockquote">
+<p><strong>Example</strong>: Perhaps we suspect that the mean wage of Canadian men is greater than $50,000 per year. As a default claim, we will assert the null hypothesis that the mean wage of Canadian men is less than or equal to 50,000. Our alternative hypothesis will then express that the mean wage of Canadian men is greater than 50,000. If we find sufficient evidence in the data to reject the null hypothesis, we can argue with a certain degree of certainty that we should favour this alternative hypothesis. If we don’t find this strong evidence, we fail to reject the null hypothesis (and our suspicion is probably false).</p>
+</blockquote>
+<p>To determine whether we should reject the null hypothesis in favour of the alternative hypothesis, we need two key features:</p>
+<ol type="1">
+<li>A <strong>significance level</strong> (denoted by <span class="math inline">\(\alpha\)</span>) which is the probability which determines the criterion for deciding if a sample statistic is “unlikely” if the null hypothesis is true.</li>
+<li>A <strong>test statistic</strong> which is number we calculate from our data: this is usually a function of various features of that data such as its mean, standard deviation, and sample size.</li>
+</ol>
+<p>Together, these two features provide the criterion under which we can accept or reject our null hypothesis. We can implement these using the following approaches:</p>
+<p>There are two common approaches we can use when testing a hypothesis: the <strong>critical value approach (rejection region)</strong> and <strong><span class="math inline">\(p\)</span>-value approach</strong>. Both have their uses, and we will demonstrate both in this notebook. They also have a series of steps, some of which they share in common.</p>
+</section>
+<section id="steps-in-hypothesis-testing" class="level2">
+<h2 class="anchored" data-anchor-id="steps-in-hypothesis-testing">Steps in Hypothesis Testing</h2>
+<p>Let’s now concretely explore the steps in both approaches. Steps 1-3 apply identically to <em>both</em> the critical value and <span class="math inline">\(p\)</span>-value approaches, and are always followed. Step 4, the interpretation step, diverges between the two approaches.</p>
+<p>We will start with one important type of test: the <strong>one sample <span class="math inline">\(t\)</span>-test</strong>. This kind of test is used to evaluate statements about whether the population average is equal to a particular value - for instance, our example above with average wages being greater than $50,000. This test is appropriate in situations where:</p>
+<ol type="1">
+<li>The statistic is <strong>normally distributed</strong>: in the case of the sample mean, when <span class="math inline">\(n &gt; 120\)</span>, invoking the Central Limit Theorem for normality.</li>
+<li>We <strong>don’t know the population standard deviation</strong> of the variable we are testing.</li>
+</ol>
+<p>This is very similar to when we constructed confidence intervals for a sample mean when we didn’t know the population standard deviation in the previous notebook. While a common type of test, this is just one of many possibilities for constructing a hypothesis test; however, we will use it as our example for brevity’s sake as we go through the general hypothesis testing procedure.</p>
+<blockquote class="blockquote">
+<p><strong>Tip</strong>: Wikipedia actually has quite a useful article containing a chart of <a href="https://en.wikipedia.org/wiki/Test_statistic">Common Hypothesis Tests</a> for different kinds of statistics.</p>
+</blockquote>
+<section id="our-example" class="level3">
+<h3 class="anchored" data-anchor-id="our-example">Our Example</h3>
+<p>Let’s work with our Census data, and suppose that our census data represents the <strong>entire Canadian population</strong> and we have no prior knowledge of it. That is, pretend we do not observe any population values from our census data, just like in real life where it is impossible to observe population parameters! We will then randomly select a sample of observations from our census data (the population) to represent our sample. We can then test to see if the average wage in our sample data is equal to the hypothesized average wage of the population as a whole. Let’s draw a random sample first!</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>) <span class="co"># ensures the reproducibility of our code </span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"># (we get the same sample if we start with that same seed each time you run the same process)</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>sample_data <span class="ot">&lt;-</span> census_data <span class="sc">%&gt;%</span> </span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>               <span class="fu">slice_sample</span>(<span class="at">n =</span> <span class="dv">100</span>,  <span class="co"># number of observations to sample from the population</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>               <span class="at">replace =</span> <span class="cn">FALSE</span>) <span class="co"># without replacement</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="step-1-state-the-null-hypothesis-and-alternative-hypothesis" class="level3">
+<h3 class="anchored" data-anchor-id="step-1-state-the-null-hypothesis-and-alternative-hypothesis">Step 1: State the Null Hypothesis and Alternative Hypothesis</h3>
+<p>The null hypothesis that a population mean wage <span class="math inline">\(\mu^{wage}\)</span> is equal to a certain value <span class="math inline">\(\mu_{0}\)</span> is:</p>
+<p><span class="math display">\[
+{H_0}: \mu^{wage} = \mu_{0}
+\]</span></p>
+<p>At this point, we have 3 choices for how to formulate our alternative hypothesis:</p>
+<ol type="1">
+<li><strong>Two-Sided Test</strong>: If we want the rejection of the null hypothesis to allow us to argue that <span class="math inline">\(\mu^{wage}\)</span> is different from the specific value <span class="math inline">\(\mu_{0}\)</span>, then we can express our alternative hypothesis as:</li>
+</ol>
+<p><span class="math display">\[
+{H_1}: \mu^{wage} \neq \mu_{0}
+\]</span></p>
+<ol start="2" type="1">
+<li><strong>One-Sided Test (Left-Tailed)</strong>: If we want the rejection of the null hypothesis to allow us to argue that <span class="math inline">\(\mu^{wage}\)</span> is less than the specific value <span class="math inline">\(\mu_{0}\)</span>, then we can express our alternative hypothesis as:</li>
+</ol>
+<p><span class="math display">\[
+{H_1}: \mu^{wage} &lt; \mu_{0}
+\]</span></p>
+<ol start="3" type="1">
+<li><strong>One-Sided Test (Right-Tailed)</strong>: If we want the rejection of the null hypothesis to allow us to argue that <span class="math inline">\(\mu^{wage}\)</span> is greater than the specific value <span class="math inline">\(\mu_{0}\)</span>, then we can express our alternative hypothesis as:</li>
+</ol>
+<p><span class="math display">\[
+{H_1}: \mu^{wage} &gt; \mu_{0}
+\]</span></p>
+<p>In all of these hypotheses, and for hypotheses in general, it is important to remember that we construct our hypotheses about <em>population parameters</em>, not sample statistics. This is because the purpose of the hypothesis testing procedure is for us to make inferences about a population. When we collect a sample, we can immediately calculate its sample mean, variance or other features. There is thus no use to construct hypotheses about these parameters! Further, while the example above considers hypotheses about a population mean, we can make hypotheses about a population variance, proportion, or various other parameters of interest. The population mean is just the default we are considering since we are focusing our attention on the one-sample <span class="math inline">\(t\)</span>-test for now.</p>
+<p>Let’s suppose that the literature on labour market earnings presents a null hypothesis that the mean wage of Canadians is $54,000 per year. We will set this up against a two-sided alternative, since this is a more stringent alternative hypothesis and requires us to have more certainty in our results in order to reject the null (as explained above).</p>
+<p><span class="math display">\[
+H_{0}: \mu = 54000
+\]</span> <span class="math display">\[
+H_{1}: \mu \neq 54000
+\]</span></p>
+</section>
+<section id="exercise" class="level3">
+<h3 class="anchored" data-anchor-id="exercise">Exercise</h3>
+<p>Suppose that you are investigating the mean years of education among all citizens in a country who are over the age of 18. Let’s say you want to find support for the idea that the mean years of education among adults in this country equals 12, indicating that the average years of schooling accumulated per person amounts to some degree of post-secondary education. Think about how you would set up your null hypothesis. Which of the following is <em>NOT</em> a correct alternative hypothesis?</p>
+<ol type="1">
+<li>$ {H_1}: ^{education} &lt; 12 $</li>
+<li>$ {H_1}: ^{education} $</li>
+<li>$ {H_1}: ^{education} &gt; 12 $</li>
+</ol>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>answer_0 <span class="ot">&lt;-</span> ...  <span class="co"># fill in th e.. with your answer of either 1, 2 or 3 </span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">test_0</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+</section>
+</section>
+<section id="step-2-choose-a-significance-level-alpha" class="level2">
+<h2 class="anchored" data-anchor-id="step-2-choose-a-significance-level-alpha">Step 2: Choose a Significance Level <span class="math inline">\(\alpha\)</span></h2>
+<p>Before any calculation of test statistics, we must choose a significance level. As a reminder, this is the probability of seeing a sample statistic at least as extreme as the one we find from our data when we assume that our null hypothesis is actually true. We most commonly set our significance level at 0.05, or 5%, but other common values include 1%, 10% and even 20%. You will understand the importance of this number more when we reach the interpretation stage.</p>
+<blockquote class="blockquote">
+<p><strong>Tip</strong>: Remember in the previous notebook on confidence intervals that the confidence level is denoted as <span class="math inline">\(1 - \alpha\)</span>. Here, <span class="math inline">\(\alpha\)</span> itself is the significance level, meaning that the confidence level and significance level add up to 1. It is important not to use these two terms interchangeably!</p>
+</blockquote>
+<p>We will choose our confidence level to be 5% since this is a common standard in applied economic work:</p>
+<p><span class="math display">\[
+\alpha = 0.05
+\]</span></p>
+<section id="step-3-compute-the-test-statistic" class="level3">
+<h3 class="anchored" data-anchor-id="step-3-compute-the-test-statistic">Step 3: Compute the Test Statistic</h3>
+<p>This is the most mathematical step, requiring some calculation. Our <strong>test statistic</strong> gives us a numeric benchmark at which we can reject our null hypothesis in Step 4. Calculating the test statistic is quick, but it is important to understand the intuition behind it and how it is derived.</p>
+<p>When we calculate our test statistic with the one-sample <span class="math inline">\(t\)</span>-test we use the following approach:</p>
+<ol type="1">
+<li>We take our sample statistic</li>
+<li>We subtract it from the mean of our sampling distribution</li>
+<li>We then divide this value by the standard deviation of our sampling distribution</li>
+</ol>
+<p>In general, this process will differ slightly depending on the situation we find ourselves in. The type of parameter we are making inferences about, as well as our sample size and the shape of our population distribution will all play important roles in determining how exactly we calculate the mean and standard deviation of our desired sampling distribution; however, the general process outlined above will always hold for calculating a test statistic.</p>
+<p>As noted, we will look below for calculating the test statistic for one case: one sample <span class="math inline">\(t\)</span>-tests.</p>
+<p>Since we don’t know the standard deviation of our population but do know that the distribution of our sampling statistic is normal (since the sample size is &gt; 30), we calculate our test statistic using the following <strong>one sample <span class="math inline">\(t\)</span>-statistic</strong>:</p>
+<p><span class="math display">\[
+\frac{\bar x - \mu_{0}}{(s / \sqrt n)}
+\]</span> <br> where <span class="math inline">\(\bar x\)</span> is the sample mean we have found, <span class="math inline">\(\mu_{0}\)</span> is the population mean we are assuming to be true under the null hypothesis <span class="math inline">\(H_{0} : \mu = \mu_{0}\)</span>, <span class="math inline">\(s\)</span> is the sample standard deviation and <span class="math inline">\(n\)</span> is the sample size.</p>
+<p>Again, the test statistic will be calculated using many different formulas depending on the test being performed, what we know about it, the size of our sample, and whether our hypothesis is about a population mean, proportion, or variance.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute the t-statistic/critical value for the one sample t-test</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>t_stat <span class="ot">&lt;-</span> (<span class="fu">mean</span>(sample_data<span class="sc">$</span>wages) <span class="sc">-</span> <span class="dv">54000</span>)<span class="sc">/</span>(<span class="fu">sd</span>(sample_data<span class="sc">$</span>wages)<span class="sc">/</span><span class="fu">sqrt</span>(<span class="dv">100</span>))</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>t_stat</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="step-4-interpret-the-results" class="level3">
+<h3 class="anchored" data-anchor-id="step-4-interpret-the-results">Step 4: Interpret the Results</h3>
+<p>This the final step of our hypothesis testing. It allows us to conclusively reject or fail to reject the null hypothesis we have set up. Importantly, this is the first step in the hypothesis testing process that allows us to choose one of a couple of methods to arrive at the same answer. We can either use the <strong>critical value approach</strong> or the <strong><span class="math inline">\(p\)</span>-value approach</strong>. Let’s look at each of them individually.</p>
+</section>
+<section id="the-critical-value-or-rejection-region-approach" class="level3">
+<h3 class="anchored" data-anchor-id="the-critical-value-or-rejection-region-approach">The Critical Value (or Rejection Region) Approach:</h3>
+<p>In this approach, we compare our calculated test statistic to a <strong>critical value</strong> (or values) corresponding to our chosen significance level. The critical value serves as the cutoff point beyond which we reject our null hypothesis. This means that if our calculated test statistic is more extreme than the critical value (situated more within the tail of the investigated distribution), we reject our null hypothesis. If the test statistic is instead within these bounds, we fail to reject our null hypothesis.</p>
+<p>How are critical values computed? Depending on our test, we determine a critical value by determining what values of statistics have an <span class="math inline">\(\alpha\)</span>-percent chance of being more extreme than the critical value. These values are called the <strong>rejection region</strong> and are specific to the test. The diagrams below illustrate this process.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># alt text for accessibility</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>alt_text <span class="ot">&lt;-</span> <span class="st">"A plot visualizing the left-tailed rejection region in a probability distribution curve."</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">draw_cr</span>(<span class="st">"left-tailed"</span>, <span class="at">df =</span> <span class="dv">30</span>, <span class="at">cv =</span> <span class="sc">-</span><span class="dv">2</span>)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="fu">mtext</span>(alt_text, <span class="at">side=</span><span class="dv">3</span>, <span class="at">line=</span><span class="fl">2.75</span>, <span class="at">cex=</span><span class="fl">1.1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>In this one-sided test, our null hypothesis that <span class="math inline">\(\mu \leq\mu_0\)</span>, and the alternative is that <span class="math inline">\(\mu &gt; \mu_0\)</span>. The value which had an <span class="math inline">\(\alpha\)</span>-percent of lying above it is called the critical value, and the red region represents the rejection region. The first diagram shows us where we can reject a null hypothesis such as <span class="math inline">\(H_{0}:\mu = \mu_{0}\)</span> in favour of the alternative hypothesis <span class="math inline">\(H_{1}:\mu &lt; \mu_{0}\)</span>”</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># alt text for accessibility</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>alt_text <span class="ot">&lt;-</span> <span class="st">"A plot visualizing the right-tailed rejection region in a probability distribution curve."</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="fu">draw_cr</span>(<span class="st">"right-tailed"</span>, <span class="at">df =</span> <span class="dv">30</span>, <span class="at">cv =</span> <span class="dv">2</span>)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">mtext</span>(alt_text, <span class="at">side=</span><span class="dv">3</span>, <span class="at">line=</span><span class="fl">2.75</span>, <span class="at">cex=</span><span class="fl">1.1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>This second diagram shows us where we can reject a null hypothesis such as <span class="math inline">\(H_{0}:\mu = \mu_{0}\)</span> in favour of the alternative hypothesis <span class="math inline">\(H_{1}:\mu &gt; \mu_{0}\)</span>. In either case, the red region is our rejection region. If our calculated test statistic falls in this region, it is “more extreme” than the critical value corresponding to our chosen significance level. This signals to us that we can can reject the null hypothesis in favour of the alternative hypothesis. If our calculated test statistic falls within the white region, we fail to reject our null.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># alt text for accessibility</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>alt_text <span class="ot">&lt;-</span> <span class="st">"A plot visualizing the two-tailed rejection region in a probability distribution curve"</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="fu">draw_cr</span>(<span class="st">"two-tailed"</span>, <span class="at">df =</span> <span class="dv">30</span>, <span class="at">cv =</span> <span class="dv">2</span>)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">mtext</span>(alt_text, <span class="at">side=</span><span class="dv">3</span>, <span class="at">line=</span><span class="fl">2.75</span>, <span class="at">cex=</span><span class="fl">1.1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The third diagram, on the other hand, shows us how to use the critical value approach to choose whether or not to reject a null hypothesis for a two-sided test. There are now two red regions for this type of test, indicative of the fact that our alternative hypothesis is now <span class="math inline">\(H_{1}: \mu \neq \mu_{0}\)</span>. Again, if our calculated test statistic falls within either of these rejection regions, we reject our null hypothesis. If it falls within the white region, we fail to reject our null. Pay attention to the fact that in all three cases, the area of the total red region equals <span class="math inline">\(\alpha\)</span>, our chosen significance level.</p>
+<p>However, for the two-sided test, this area is split up. Considering that our test statistic will deterministically fall near (or in) either the left-hand rejection region or right-hand region, the probability that it falls within that specific region itself is now half as likely as it was for the one-sided tests (the probability is now <span class="math inline">\(\alpha / 2\)</span>). In this sense, the two-sided test is more conservative. It is less likely for our calculated test statistic to fall inside the rejection region and allow us to reject our null hypothesis.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># examples of how to compute critical values for different types of test</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co"># suppose the significance level is 0.05</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co"># finding the lower and upper critical values for a two-sided test</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="fu">qt</span>(<span class="at">p=</span><span class="fl">0.025</span>, <span class="at">df=</span><span class="dv">8</span>, <span class="at">lower.tail=</span><span class="cn">TRUE</span>)</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="fu">qt</span>(<span class="at">p=</span><span class="fl">0.025</span>, <span class="at">df=</span><span class="dv">8</span>, <span class="at">lower.tail=</span><span class="cn">FALSE</span>)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="co"># finding the critical value for a left-sided test</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="fu">qt</span>(<span class="at">p=</span><span class="fl">0.05</span>, <span class="at">df=</span><span class="dv">8</span>, <span class="at">lower.tail=</span><span class="cn">TRUE</span>)</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="co"># finding the critical value for a right-sided test</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="fu">qt</span>(<span class="at">p=</span><span class="fl">0.05</span>, <span class="at">df=</span><span class="dv">8</span>, <span class="at">lower.tail=</span><span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Let’s compute the rejection regions for our sample data:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># finding the lower and upper critical values for our sample data</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">qt</span>(<span class="at">p=</span><span class="fl">0.025</span>, <span class="at">df=</span><span class="dv">99</span>, <span class="at">lower.tail=</span><span class="cn">TRUE</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">qt</span>(<span class="at">p=</span><span class="fl">0.025</span>, <span class="at">df=</span><span class="dv">99</span>, <span class="at">lower.tail=</span><span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We can see from the above that our test statistic of about 0.72 fits nicely within the upper and lower bound critical values of -1.98 and 1.98. Thus, again, it is very likely we see the sample statistic we have actually found conditioned on the null hypothesis being true. We thus do not have strong evidence to reject the null hypothesis. Further, we say that our sample mean is not <strong>statistically significant</strong>. Statistically significant results are those which we find upon rejecting the null hypothesis.</p>
+</section>
+<section id="the-p-value-approach" class="level3">
+<h3 class="anchored" data-anchor-id="the-p-value-approach">The <span class="math inline">\(p\)</span>-value Approach:</h3>
+<p>In this approach, we again use our test statistic to make inferences about our population. However, we no longer rely on the diagrams above. In this approach, we instead calculate what is called a <strong><span class="math inline">\(p\)</span>-value</strong>. The <span class="math inline">\(p\)</span>-value is the probability of observing a value at least as extreme as the test statistic if <span class="math inline">\({H_0}\)</span> is true. <span class="math inline">\(p\)</span>-value lies between 0 and 1 because it is a probability. For example, a <span class="math inline">\(p\)</span>-value of 0.05 would mean that if the <span class="math inline">\({H_0}\)</span> is true, there is a 5% chance of getting a test-statistic as extreme or more extreme than the one we obtained.</p>
+<p>Small <span class="math inline">\(p\)</span>-values provide evidence to reject the null hypothesis, since they indicate that the observed data is not likely if the hypothesis was true. Think of it this way, would you be more happy if I say that there is a 10% chance of seeing this test statistic if <span class="math inline">\({H_0}\)</span> was true or if I said there is a 1% chance of seeing this test statistic if <span class="math inline">\({H_0}\)</span> was true. I think you would be more happy if there was a 1% chance because that would mean that it is more unlikely to see this test statistic if <span class="math inline">\({H_0}\)</span> was true which means that we can be more confident that <span class="math inline">\({H_0}\)</span> is not true. Recall that in hypothesis testing we are trying to find evidence to reject the null hypothesis. A lower <span class="math inline">\(p\)</span>-value provide evidence to reject the null hypothesis. Formally, if the <span class="math inline">\(p\)</span>-value is less than or equal to our significance level <span class="math inline">\(\alpha\)</span>, the null hypothesis is rejected; otherwise, the null hypothesis is not rejected.</p>
+<p>For example,</p>
+<p>To find the <span class="math inline">\(p\)</span>-value associated with a t-score in R, we can use the <code>pt()</code> function:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Examples of how to compute p values for different types of test</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co"># If the t-score/critical value is 1.8 for a right-tailed test</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># find p-value if the degrees of freedom is 30</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="fu">pt</span>(<span class="at">q=</span><span class="fl">1.8</span>, <span class="at">df=</span><span class="dv">30</span>, <span class="at">lower.tail=</span><span class="cn">FALSE</span>)</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co"># If the t-score/critical value is 1.8 for a two-tailed test</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co">#find two-tailed p-value if the degrees of freedom is 30</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="dv">2</span><span class="sc">*</span><span class="fu">pt</span>(<span class="at">q=</span><span class="fl">1.8</span>, <span class="at">df=</span><span class="dv">30</span>, <span class="at">lower.tail=</span><span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Let’s compute the <em>p</em>-value for our sample data:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute the p-value</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="dv">2</span><span class="sc">*</span><span class="fu">pt</span>(<span class="at">q=</span>t_stat, <span class="at">df=</span><span class="dv">99</span>, <span class="at">lower.tail=</span><span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Our <span class="math inline">\(p\)</span>-value is about 0.47, which is much larger than our confidence level of 0.05. This means that, assuming the null is true, it is very likely that we see a value as extreme as our sample mean. It is thus not bizarre to imagine pulling such a sample statistic when the null of 54000 is in fact true. This causes us to fail to reject the null hypothesis.</p>
+</section>
+</section>
+<section id="exercise-1" class="level2">
+<h2 class="anchored" data-anchor-id="exercise-1">Exercise</h2>
+<p>Let’s say that you choose a 5% significance level and conduct a one sample <span class="math inline">\(t\)</span>-test (since you’re testing a hypothesis about the mean of a single population for which you don’t know the standard deviation). You receive a <span class="math inline">\(p\)</span>-value of 0.02 and correctly reject your null hypothesis. Have you proved that your null hypothesis is false?</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>answer_1 <span class="ot">&lt;-</span> <span class="st">"x"</span> <span class="co"># your answer of "yes" or "no" in place of "x" here</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">test_1</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+<p>Let’s now run through the hypothesis testing procedure more quickly with a few examples, but this time through an automation process with <code>t.test()</code>. It performs one and two sample t-tests on vectors of data.</p>
+</section>
+<section id="applications-of-the-procedure-with-the-r-function-t.test" class="level2">
+<h2 class="anchored" data-anchor-id="applications-of-the-procedure-with-the-r-function-t.test">Applications of the Procedure with the R function <code>t.test()</code></h2>
+</section>
+<section id="example-1-one-sample-t-test" class="level2">
+<h2 class="anchored" data-anchor-id="example-1-one-sample-t-test">Example 1: One Sample <span class="math inline">\(t\)</span>-test</h2>
+<p>Recall from our previous example:</p>
+<p><span class="math display">\[
+H_{0}: \mu = 54000
+\]</span> <span class="math display">\[
+H_{1}: \mu \neq 54000
+\]</span></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># conduct one sample t-test</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">t.test</span>(<span class="at">x =</span> sample_data<span class="sc">$</span>wages, <span class="at">mu =</span> <span class="dv">54000</span>, <span class="at">alternative =</span> <span class="st">"two.sided"</span>, <span class="at">conf.level =</span> <span class="fl">0.95</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<blockquote class="blockquote">
+<p>Now we may go back and check if the t statistic and <span class="math inline">\(p\)</span>-value here match with our manual calculation above. It matches!</p>
+</blockquote>
+<p>The <code>t.test()</code> function in R is super helpful in that it allows us to either reject or fail to reject the null hypothesis immediately. This is because it outputs a <span class="math inline">\(p\)</span>-value and test statistic immediately. In our sample data, our large <span class="math inline">\(p\)</span>-value and non-extreme test statistic prevent us from rejecting the null. If we received much different results (say a <span class="math inline">\(p\)</span>-value &lt; 0.05 or test statistic very large in magnitude), we would say that the probability of finding the particular sample mean under the null being true is incredibly unlikely. This sample mean would thus be a statistically significant result which we could try with a high degree of uncertainty, allowing us to reject the null in favour of the alternative hypothesis.</p>
+<blockquote class="blockquote">
+<p>One final crucial point about the <span class="math inline">\(p\)</span>-value: In this example, the <span class="math inline">\(p\)</span>-value was about 0.47. This does not mean that the probability the null hypothesis is true is 47%. It instead means that, conditioning on the null hypothesis being true, the probability of seeing a sample mean at least as far away from 54000 is 47%. This is why we cannot reject the null and did not have statistically significant results. It is quite likely to pull a sample mean this large by chance under the given situation.</p>
+</blockquote>
+</section>
+<section id="example-2-two-sample-t-test" class="level2">
+<h2 class="anchored" data-anchor-id="example-2-two-sample-t-test">Example 2: Two Sample <span class="math inline">\(t\)</span>-test</h2>
+<p>Next let us look at the <strong>two-sample <span class="math inline">\(t\)</span>-test</strong>. Unlike the one-sample <span class="math inline">\(t\)</span>-test where we use a sample mean point estimate to test a hypothesis about a population mean, the two-sample <span class="math inline">\(t\)</span>-test uses two sample means to test a hypothesis about the difference between two population means. More specifically, in this case, the two sample <span class="math inline">\(t\)</span>-test will test whether the means of two independent populations differ from each another. We will specifically use the two sample unpooled <span class="math inline">\(t\)</span>-test with unequal variances, which is used to tests hypotheses about the difference between population means when we know: 1. That both populations are normally distributed (or the sum of their sample sizes exceeds 40, invoking normality), 2. That the observations are independent between the two groups (i.e.&nbsp;observations are not paired between populations), 3. And we assume that both population standard deviations, while unknown, are different.</p>
+<p>For this example, we will test the hypothesis that there is no difference between the mean wages of Canadians and Non-Canadians. We will set this up against a two-sided alternative.</p>
+<p><span class="math display">\[
+H_{0}: \mu_{Canadian} = \mu_{Non-Canadian}
+\]</span> <span class="math display">\[
+H_{1}: \mu_{Canadian} \neq \mu_{Non-Canadian}
+\]</span></p>
+<p>We will again set our significance level at 5%.</p>
+<p><span class="math display">\[
+\alpha = 0.05
+\]</span></p>
+<p>Again, we will assume our census data represents our population and take two random samples from it, each of which will consistent exclusively of Canadians or Non-Canadians.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>) <span class="co"># ensures the reproducibility of our code (we get the same sample if we start with that same seed each time you run the same process)</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>sample_cad <span class="ot">&lt;-</span> census_data <span class="sc">%&gt;%</span> </span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>              <span class="fu">filter</span>(immstat <span class="sc">==</span> <span class="dv">1</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>              <span class="fu">slice_sample</span>(<span class="at">n =</span> <span class="dv">100</span>,  <span class="co"># number of observations to sample from the population</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>              <span class="at">replace =</span> <span class="cn">FALSE</span>) <span class="co"># without replacement</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>sample_noncad <span class="ot">&lt;-</span> census_data <span class="sc">%&gt;%</span> </span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>              <span class="fu">filter</span>(immstat <span class="sc">==</span> <span class="dv">2</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>              <span class="fu">slice_sample</span>(<span class="at">n =</span> <span class="dv">100</span>,  <span class="co"># number of observations to sample from the population</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>              <span class="at">replace =</span> <span class="cn">FALSE</span>) <span class="co"># without replacement</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>For fun, let’s look at our sample statistics.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(sample_cad<span class="sc">$</span>wages)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(sample_noncad<span class="sc">$</span>wages)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We can already see a large difference in mean wages between Canadians and Non-Canadians here. However, we will have to conduct our <span class="math inline">\(t\)</span>-test to determine whether or not this difference is statistically significant and thus whether or not we can reject our null hypothesis.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># conducting our two sample t-test</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">t.test</span>(<span class="at">x=</span>sample_cad<span class="sc">$</span>wages, <span class="at">y=</span>sample_noncad<span class="sc">$</span>wages, <span class="at">conf.level=</span><span class="fl">0.95</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Our <span class="math inline">\(t\)</span>-test yields a <span class="math inline">\(p\)</span>-value of about 0.1478, greater than our significance level of 0.05. Thus, our result is not statistically significant and we cannot reject our null hypothesis; however, this reveals nothing about why this is the case and does not control for any relevant factors. You will learn more about this in upcoming courses.</p>
+<p>We ran this <span class="math inline">\(t\)</span>-test on two independent populations (Canadians and Non-Canadians). Alternatively, if we want to compare the means of dependent populations and test whether or not they are the same, we can employ the <code>y ~ x</code> option to our <code>t.test()</code> function. The variable on the left-hand side of the tilde (<code>~</code>) is the dependent variable, while the variables on the right-hand side is the independent variable (or variables). We also need to specify within the <code>t.test()</code> function arguments to the options <code>paired</code> and <code>var.equal</code>. Both of these are set to FALSE by default, but we can change one or both of them to TRUE if we believe that our two samples come in pairs (a specific case of dependent samples) or the variances of the two populations are equal.</p>
+<blockquote class="blockquote">
+<p><strong>Note</strong>: The dependent sample t-test is also called the paired sample t-test. A perfect example of two dependent samples would be before-treatment and after-treatment patient groups in medical research.</p>
+</blockquote>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Let's create some fake data to demonstrate paired sample t-test</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>before <span class="ot">&lt;-</span><span class="fu">c</span>(<span class="fl">200.1</span>, <span class="fl">190.9</span>, <span class="fl">192.7</span>, <span class="dv">213</span>, <span class="fl">241.4</span>, <span class="fl">196.9</span>, <span class="fl">172.2</span>, <span class="fl">185.5</span>, <span class="fl">205.2</span>, <span class="fl">193.7</span>)</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>after <span class="ot">&lt;-</span><span class="fu">c</span>(<span class="fl">392.9</span>, <span class="fl">393.2</span>, <span class="fl">345.1</span>, <span class="dv">393</span>, <span class="dv">434</span>, <span class="fl">427.9</span>, <span class="dv">422</span>, <span class="fl">383.9</span>, <span class="fl">392.3</span>, <span class="fl">352.2</span>)</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>( </span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>                <span class="at">group =</span> <span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">"before"</span>, <span class="st">"after"</span>), <span class="at">each =</span> <span class="dv">10</span>),</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>                <span class="at">weight =</span> <span class="fu">c</span>(before,  after)</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>                )</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a><span class="fu">t.test</span>(weight <span class="sc">~</span> group, </span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>       <span class="at">data =</span> df, </span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>       <span class="at">paired =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>       <span class="at">conf.level=</span><span class="fl">0.95</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="exercise-2" class="level2">
+<h2 class="anchored" data-anchor-id="exercise-2">Exercise</h2>
+<p>Suppose you instead want to compare the mean earnings of those who have and have not graduated from high school. You determine that these are independent populations. Further, even though you don’t know the population standard deviations of earnings in each group, you determine that these standard deviations must not be the same, arguing that there is a wider spread of earnings among those who graduated high school. For these reasons, you conduct an unpooled, unequal variance two sample <span class="math inline">\(t\)</span>-test, the type of two sample <span class="math inline">\(t\)</span>-test we explored earlier in our applications. You then set up the following hypotheses.</p>
+<p><span class="math display">\[
+H_{0}: \mu_{graduated} = \mu_{didn't \ graduate}
+\]</span> <span class="math display">\[
+H_{1}: \mu_{graduated} \neq \mu_{didn't \ graduate}
+\]</span></p>
+<p>You then choose a significance level of 5%, the default level used. Suppose a friend instead sets up a one-sided alternative, namely that <span class="math inline">\(\mu_{graduated} &gt; \mu_{didn't \ graduate}\)</span>. Assuming the null hypothesis, significance level, sample data and type of test used are identical for both you and your friend, who is more likely to receive statistically significant results?</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>answer_2 <span class="ot">&lt;-</span> <span class="st">""</span> <span class="co"># your answer for "you" or "your friend" in place of "x" here</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">test_2</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+<p>Moving forward with your two-sided hypothesis test, you find a sample mean statistic of 60000 for those who graduated high school and 25000 for those who didn’t graduate high school. You find for your chosen significance level and distribution of sample means for each population that the resulting test statistic in your test is 1.5, while the critical values from the student’s t-distribution are -2 and 2 respectively. Should you reject the null hypothesis that there is no statistically significant difference between the mean earnings of each population?</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>answer_3 <span class="ot">&lt;-</span> <span class="st">"x"</span> <span class="co"># your answer for "yes" or "no" in place of "x" here</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">test_3</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+</section>
+<section id="applications-of-hypothesis-testing-with-pearsons-correlation-coefficient" class="level2">
+<h2 class="anchored" data-anchor-id="applications-of-hypothesis-testing-with-pearsons-correlation-coefficient">Applications of Hypothesis Testing with Pearson’s Correlation Coefficient</h2>
+<section id="pearson-correlation-test" class="level3">
+<h3 class="anchored" data-anchor-id="pearson-correlation-test">Pearson Correlation Test</h3>
+<p>Another parameter we can make hypotheses about is the correlation coefficient. We can use hypothesis testing to test inferences about the correlation between two variables by analyzing random samples. Let’s do this with <code>wages</code> and <code>mrkinc</code>. Recall from the Dependence and Dispersion Notebook that two variables are highly positively correlated if their correlation coefficient is close to 1, while they are highly negatively correlated if it is close to -1. Let’s suppose that we have reason to believe that <code>wages</code> and <code>mrkinc</code> are quite correlated (hence their correlation coefficient is not 0). To find support for this, we will set this up as an alternative hypothesis to be supported after rejecting the null hypothesis that there is no correlation. In this way, we have to work to reject our null hypothesis in order to find support for this belief. Let’s set up the hypotheses below.</p>
+<p><span class="math display">\[
+{H_0}: r = 0
+\]</span> <span class="math display">\[
+{H_1}: r \neq 0
+\]</span></p>
+<p>where <span class="math inline">\(r\)</span> is the population correlation coefficient between the wages and market income of Canadians. Let’s further choose our significance level to be the default 5% (95% confidence level).</p>
+<p><span class="math display">\[
+\alpha = 0.05
+\]</span></p>
+<p>Let’s now look at our sample statistic (sample correlation coefficient) to shed some light on the number whose significance we will be testing in our hypothesis test.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># finding the cor() between wages and mrkinc, including use="complete.obs" to remove NA entries</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cor</span>(census_data<span class="sc">$</span>wages, census_data<span class="sc">$</span>mrkinc, <span class="at">use=</span><span class="st">"complete.obs"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>This correlation coefficient appears to be quite different from 0, giving us some reason to believe we will likely be able to reject the null hypothesis in favour of our alternative hypothesis of some relationship between <code>wages</code> and <code>mrkinc</code> (in this case, a possibly very strongly positive relationship). However, there is always the small chance that we happen to have pulled a sample with a strong correlation which does not otherwise exist. To guard against this error of a false positive, we will conduct a Pearson Correlation test. Luckily, instead of having to calculate a test statistic and then calculate critical values or a <span class="math inline">\(p\)</span>-value, we can invoke the <code>cor.test()</code> function.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Pearson correlation test</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cor.test</span>(census_data<span class="sc">$</span>wages, census_data<span class="sc">$</span>mrkinc, <span class="at">use=</span><span class="st">"complete.obs"</span>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The correlation test yields an incredibly small <span class="math inline">\(p\)</span>-value of 2.2e-16 &lt; <span class="math inline">\(\alpha\)</span> = 0.05. Thus, we see that this correlation is statistically significant and reject the null hypothesis in favour of the alternative hypothesis that the true correlation coefficient is not zero.</p>
+</section>
+</section>
+<section id="type-i-and-type-ii-errors" class="level2">
+<h2 class="anchored" data-anchor-id="type-i-and-type-ii-errors">Type I and Type II Errors</h2>
+<p>One thing that is crucial to remember is that our hypothesis test may not always be correct. While a hypothesis test provides strong evidence for us to reject or fail to reject a null hypothesis, it is not concrete. That is why we never say that we “accept” the null hypothesis, instead preferring to say that we “fail to reject” the null hypothesis when no strong evidence exists against it. Similarly, we never say that we “accept” the alternative hypothesis, only that we “reject the null hypothesis in favour of the alternative hypothesis”. Neither hypothesis can conclusively be proven as true or false. Otherwise, we could calculate these parameters directly and there would be no need for constructing hypotheses about them!</p>
+<p>Due to this lack of concreteness, we may occasionally make incorrect decisions about rejecting or failing to reject a null hypothesis. These errors are called <strong>type I errors</strong> and <strong>type II errors</strong>. A type I error occurs when we incorrectly reject a true null hypothesis, otherwise known as a “false positive”. This can occur when we draw a sample statistic which appears incredibly unlikely under the null hypothesis and then falsely assume that means our null hypothesis is incorrect. In reality, that sample statistic could have just been an unlikely pull under a true null hypothesis. Type II errors, on the other hand, occur when we to fail to reject a false null hypothesis, otherwise known as a “false negative”. This can occur when we pull a sample statistic which is seemingly reasonable under our null hypothesis and falsely assume that we cannot reject the null. In reality, that sample statistic could have just been an unlikely pull which would have otherwise encouraged us to reject the null.</p>
+<p>The probability of making a type I error is denoted by <span class="math inline">\(\alpha\)</span> and is the significance level of our test. Conversely, the probability of correctly failing to reject a true null hypothesis is <span class="math inline">\(1 - \alpha\)</span>. The probability of a type II error is denoted by <span class="math inline">\(\beta\)</span>, while the probability of correctly rejecting a false null hypothesis is <span class="math inline">\(1 - \beta\)</span> and is known as the power of the test. A higher confidence level (corresponds to lower significance value) reduces the chances of getting a false positive and increases the chances of getting a false negative. In other words, for a fixed sample size, the smaller the <span class="math inline">\(\alpha\)</span>, the larger the <span class="math inline">\(\beta\)</span>. This indicates that there is a constant tradeoff betweeen making type I and II errors. As well, it is important to remember that we select our significance level and hence the probability of falsely rejecting a true null hypothesis before we even calculate our test statistic (it is Step 2). Conversely, we can never select for the probability of failing to reject a false null, <span class="math inline">\(\beta\)</span>. This probability instead emerges in the testing process.</p>
+<section id="exercise-3" class="level3">
+<h3 class="anchored" data-anchor-id="exercise-3">Exercise</h3>
+<p>Suppose you choose a 5% significance level and conduct a one sample t-test with <span class="math inline">\(p\)</span>-value of 0.13 and correctly reject the null hypothesis, but then concludes that the results are not statistically significant. What error have you made?</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>answer_4 <span class="ot">&lt;-</span> <span class="st">"x"</span> <span class="co"># your answer of "type 1" or "type 2" in place of "x" here</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="fu">test_4</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, function() {
+      let href = xref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children.length > 2) {
+          for (let i = 0; i < 2; i++) {
+            container.appendChild(note.children[i].cloneNode(true));
+          }
+          return container.innerHTML
+        } else {
+          return note.innerHTML;
+        }
+      } else {
+        return note.innerHTML;
+      }
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+          // target, if specified
+          link.setAttribute("target", "_blank");
+      }
+    }
+});
+</script>
+<nav class="page-navigation column-body">
+  <div class="nav-page nav-page-previous">
+      <a href="../../../docs/econ_325/03_confidence_intervals/confidence_intervals.html" class="pagination-link">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">7 - Confidence Intervals</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../../../docs/econ_325/09_regression/simple_regression.html" class="pagination-link">
+        <span class="nav-page-text">9 - Simple Regression</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item">
+ <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/80x15.png"></a>.  <a rel="license" href="https://comet.arts.ubc.ca/pages/copyright.html">See details.</a>
+  </li>  
+</ul>
+    </div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item">
+ The COMET Project and the UBC Vancouver School of Economics are located on the traditional, ancestral and unceded territory of the xʷməθkʷəy̓əm (Musqueam) and Sḵwx̱wú7mesh (Squamish) peoples.
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+</body></html>

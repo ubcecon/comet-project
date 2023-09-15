@@ -1,0 +1,1482 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-GB" xml:lang="en-GB"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.36">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="COMET Team   Valeria Zolla, Colby Chambers, Jonathan Graves">
+<meta name="dcterms.date" content="2023-01-12">
+<meta name="keywords" content="economics, econometrics, R, data, machine learning, UBC, COMET, geog 374, econ 325, econ 326, learning, teaching, learn r, r help, help, tutorial, r tutorial for beginners,learning statistics with r, learn r programming, learn statistics, linear regression, r machine learning, learn machine learning, university of british columbia, british columbia, r programming for beginners, r language tutorial, r tutorial for beginners, economic data, econometrics tutoring, economics help for students, economics homework help, oer resources for teachers, open educational resources for teachers, educational resource, oer project, oer materials, oer resources, learn economics online, learn econometrics, teach yourself economics, teach yourself econometrics, econometrics basics for beginners">
+<meta name="description" content="This notebook introduces the idea of a statistical distribution, including its properties and some commonly used functions associated with it. We also discuss the shape of distributions, and come common examples.">
+
+<title>COMET - 08 - ECON 325: Distributions</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<link href="../../../docs/econ_325/06_visualization_1/intro_to_visualization1.html" rel="next">
+<link href="../../../docs/econ_325/index_325.html" rel="prev">
+<link href="../../../media/comet_favicon.png" rel="icon" type="image/png">
+<script src="../../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<link rel="stylesheet" href="../../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a href="../../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../../media/logo_no_tiny_text.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">COMET</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../index.html" rel="" target=""><i class="bi bi-house-door" role="img">
+</i> 
+ <span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-get-started" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Get Started</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-get-started">    
+        <li>
+    <a class="dropdown-item" href="../../../pages/quickstart.html" rel="" target="">
+ <span class="dropdown-text">Quickstart Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../pages/installing_locally.html" rel="" target="">
+ <span class="dropdown-text">Install and Use COMET</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/intro_jupyter/intro_to_jupyter.html" rel="" target="">
+ <span class="dropdown-text">Learn about Jupyter</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/intro_r/introduction_to_R.html" rel="" target="">
+ <span class="dropdown-text">Learn about R</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/econ_prep/Introduction to Statistical Concepts.html" rel="" target="">
+ <span class="dropdown-text">Review High School Statistics</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-basics" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Basics</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-basics">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/index_intro.html" rel="" target="">
+ <span class="dropdown-text">Preliminary Material</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_325/index_325.html" rel="" target="">
+ <span class="dropdown-text">Introduction to Econometrics (ECON 325)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/econ_prep/Introduction to Statistical Concepts.html" rel="" target="">
+ <span class="dropdown-text">Review of Statistics</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-fundamentals" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Fundamentals</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-fundamentals">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_326/index_326.html" rel="" target="">
+ <span class="dropdown-text">Introduction to Empirical Models (ECON 326)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/geog_374/index_374.html" rel="" target="">
+ <span class="dropdown-text">Geographic Computation (GEOG 374)</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-projects" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Projects</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-projects">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_490/index_490.html" rel="" target="">
+ <span class="dropdown-text">Overview of ECON 490</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_490/index_490_r.html" rel="" target="">
+ <span class="dropdown-text">R Modules</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_490/index_490_stata.html" rel="" target="">
+ <span class="dropdown-text">STATA Modules</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-advanced" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Advanced</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-advanced">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_adv/index_adv.html" rel="" target="">
+ <span class="dropdown-text">Advanced Topics</span></a>
+  </li>  
+    </ul>
+  </li>
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-launch-comet" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+      <i class="bi bi-play" role="img">
+</i> 
+ <span class="menu-text">Launch COMET</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-launch-comet">    
+        <li>
+    <a class="dropdown-item" href="https://open.jupyter.ubc.ca/jupyter/hub/user-redirect/git-pull?repo=https%3A%2F%2Fgithub.com%2Fubcecon%2Fcomet-project&amp;urlpath=lab%2Ftree%2Fcomet-project%2F&amp;branch=main" rel="" target=""><i class="bi bi-cloud-check" role="img">
+</i> 
+ <span class="dropdown-text">Launch on JupyterOpen</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://ubc.syzygy.ca/jupyter/hub/user-redirect/git-pull?repo=https%3A%2F%2Fgithub.com%2Fubcecon%2Fcomet-project&amp;urlpath=lab%2Ftree%2Fcomet-project%2F&amp;branch=main" rel="" target=""><i class="bi bi-gear" role="img">
+</i> 
+ <span class="dropdown-text">Launch on Syzygy</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://colab.research.google.com/github/ubcecon/comet-project/blob/main/" rel="" target=""><i class="bi bi-google" role="img">
+</i> 
+ <span class="dropdown-text">Launch on Collab</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://github.com/ubcecon/comet-project/archive/refs/heads/main.zip" rel="" target=""><i class="bi bi-cloud-download" role="img">
+</i> 
+ <span class="dropdown-text">Launch Locally</span></a>
+  </li>  
+        <li><hr class="dropdown-divider"></li>
+        <li>
+    <a class="dropdown-item" href="https://github.com/ubcecon/comet-project/archive/refs/heads/data-only.zip" rel="" target=""><i class="bi bi-clipboard-data" role="img">
+</i> 
+ <span class="dropdown-text">Project Datasets</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="../../../#" rel="" target="">
+ <span class="menu-text">|</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-about" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">About</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-about">    
+        <li>
+    <a class="dropdown-item" href="../../../pages/team.html" rel="" target="">
+ <span class="dropdown-text">COMET Team</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../pages/using_comet.html" rel="" target="">
+ <span class="dropdown-text">Teach With COMET</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../pages/copyright.html" rel="" target="">
+ <span class="dropdown-text">Copyright Information</span></a>
+  </li>  
+    </ul>
+  </li>
+</ul>
+            <div class="quarto-navbar-tools">
+</div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../docs/econ_325/index_325.html">Introduction to Econometrics</a></li><li class="breadcrumb-item"><a href="../../../docs/econ_325/08_distribution/distribution.html">1 - Distribution</a></li></ol></nav>
+      <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+      </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation docked overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_intro/index_intro.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true">
+ <span class="menu-text">Preliminary Material</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_intro/intro_r/introduction_to_R.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">0 - Intro to R</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_intro/intro_to_data/intro_to_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1 - Intro to Data (Part 1)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_intro/intro_to_data/intro_to_data2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2 - Intro to Data (Part 2)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_intro/econ_prep/Introduction to Statistical Concepts.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3 - Review of Basic Statistics</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="px-0"><hr class="sidebar-divider hi "></li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true">
+ <span class="menu-text">Introduction to Econometrics</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/index_325.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">0 - Overview of ECON 325</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/08_distribution/distribution.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">1 - Distribution</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/06_visualization_1/intro_to_visualization1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2 - Visualization I</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/07_visualization_2/intro_to_visualization2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3 - Visualization II</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/01_central_tendency/central_tendency.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4 - Central Tendency</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/02_dispersion_and_dependence/dispersion_and_dependence.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">5 - Dispersion and Dependence</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/10_sampling_distributions/Sampling_distributions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6 - Sampling Distributions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/03_confidence_intervals/confidence_intervals.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">7 - Confidence Intervals</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/04_hypothesis_testing/hypothesis_testing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">8 - Hypothesis Testing</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/09_regression/simple_regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">9 - Simple Regression</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#outline" id="toc-outline" class="nav-link active" data-scroll-target="#outline">Outline</a>
+  <ul class="collapse">
+  <li><a href="#prerequisites" id="toc-prerequisites" class="nav-link" data-scroll-target="#prerequisites">Prerequisites</a></li>
+  <li><a href="#outcomes" id="toc-outcomes" class="nav-link" data-scroll-target="#outcomes">Outcomes</a></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
+  </ul></li>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#part-1-distribution-functions---the-basics" id="toc-part-1-distribution-functions---the-basics" class="nav-link" data-scroll-target="#part-1-distribution-functions---the-basics">Part 1: Distribution Functions - The Basics</a>
+  <ul class="collapse">
+  <li><a href="#what-is-a-probability" id="toc-what-is-a-probability" class="nav-link" data-scroll-target="#what-is-a-probability">What is a Probability?</a></li>
+  <li><a href="#what-is-a-random-variable" id="toc-what-is-a-random-variable" class="nav-link" data-scroll-target="#what-is-a-random-variable">What is a Random Variable?</a></li>
+  <li><a href="#what-is-the-probability-distribution" id="toc-what-is-the-probability-distribution" class="nav-link" data-scroll-target="#what-is-the-probability-distribution">What is the Probability Distribution?</a></li>
+  </ul></li>
+  <li><a href="#probability-density-functions-pdfs" id="toc-probability-density-functions-pdfs" class="nav-link" data-scroll-target="#probability-density-functions-pdfs">Probability Density Functions (PDFs)</a>
+  <ul class="collapse">
+  <li><a href="#discrete-pdf" id="toc-discrete-pdf" class="nav-link" data-scroll-target="#discrete-pdf">1. Discrete PDF:</a></li>
+  </ul></li>
+  <li><a href="#continuous-pdf" id="toc-continuous-pdf" class="nav-link" data-scroll-target="#continuous-pdf">2. Continuous PDF:</a></li>
+  <li><a href="#cumulative-density-function-cdf" id="toc-cumulative-density-function-cdf" class="nav-link" data-scroll-target="#cumulative-density-function-cdf">Cumulative Density Function (CDF)</a></li>
+  <li><a href="#joint-probability-distribution" id="toc-joint-probability-distribution" class="nav-link" data-scroll-target="#joint-probability-distribution">Joint Probability Distribution</a></li>
+  <li><a href="#marginal-probability-distribution" id="toc-marginal-probability-distribution" class="nav-link" data-scroll-target="#marginal-probability-distribution">Marginal Probability Distribution</a></li>
+  <li><a href="#conditional-probability-distribution" id="toc-conditional-probability-distribution" class="nav-link" data-scroll-target="#conditional-probability-distribution">Conditional Probability Distribution</a></li>
+  <li><a href="#exercise-1" id="toc-exercise-1" class="nav-link" data-scroll-target="#exercise-1">Exercise 1</a>
+  <ul class="collapse">
+  <li><a href="#question-1" id="toc-question-1" class="nav-link" data-scroll-target="#question-1">Question 1</a></li>
+  <li><a href="#question-2" id="toc-question-2" class="nav-link" data-scroll-target="#question-2">Question 2</a></li>
+  <li><a href="#question-3" id="toc-question-3" class="nav-link" data-scroll-target="#question-3">Question 3</a></li>
+  </ul></li>
+  <li><a href="#exercise-2" id="toc-exercise-2" class="nav-link" data-scroll-target="#exercise-2">Exercise 2</a>
+  <ul class="collapse">
+  <li><a href="#question-1-1" id="toc-question-1-1" class="nav-link" data-scroll-target="#question-1-1">Question 1</a></li>
+  <li><a href="#question-2-1" id="toc-question-2-1" class="nav-link" data-scroll-target="#question-2-1">Question 2</a></li>
+  <li><a href="#question-3-1" id="toc-question-3-1" class="nav-link" data-scroll-target="#question-3-1">Question 3</a></li>
+  </ul></li>
+  <li><a href="#exercise-3" id="toc-exercise-3" class="nav-link" data-scroll-target="#exercise-3">Exercise 3</a>
+  <ul class="collapse">
+  <li><a href="#question-1-2" id="toc-question-1-2" class="nav-link" data-scroll-target="#question-1-2">Question 1</a></li>
+  <li><a href="#question-2-2" id="toc-question-2-2" class="nav-link" data-scroll-target="#question-2-2">Question 2</a></li>
+  <li><a href="#question-3-2" id="toc-question-3-2" class="nav-link" data-scroll-target="#question-3-2">Question 3</a></li>
+  </ul></li>
+  <li><a href="#exercise-4" id="toc-exercise-4" class="nav-link" data-scroll-target="#exercise-4">Exercise 4</a>
+  <ul class="collapse">
+  <li><a href="#question-1-3" id="toc-question-1-3" class="nav-link" data-scroll-target="#question-1-3">Question 1</a></li>
+  <li><a href="#question-2-3" id="toc-question-2-3" class="nav-link" data-scroll-target="#question-2-3">Question 2</a></li>
+  <li><a href="#question-3-3" id="toc-question-3-3" class="nav-link" data-scroll-target="#question-3-3">Question 3</a></li>
+  </ul></li>
+  <li><a href="#part-2-parametric-distributions" id="toc-part-2-parametric-distributions" class="nav-link" data-scroll-target="#part-2-parametric-distributions">Part 2: Parametric Distributions</a>
+  <ul class="collapse">
+  <li><a href="#uniform-distribution" id="toc-uniform-distribution" class="nav-link" data-scroll-target="#uniform-distribution">Uniform Distribution</a>
+  <ul class="collapse">
+  <li><a href="#simulation" id="toc-simulation" class="nav-link" data-scroll-target="#simulation">Simulation</a></li>
+  <li><a href="#pdf" id="toc-pdf" class="nav-link" data-scroll-target="#pdf">PDF</a></li>
+  <li><a href="#cdf" id="toc-cdf" class="nav-link" data-scroll-target="#cdf">CDF</a></li>
+  </ul></li>
+  <li><a href="#normal-gaussian-distribution" id="toc-normal-gaussian-distribution" class="nav-link" data-scroll-target="#normal-gaussian-distribution">Normal (Gaussian) Distribution</a>
+  <ul class="collapse">
+  <li><a href="#simulation-1" id="toc-simulation-1" class="nav-link" data-scroll-target="#simulation-1">Simulation</a></li>
+  <li><a href="#pdf-1" id="toc-pdf-1" class="nav-link" data-scroll-target="#pdf-1">PDF</a></li>
+  <li><a href="#cdf-1" id="toc-cdf-1" class="nav-link" data-scroll-target="#cdf-1">CDF</a></li>
+  </ul></li>
+  <li><a href="#students-t-distribution" id="toc-students-t-distribution" class="nav-link" data-scroll-target="#students-t-distribution">Student’s <span class="math inline">\(t\)</span>-Distribution</a>
+  <ul class="collapse">
+  <li><a href="#simulation-2" id="toc-simulation-2" class="nav-link" data-scroll-target="#simulation-2">Simulation</a></li>
+  <li><a href="#pdf-2" id="toc-pdf-2" class="nav-link" data-scroll-target="#pdf-2">PDF</a></li>
+  <li><a href="#cdf-2" id="toc-cdf-2" class="nav-link" data-scroll-target="#cdf-2">CDF</a></li>
+  </ul></li>
+  </ul></li>
+  <li><a href="#part-3-exercises" id="toc-part-3-exercises" class="nav-link" data-scroll-target="#part-3-exercises">Part 3: Exercises</a>
+  <ul class="collapse">
+  <li><a href="#exercise-12" id="toc-exercise-12" class="nav-link" data-scroll-target="#exercise-12">Exercise 12</a></li>
+  <li><a href="#exercise-13" id="toc-exercise-13" class="nav-link" data-scroll-target="#exercise-13">Exercise 13</a></li>
+  <li><a href="#exercise-14" id="toc-exercise-14" class="nav-link" data-scroll-target="#exercise-14">Exercise 14</a></li>
+  <li><a href="#exercise-15" id="toc-exercise-15" class="nav-link" data-scroll-target="#exercise-15">Exercise 15</a></li>
+  <li><a href="#exercise-16" id="toc-exercise-16" class="nav-link" data-scroll-target="#exercise-16">Exercise 16</a></li>
+  </ul></li>
+  </ul>
+<div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/ubcecon/comet-project/issues/new" class="toc-action">Report an issue</a></p></div></div><div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="distribution.ipynb" download="distribution.ipynb"><i class="bi bi-journal-code"></i>Jupyter</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content column-body" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">08 - ECON 325: Distributions</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">econ 325</div>
+    <div class="quarto-category">distribution</div>
+    <div class="quarto-category">pdf</div>
+    <div class="quarto-category">cdf</div>
+    <div class="quarto-category">uniform</div>
+    <div class="quarto-category">normal</div>
+    <div class="quarto-category">t-distribution</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    This notebook introduces the idea of a statistical distribution, including its properties and some commonly used functions associated with it. We also discuss the shape of distributions, and come common examples.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>COMET Team <br> <em>Valeria Zolla, Colby Chambers, Jonathan Graves</em> </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">12 January 2023</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+</header>
+
+<section id="outline" class="level2">
+<h2 class="anchored" data-anchor-id="outline">Outline</h2>
+<section id="prerequisites" class="level3">
+<h3 class="anchored" data-anchor-id="prerequisites">Prerequisites</h3>
+<ul>
+<li>Introduction to Jupyter</li>
+<li>Introduction to R</li>
+<li>Introduction to Visualization</li>
+<li>Central Tendency</li>
+</ul>
+</section>
+<section id="outcomes" class="level3">
+<h3 class="anchored" data-anchor-id="outcomes">Outcomes</h3>
+<p>After completing this notebook, you will be able:</p>
+<ul>
+<li>Understand and work with Probability Density Functions (PDFs) and Cumulative Density Functions (CDF)</li>
+<li>Use tables to find joint, marginal, and conditional probabilities</li>
+<li>Interpret uniform, normal, and <span class="math inline">\(t\)</span> distributions</li>
+</ul>
+</section>
+<section id="references" class="level3">
+<h3 class="anchored" data-anchor-id="references">References</h3>
+<ul>
+<li><a href="https://mran.microsoft.com/snapshot/2018-09-28/web/packages/IPSUR/vignettes/IPSUR.pdf">Introduction to Probability and Statistics Using R</a></li>
+</ul>
+</section>
+</section>
+<section id="introduction" class="level1">
+<h1>Introduction</h1>
+<p>This notebook will explore in detail the concept of distributions, both in terms of their functional forms for probability and how they are representative of different sets of data. This notebook aims to help us develop a deeper understanding of statistics from the perspective of data spread. Let’s first load our reliable friend, the 2016 Census from Statistics Canada, which we will consult throughout this lesson.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># loading in our packages</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(haven)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(digest)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"testing_distribution.r"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># reading in the data</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>census_data <span class="ot">&lt;-</span> <span class="fu">read_dta</span>(<span class="st">"../datasets/01_census2016.dta"</span>)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># cleaning up factors</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>census_data <span class="ot">&lt;-</span> <span class="fu">as_factor</span>(census_data)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co"># cleaning up missing data</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>census_data <span class="ot">&lt;-</span> <span class="fu">filter</span>(census_data, <span class="sc">!</span><span class="fu">is.na</span>(census_data<span class="sc">$</span>wages))</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>census_data <span class="ot">&lt;-</span> <span class="fu">filter</span>(census_data, <span class="sc">!</span><span class="fu">is.na</span>(census_data<span class="sc">$</span>mrkinc))</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co"># inspecting the data</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(census_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Now that we have our data set ready on stand-by for analysis, let’s start looking at distributions as a concept more generally.</p>
+</section>
+<section id="part-1-distribution-functions---the-basics" class="level1">
+<h1>Part 1: Distribution Functions - The Basics</h1>
+<p>Let’s begin with a quick review of some basic ideas from probability theory.</p>
+<section id="what-is-a-probability" class="level2">
+<h2 class="anchored" data-anchor-id="what-is-a-probability">What is a Probability?</h2>
+<p>When working with data, the <strong>probability</strong> of seeing a particular piece of data take on a certain set of values (called an <strong>event</strong>) is the <strong>likelihood</strong> of those values occurring. When the possible values are discrete (e.g.&nbsp;<code>1,2,3</code> or <code>adult, child</code>), we refer to this as the <strong>frequency</strong>. When the possible values are continuous (e.g.&nbsp;any number between <code>0.5</code> and <code>3.75</code>), we refer to this as the <strong>density</strong>. We learn a little bit more about this later in this notebook.</p>
+<p>There is a difference between <em>population</em> probabilities and <em>empirical</em> or <em>sample</em> probabilities. Generally, when we talk about distributions we will be referring to <em>population</em> objects: but there are also sample versions as well, which are often easier to think about.</p>
+<p>For instance, let’s say we have a dataset with 5,000 observations and a variable called <code>birthmonth</code> which records the month of birth of every participant captured in the dataset. If 500 people in the data were born in October, then <code>birthmonth=="October</code>” would have an <em>empirical</em> probability of occurring in an observation 10% of the time. We can’t be sure what the population probability would be, unless we knew more about the population.</p>
+</section>
+<section id="what-is-a-random-variable" class="level2">
+<h2 class="anchored" data-anchor-id="what-is-a-random-variable">What is a Random Variable?</h2>
+<p>A <strong>random variable</strong> is a variable whose possible values are numerical outcomes of a random phenomenon, such as rolling a dice or surveys done to random people in certain locations at certain times. There are two types of random variables: discrete and continuous.</p>
+<ul>
+<li><p>A <strong>discrete random variable</strong> is one which may take on only a finite number of distinct values. Examples of discrete random variables include the options when you roll dice, the number of children in a family, or the number of defective light bulbs in a box of ten. A good example of a discrete random variable of the data used in this notebook is the age group (<code>agegrp</code> in the data) of the census participants as it can take only a finite number of distinct values: 17 different categories to be exact.</p></li>
+<li><p>A <strong>continuous random variable</strong> is one which takes an infinite number of possible values. We can commonly think of this variable as being one that is <em>measured</em> rather than merely <em>categorized</em>. Examples include height, weight, or how much people earn. In the data, we can see that <code>wages</code> and <code>mrkinc</code> are great examples of continuous random variables. They can take on an infinite number of possible values.</p></li>
+</ul>
+<p>Now that we’ve learned some key terminology for describing variables and the values they can take on, we can work with distributions.</p>
+</section>
+<section id="what-is-the-probability-distribution" class="level2">
+<h2 class="anchored" data-anchor-id="what-is-the-probability-distribution">What is the Probability Distribution?</h2>
+<p>A <strong>probability distribution</strong> refers to the pattern or arrangement of probabilities in a population. These are usually described as <em>functions</em>: the function takes in a possible event, then reports back the probability of that event occurring. As we explained above, there is a difference between <em>population</em> and <em>sample</em> distributions: * A <em>population</em> distribution (which is the typical way we describe these) describes population probabilities * An <em>empirical</em> or <em>sample</em> distribution reports describes empirical probabilities from within a particular sample</p>
+<p>It’s important to keep this difference in mind: from the perspective of statistical inference, we usually want to learn about the <em>population</em> distribution, but will use the <em>empirical</em> distribution to do so.</p>
+<p>Distribution functions come in several standard forms; let’s learn about them.</p>
+</section>
+</section>
+<section id="probability-density-functions-pdfs" class="level1">
+<h1>Probability Density Functions (PDFs)</h1>
+<p><strong>Probability Density Functions</strong> are also sometimes referred to as PDFs or probability mass functions. We usually use lower case letters like <span class="math inline">\(f\)</span> or <span class="math inline">\(p\)</span> to describe these functions.</p>
+<section id="discrete-pdf" class="level2">
+<h2 class="anchored" data-anchor-id="discrete-pdf">1. Discrete PDF:</h2>
+<blockquote class="blockquote">
+<p>” The probability distribution of a discrete random variable is the list of all possible values of the variable and their probabilities which sum to 1.”</p>
+<p>- Econometrics with R</p>
+</blockquote>
+<p>In other words, a <strong>Probability Density Function (PDF)</strong> is the probability of occurrence of all the different values of a variable. The probability of occurrence is also called <strong>density</strong> or <strong>frequency</strong>.</p>
+<p>Suppose a random variable X may take k different values, with the probability that <span class="math inline">\(X = x_{i}\)</span> defined to be <span class="math inline">\(P(X = x_{i}) = p_{i}\)</span>. The probabilities <span class="math inline">\(p_{i}\)</span> must satisfy the following:</p>
+<ol type="1">
+<li><p>For each i: <span class="math inline">\(0&lt;p_{i}&lt;1\)</span></p></li>
+<li><p><span class="math inline">\(p_{1} + p_{2} + ... + p_{k} = 1\)</span></p></li>
+</ol>
+<p>There are two different ways to view the empirical PDF of a discrete variable. The first way is by creating a frequency table.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>census_data0 <span class="ot">&lt;-</span> <span class="fu">filter</span>(census_data, agegrp <span class="sc">!=</span> <span class="st">"not available"</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>sample_size <span class="ot">&lt;-</span> <span class="fu">nrow</span>(census_data0) <span class="co"># number of observations</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>table2 <span class="ot">&lt;-</span> census_data0 <span class="sc">%&gt;%</span> </span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(agegrp) <span class="sc">%&gt;%</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarize</span>(<span class="at">Count =</span> <span class="fu">n</span>(),</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>              <span class="at">Frequency =</span> <span class="fu">n</span>()<span class="sc">/</span>sample_size<span class="sc">*</span><span class="dv">100</span>) <span class="co"># creates two variables in our table</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>table2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>A second way to visualize an empirical PDF is by creating a graph. Because a PDF has a finite number of distinct values of which we measure their frequency, the typical format to express a categorical array such as a PDF is through a bar graph following what we learned in <em>Introduction to Visualization</em>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>plot <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="at">data =</span> table2,  <span class="co"># this declares the data for the chart; all variable names are in this data</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>                <span class="fu">aes</span>(<span class="co"># this is a list of the aesthetic features of the chart</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>                    <span class="at">x =</span> agegrp,   <span class="co"># for example, the x-axis will be "year"</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>                    <span class="at">y =</span> Frequency <span class="co"># the y-axes will be expenditure-based real GDP per capita</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>                ),</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>                ) </span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>plot1 <span class="ot">&lt;-</span> plot <span class="sc">+</span> <span class="fu">geom_col</span>() <span class="sc">+</span> </span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">90</span>, <span class="at">vjust =</span> <span class="fl">0.5</span>, <span class="at">hjust=</span><span class="dv">1</span>))</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>plot1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="continuous-pdf" class="level1">
+<h1>2. Continuous PDF:</h1>
+<blockquote class="blockquote">
+<p>“Since a continuous random variable takes on a continuum of possible values, we cannot use the concept of a probability distribution as used for discrete random variables.”</p>
+<p>- Econometrics with R</p>
+</blockquote>
+<p>Unlike a discrete variable, a continuous random variable is not defined in specific values. Instead, it is defined over intervals of values, and is represented by the area under a curve (in calculus, this is the integral). The curve, which represents the probability function is also called a <strong>density</strong> curve and it must satisfy the following: 1. The curve has no negative values <span class="math inline">\(p(x) &gt; 0\)</span> for all <span class="math inline">\(x\)</span> (there cannot be a negative probability of observing a value) 2. The total area under the curve is equal to 1</p>
+<p>Let’s imagine a random variable that can take any value over an interval of real numbers. The probability of observing values between <span class="math inline">\(a\)</span> and <span class="math inline">\(b\)</span> is the area between the density curve and the area between <span class="math inline">\(a\)</span> and <span class="math inline">\(b\)</span>:</p>
+<p><span class="math display">\[
+\mathrm{P}(a \le X \le b) = \left(\int_{a}^{b} f(x) \; dx\right)
+\]</span></p>
+<p>Since the number of values which may be assumed by the random variable is infinite, the probability of observing any single value is equal to 0.</p>
+<p>Therefore, to visualize a continuous PDF we commonly use graphs rather than tables and do not use bar graphs or scatterplots to visualize a continuous PDF. Because it is a continuous variable, we need to use a visualization type that allows for the entire continuum of possible values to be represented in the graph. As stated above, the probability of observing values between <span class="math inline">\(a\)</span> and <span class="math inline">\(b\)</span> is the area underneath the curve, therefore a continuous PDF should be visualized as a line graph.</p>
+<p>Suppose we would like to visualize a continuous empirical PDF for all wages between 25000 and 75000:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>density <span class="ot">&lt;-</span> <span class="fu">density</span>(census_data<span class="sc">$</span>wages)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(density)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Telling R how to read our upper and lower bounds</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>l <span class="ot">&lt;-</span> <span class="fu">min</span>(<span class="fu">which</span>(density<span class="sc">$</span>x <span class="sc">&gt;=</span> <span class="dv">25000</span>))</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>h <span class="ot">&lt;-</span> <span class="fu">max</span>(<span class="fu">which</span>(density<span class="sc">$</span>x <span class="sc">&lt;</span> <span class="dv">75000</span>))</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualizing our specified range in red </span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="fu">polygon</span>(<span class="fu">c</span>(density<span class="sc">$</span>x[<span class="fu">c</span>(l, l<span class="sc">:</span>h, h)]),</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>        <span class="fu">c</span>(<span class="dv">0</span>, density<span class="sc">$</span>y[l<span class="sc">:</span>h], <span class="dv">0</span>),</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>        <span class="at">col =</span> <span class="st">"red"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="cumulative-density-function-cdf" class="level1">
+<h1>Cumulative Density Function (CDF)</h1>
+<p>When we have a variable which is rankable, we can define a related object: the <strong>Cumulative Density Function (CDF)</strong>. The CDF for both discrete and continuous random variables is the probability that the random variable is less than or equal to a particular value. Naturally, this means that the CDF must necessarily be an increasing function. Think of the example of rolling a dice. <span class="math inline">\(F(1)\)</span> would indicate the the probability that a 1 was rolled. <span class="math inline">\(F(2)\)</span> would indicate the probability that a 2 <strong>or lower</strong> was rolled. Evidently, <span class="math inline">\(F(2)\)</span> would be greater than <span class="math inline">\(F(1)\)</span>.</p>
+<p>Therefore, if we have a variable <span class="math inline">\(X\)</span> that can have take the value of <span class="math inline">\(x\)</span> the CDF is is the probability that <span class="math inline">\(X\)</span> will take a value less than or equal to <span class="math inline">\(x\)</span>. A CDF can only take values between 0 and 1: this is because the total probability that the random variable is less or equal to the biggest value of the variable is 100% or 1 while the probability that the random variable is less or equal to the smallest value of the variable is 0% or 0.</p>
+<p>If we use the lowercase <span class="math inline">\(f(y)\)</span> to represent the PDF of <span class="math inline">\(y\)</span>, then by convention we use the uppercase <span class="math inline">\(F(y)\)</span> to represent the CDF of <span class="math inline">\(y\)</span>.</p>
+<p>Mathematically, since <span class="math inline">\(f_{X}(x)\)</span> denotes the probability density function of <span class="math inline">\(X\)</span>, then the probability that <span class="math inline">\(X\)</span> falls between <span class="math inline">\(a\)</span> and <span class="math inline">\(b\)</span> where <span class="math inline">\(a \leq b\)</span> is:</p>
+<p><span class="math display">\[
+\mathrm{P}(a \leq X \leq b) = \left(\int_{a}^{b} f_{X}(x) \; dx\right)
+\]</span></p>
+<p>We know that the entire X variable falls between 2 values if the probability of x falling in between them is 1. Therefore <span class="math inline">\(X\)</span>’s CDF curve is:</p>
+<p><span class="math display">\[
+\mathrm{P}(−∞ \le X \le ∞) = \left(\int_{−∞}^{∞} f_{X}(x) \; dx\right) = 1
+\]</span></p>
+<p>Below we’ve used a scatterplot to visualize empirical CDF of the continuous variable <code>wages</code>. From the graph below we can tell that most people earn between 0-200000 as the probability of people’s wages being less than or equal to 200000 is over 80%.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>p <span class="ot">&lt;-</span> <span class="fu">ecdf</span>(census_data<span class="sc">$</span>wages)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># plot CDF</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(p)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="joint-probability-distribution" class="level1">
+<h1>Joint Probability Distribution</h1>
+<p>So far, we’ve looked at distributions for single random variables. However, we can also use distributions to analyze the probability of multiple random variables taking on certain values. Let’s say we have two random variables, <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span>. The <strong>joint distribution</strong> is the probability distribution on all possible values that <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span> can take on.</p>
+<p>As an example, lets suppose both <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span> are discrete random variable which can take on values from 1-3, with the following joint probability table (X on vertical axis, and Y on horizontal):</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th></th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>0</td>
+<td>1/6</td>
+<td>1/6</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>1/6</td>
+<td>0</td>
+<td>1/6</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>1/6</td>
+<td>1/6</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p>Above, we’ve created a joint distribution for the two discrete random variables, <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span>. Notice the probabilities will sum to 1, as some combination of both <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span> will always occur.</p>
+<p>Every joint distribution can be represented by a PDF and CDF, just like single random variables. The formal notation of a PDF for two jointly distributed random variables is below.</p>
+<p><span class="math display">\[f(x, y) = Prob (X = x, Y = y)\]</span></p>
+<p>where <span class="math inline">\(f(x, y)\)</span> is the joint probability density that the random variable <span class="math inline">\(X\)</span> takes on a value of <span class="math inline">\(x\)</span> and the random variable <span class="math inline">\(Y\)</span> takes on a value of <span class="math inline">\(y\)</span> simultaneously.</p>
+<p>The PDF for jointly distributed random variables would be, in this case, are the values recorded in the example table above. For example the PDF of an immigrant only speaking french <span class="math inline">\(Prob(X=1, Y =2) = 1/6\)</span>.</p>
+<p>The CDF for jointly distributed random variables follows the exact same logic as with single variables as well. It just instead represents the probability of multiple variables taking on values less than those specified all at once. This is quite non-sensical for two discrete random variables such as <code>immstat</code> and <code>kol</code>, but we can imagine the CDF of two jointly distributed random variables being much more interpretable if both of those variables are continuous (i.e.&nbsp;<code>wages</code> and <code>mrkinc</code>). The formal notation of a CDF for two jointly distributed random variables is below.</p>
+<p><span class="math display">\[
+F(x, y) = Prob({X \leq x}, {Y \leq y})
+\]</span></p>
+<p>where <span class="math inline">\(F(x, y)\)</span> is the joint cumulative probability that the random variable <span class="math inline">\(X\)</span> takes on a value less than or equal to <span class="math inline">\(x\)</span> and the random variable <span class="math inline">\(Y\)</span> takes on a value less than or equal to <span class="math inline">\(y\)</span> simultaneously.</p>
+</section>
+<section id="marginal-probability-distribution" class="level1">
+<h1>Marginal Probability Distribution</h1>
+<p>If we add up all of the joint probabilities from the same row or the same column, we arrive at another concept known as the <strong>marginal distribution</strong>. This is essentially probability density function for each individual random variable. It gives the probability of one random variable taking on a series of different values, and it is found from utilizing the joint probabilities in our table above. We can represent the marginal probability density function as follows:</p>
+<p><span class="math display">\[
+f_{x}(x) = \sum_{y} Prob(X = x, Y = y)
+\]</span></p>
+<p>where we sum across all possible joint probabilities of <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span> for a given value of <span class="math inline">\(X\)</span>. Identical logic holds for the marginal probability density function of the random variable <span class="math inline">\(Y\)</span> as well.</p>
+<p>An example will make this more clear. If we wanted the marginal empirical probability distribution function of the <span class="math inline">\(X\)</span> random variable, we would need to find the marginal probability for all possible values of <span class="math inline">\(X\)</span>.</p>
+<p>For <span class="math inline">\(X=1\)</span>, the marginal probability is the sum of all joint probabilities in that corresponding row: 1/6 + 1/6 = 1/3</p>
+</section>
+<section id="conditional-probability-distribution" class="level1">
+<h1>Conditional Probability Distribution</h1>
+<p>The <strong>conditional distribution</strong> function gives us the probability of seeing a host of values for one random variable conditional on a specified value of another random variable, given the two random variables are jointly distributed.</p>
+<p>We can think about conditional probabilities mathematically. We will use the following formula to find the conditional probability density function:</p>
+<p><span class="math display">\[
+f(x | y) = \frac {Prob ((X = x) \bigcap (Y = y))} {Prob(Y = y)}
+\]</span></p>
+<p>where <span class="math inline">\(f(x | y)\)</span> represents the conditional probability that the random variable <span class="math inline">\(X\)</span> will take on a value of <span class="math inline">\(x\)</span> when the random variable of <span class="math inline">\(Y\)</span> takes on a value of <span class="math inline">\(y\)</span>. The <span class="math inline">\(\bigcap\)</span> symbol simply represents the case that both <span class="math inline">\(X\)</span> = <span class="math inline">\(x\)</span> and <span class="math inline">\(Y\)</span> = <span class="math inline">\(y\)</span> simultaneously (a joint probability) - we can read this symbol as “given that”. One caveat to this equation is that the marginal probability that <span class="math inline">\(Y = y\)</span> must not be 0, else this conditional probability will be undefined.</p>
+<p>Let’s say we want to find the conditional probability of <span class="math inline">\(X=1\)</span> given <span class="math inline">\(Y=2\)</span>. Recall the unconditional probability that <span class="math inline">\(Y=1\)</span> = 1/3. The conditional probability, given <span class="math inline">\(Y=1\)</span> will therefore be the probability of <span class="math inline">\(X=1\)</span> AND <span class="math inline">\(Y=2\)</span> divided by the probability that <span class="math inline">\(Y=2\)</span>: (1/6) / (1/3) = 1/2.</p>
+<p>One important point to consider is that of <strong>statistical independence of random variables</strong>. Two random variables are independent if and only if their joint probability of occurrence equals the product of their marginal probabilities for all possible combinations of values of the random variables. In mathematical notation, this means that two random variables are statistically independent if and only if:</p>
+<p><span class="math display">\[
+f(x, y) = f_{x}(x) f_{y}(y)
+\]</span></p>
+<p>We can check for statistical independence of our jointly distributed random variables, <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span>, quite quickly by consulting our table up above. Try to deduce whether these variables are independent yourself by multiplying combinations of marginal probabilities to see if they match the joint probability in the corresponding cell.</p>
+<p>Throughout these explanations, we have continually referred to the joint, marginal and conditional distribution of two discrete random variables; however, <strong><em>one or both of these variables can be continuous</em></strong>. We focused on discrete random variables since they are much easier to represent in table format. Just imagine trying to create a table of joint probabilities for two jointly distributed continuous random variables: there would be near infinite cells, each of which would have a joint probability of about 0! Nonetheless, all of the same logic applies to continuous random variables. The only difference is that we often refer to mathematical formulas when finding the marginal and conditional probabily functions for these random variables, since their PDFs and CDFs can be represented by mathematical functions (provided they fit the mathematical conditions of a PDF we outlined earlier).</p>
+<p>One last important point to remember is that <strong><em>we can have more than two jointly distributed random variables</em></strong>. We may want to represent the probability of 3, 4, or an even larger number of variables taking on certain values at once. While this is possible, it is not easy to represent graphically or in table format. That is why we have stuck to investigating two jointly distributed random variables in this notebook. However, you should keep this in mind as you progress in this course.</p>
+<p>Now is your turn to work on some exercises which will test your understanding of the material presented in this notebook!</p>
+</section>
+<section id="exercise-1" class="level1">
+<h1>Exercise 1</h1>
+<p>Let the random variable <span class="math inline">\(X\)</span> denote the time (in hours) a person waits for their flight. This person can wait up to 2 hours for this flight.</p>
+<section id="question-1" class="level2">
+<h2 class="anchored" data-anchor-id="question-1">Question 1</h2>
+<p>Is <span class="math inline">\(X\)</span> a discrete or continuous random variable?</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>answer_1 <span class="ot">&lt;-</span> <span class="st">"..."</span> <span class="co"># your answer of "discrete" or "continuous" in place of ...</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_1</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><span style="color:red">Explain your reasoning here:</span></p>
+</section>
+<section id="question-2" class="level2">
+<h2 class="anchored" data-anchor-id="question-2">Question 2</h2>
+<p>Say a potential probability density function representing this random variable (from the above flight example) is the following:</p>
+<p><span class="math display">\[
+f(x) = \begin{cases}
+x &amp; \text{if } 0 \leq x \leq 1,\\
+2 - x  &amp; \text{if } 1 \leq x \leq 2,\\
+0  &amp; \text{otherwise}
+\end{cases}
+\]</span></p>
+<p>Is this a valid PDF?</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>answer_2 <span class="ot">&lt;-</span> <span class="st">"..."</span> <span class="co"># your answer of "yes" or "no" in place of ...</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_2</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><span style="color:red">Explain your reasoning here:</span></p>
+</section>
+<section id="question-3" class="level2">
+<h2 class="anchored" data-anchor-id="question-3">Question 3</h2>
+<p>What is the probability of a person waiting up to 1.5 hours for their flight? Answer to 3 decimal places. <strong>Hint</strong>: this is not the same as the probability of waiting precisely 1.5 hours.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># your code here</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>answer_3 <span class="ot">&lt;-</span> ... <span class="co"># your answer for the cumulative probability (in decimal format, i.e. 95% = 0.95) here</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="fu">test_3</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="exercise-2" class="level1">
+<h1>Exercise 2</h1>
+<p>Let’s return to our <code>joint_table</code> for the joint distribution of discrete random variables <code>immstat</code> and <code>kol</code>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>joint_table</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="question-1-1" class="level2">
+<h2 class="anchored" data-anchor-id="question-1-1">Question 1</h2>
+<p>What is the probability that someone is both an immigrant and knows both English and French? Answer to 3 decimal places.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>answer_4 <span class="ot">&lt;-</span> ... <span class="co"># your answer for the probability (in decimal format, i.e. 95% = 0.95) here</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_4</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="question-2-1" class="level2">
+<h2 class="anchored" data-anchor-id="question-2-1">Question 2</h2>
+<p>What is the probability that someone is an immigrant given that they know only English? Answer to 3 decimal places.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># your code here</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>answer_5 <span class="ot">&lt;-</span> ... <span class="co"># your answer for the probability (in decimal format, i.e. 95% = 0.95) here</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="fu">test_5</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="question-3-1" class="level2">
+<h2 class="anchored" data-anchor-id="question-3-1">Question 3</h2>
+<p>Why is it difficult to graph a joint probability distribution function (either density or cumulative) for these two variables in Jupyter? Which type of probability density function can we easily graph in Jupyter for jointly distributed random variables?</p>
+<p><span style="color:red">Explain your reasoning here:</span></p>
+</section>
+</section>
+<section id="exercise-3" class="level1">
+<h1>Exercise 3</h1>
+<p>Let the random variable <span class="math inline">\(Y\)</span> be uniformly distributed on the range of values [20, 80].</p>
+<section id="question-1-2" class="level2">
+<h2 class="anchored" data-anchor-id="question-1-2">Question 1</h2>
+<p>What is the probability of <span class="math inline">\(Y\)</span> taking on the value of 30? Answer to 3 decimal places. You may use a graph to help you.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># your code here</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>answer_6 <span class="ot">&lt;-</span> ... <span class="co"># your answer for the probability (in decimal format, i.e. 95% = 0.95) here</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="fu">test_6</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="question-2-2" class="level2">
+<h2 class="anchored" data-anchor-id="question-2-2">Question 2</h2>
+<p>What is the probability of <span class="math inline">\(Y\)</span> taking on a value of 60 or more? Answer to 3 decimal places.</p>
+<div class="cell" data-tags="[]">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>answer_7 <span class="ot">&lt;-</span> ... <span class="co"># your answer for the probability (in decimal format, i.e. 95% = 0.95) here</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_7</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="question-3-2" class="level2">
+<h2 class="anchored" data-anchor-id="question-3-2">Question 3</h2>
+<p>What would happen to this probability if <span class="math inline">\(Y\)</span> was expanded to be uniformly distributed on the range of values [20, 100]?</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>answer_8 <span class="ot">&lt;-</span> <span class="st">"..."</span> <span class="co"># your answer of "it would increase" or "it would decrease" in place of "..."</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_8</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><span style="color:red">Explain your reasoning here:</span></p>
+</section>
+</section>
+<section id="exercise-4" class="level1">
+<h1>Exercise 4</h1>
+<p>Now let <span class="math inline">\(Z\)</span> be a normally distributed random variable representing the length of a piece of classical music (in minutes), with a mean of 5 and standard deviation of 1.5.</p>
+<section id="question-1-3" class="level2">
+<h2 class="anchored" data-anchor-id="question-1-3">Question 1</h2>
+<p>What is the probability that a given piece will last between 3 and 7 minutes? Answer to 3 decimal places. You may use code to help you.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># your code here</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>answer_9 <span class="ot">&lt;-</span> ... <span class="co"># your answer for the probability (in decimal format, i.e. 95% = 0.95) here</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="fu">test_9</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="question-2-3" class="level2">
+<h2 class="anchored" data-anchor-id="question-2-3">Question 2</h2>
+<p>If <span class="math inline">\(Z\)</span> were to remain normally distributed and have the same standard deviation, but the mean piece length was changed to 3 minutes, how would this probability change?</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>answer_10 <span class="ot">&lt;-</span> <span class="st">"..."</span> <span class="co"># your answer of "it would increase" or "it would decrease" in place of "..."</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_10</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><span style="color:red">Explain your reasoning here:</span></p>
+</section>
+<section id="question-3-3" class="level2">
+<h2 class="anchored" data-anchor-id="question-3-3">Question 3</h2>
+<p>Returning to our original <span class="math inline">\(Z\)</span> variable (with mean 5), if the standard deviation were to decrease to 1, how would this probability change?</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>answer_11 <span class="ot">&lt;-</span> <span class="st">"..."</span> <span class="co"># your answer of "it would increase" or "it would decrease" in place of "..."</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_11</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><span style="color:red">Explain your reasoning here:</span></p>
+</section>
+</section>
+<section id="part-2-parametric-distributions" class="level1">
+<h1>Part 2: Parametric Distributions</h1>
+<p>You may have noticed that all of the examples we used were for <em>empirical</em> distributions. This was because we don’t really know what the <em>population</em> distributions which make up the census actually are. However, many statistics <em>do</em> have known distributions which are very important to recognize and understand.</p>
+<p>Now that we have a strong background in random variables and the various probability functions which represent them, we can look at the three most famous examples of distributions:</p>
+<ul>
+<li>uniform distribution</li>
+<li>normal (or Gaussian) distribution</li>
+<li>student <span class="math inline">\(t\)</span>-distribution</li>
+</ul>
+<p>These are called <strong>parametric</strong> distributions because (as we will see) they can be described by a set of numbers called <em>parameters</em>. For instance, the normal distribution’s two <em>parameters</em> are the mean and standard deviation.</p>
+<p>All the parametric distributions explained in this module are analyzed using four R commands. The four commands will start with the prefixes: - <code>d</code> for “density”: it produces the probability density function (PDF) - <code>p</code> for “probability”: it produces the cumulative distribution function (CDF) - <code>q</code> for “quantile”: it produces the inverse cumulative distribution function, also called the quantile function - <code>r</code> for “random”: generates random numbers from a particular parametric distribution</p>
+<section id="uniform-distribution" class="level2">
+<h2 class="anchored" data-anchor-id="uniform-distribution">Uniform Distribution</h2>
+<p>A continuous variable has a <strong>uniform distribution</strong> if all values have the same likelihood of occurring. Therefore, the variable’s density curve is a rectangle, with constant height across the interval and 0 height elsewhere. Since the area under the curve must be equal to 1, the length of the interval determines the height of the curve. A good example of a random event that has a uniform distribution is rolling a dice. Rolling each of the six numbers is equally likely.</p>
+<p>Let’s see with a variable what this kind of distribution might look like. To do this, we will generate random values from this distribution using the function <code>runif()</code>. This command is written as <code>runif(n, min = , max = )</code>, where <code>n</code> is the number of observations, and <code>max</code> and <code>min</code> provide the interval between which the random variables are picked from.</p>
+<section id="simulation" class="level3">
+<h3 class="anchored" data-anchor-id="simulation">Simulation</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>example_unif <span class="ot">&lt;-</span> <span class="fu">runif</span>(<span class="dv">10000</span>, <span class="at">min =</span> <span class="dv">10</span>, <span class="at">max =</span> <span class="dv">100</span>)</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(example_unif, <span class="at">freq =</span> <span class="cn">FALSE</span>, <span class="at">xlab =</span> <span class="st">'x'</span>, <span class="at">xlim =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">100</span>), <span class="at">main =</span> <span class="st">"Empirical PDF for uniform random values on [0,100]"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>You may be wondering why all the bars aren’t the exact same height if each number is equally likely to be drawn. This is because of random chance. Each number is within the specified range is equally likely to be drawn, but out of random chance some ranges of numbers are being drawn at higher frequencies than others. If you re-run the previous code cell, you will see that the shape of the distribution changes each time.</p>
+<p>Since we know what this distribution is, we can plot the population distribution, and visualize it.</p>
+<p>For instance, suppose we have a uniform random variable <span class="math inline">\(X\)</span> defined on the interval <span class="math inline">\((10,50)\)</span>. Since the interval has a width of 40, so the curve must have a height of <span class="math inline">\(\frac{1}{40} = 0.024\)</span> over the interval and 0 elsewhere. The probability that <span class="math inline">\(X \leq 25\)</span> is the area between 10 and 25, or <span class="math inline">\((25-10)\cdot 0.025 = 0.375\)</span>. Naturally, these kinds of calculations are much easier to do using R!</p>
+</section>
+<section id="pdf" class="level3">
+<h3 class="anchored" data-anchor-id="pdf">PDF</h3>
+<p>The <code>dunif()</code> function calculates the uniform probability density function for a variable and can also calculate a specific value’s density.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>range <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">100</span>, <span class="at">by =</span> <span class="dv">1</span>) <span class="co"># creating a variable with a uniform distribution</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>ex.dunif <span class="ot">&lt;-</span> <span class="fu">dunif</span>(range, <span class="at">min =</span> <span class="dv">10</span>, <span class="at">max =</span> <span class="dv">60</span>) <span class="co"># calculating the PDF of the variable "range"</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(ex.dunif, <span class="at">type =</span> <span class="st">"o"</span>) <span class="co"># plotting the PDF</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="cdf" class="level3">
+<h3 class="anchored" data-anchor-id="cdf">CDF</h3>
+<p>The <code>punif()</code> function calculates the uniform cumulative distribution function for the set of values.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>x_cdf <span class="ot">&lt;-</span> <span class="fu">punif</span>(range,      <span class="co"># Vector of quantiles</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>      <span class="at">min =</span> <span class="dv">10</span>,            <span class="co"># Lower limit of the distribution (a)</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>      <span class="at">max =</span> <span class="dv">50</span>,            <span class="co"># Upper limit of the distribution (b)</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>      <span class="at">lower.tail =</span> <span class="cn">TRUE</span>,   <span class="co"># If TRUE, probabilities are P(X &lt;= x), or P(X &gt; x) otherwise</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>      <span class="at">log.p =</span> <span class="cn">FALSE</span>)       <span class="co"># If TRUE, probabilities are given as log</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(x_cdf, <span class="at">type =</span> <span class="st">"l"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The <code>qunif()</code> function calculates, based on the cumulative probability, where a specific value is located in the distribution of density and helps us access the quantile distribution probability values from the data.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>quantiles <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="at">by =</span> <span class="fl">0.01</span>)</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>y_qunif <span class="ot">&lt;-</span> <span class="fu">qunif</span>(quantiles, <span class="at">min =</span> <span class="dv">10</span>, <span class="at">max =</span> <span class="dv">50</span>)    </span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(y_qunif, <span class="at">type =</span> <span class="st">"l"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="normal-gaussian-distribution" class="level2">
+<h2 class="anchored" data-anchor-id="normal-gaussian-distribution">Normal (Gaussian) Distribution</h2>
+<p>We first saw the normal distribution in the <em>Central Tendency notebook</em> and we are now better equipped to understand its nuances. The normal distribution is a special type of distribution for a number of reasons: it is fundamental to many statistic processes. Many random variables in natural and social sciences are normally distributed. Height, birth weight or SAT scores all follow a normal distribution.</p>
+<p>This kind of distribution is referred to as “normal” because it’s distribution is symmetrical and bell-shaped. A normal distribution is <strong>parameterized</strong> by its mean <span class="math inline">\(\mu\)</span> and its standard deviation <span class="math inline">\(\sigma\)</span>, and it is expressed as <span class="math inline">\(N(\mu,\sigma)\)</span>. Without knowing the mean and the standard deviation one cannot calculate the normal distribution.</p>
+<p>The PDF has a complex equation, which can be written as:</p>
+<p><span class="math display">\[
+f(x; \mu, \sigma) = \displaystyle \frac{x^{-(x-\mu)^{2}/(2\sigma^{2})}}{\sigma\sqrt{2\pi}}
+\]</span></p>
+<p>A <strong>standard normal distribution</strong> is is a special normal distribution, characterized for having a mean equal to zero and a standard deviation equal to 1 (<span class="math inline">\(\mu=0\)</span> and <span class="math inline">\(\sigma=1\)</span>). Hence, <span class="math inline">\(N(0,1)\)</span>: - Standard normal variables are often denoted by <span class="math inline">\(Z\)</span> - Usually, the standard normal PDF is denoted by <span class="math inline">\(\phi\)</span> and the standard normal CDF is denoted by <span class="math inline">\(\Phi\)</span></p>
+<p>To generate simulated normal random variables, we can use the <code>rnorm()</code>this function. It is similar to the <code>runif()</code> function we saw earlier:</p>
+<section id="simulation-1" class="level3">
+<h3 class="anchored" data-anchor-id="simulation-1">Simulation</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a> x <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="dv">10000</span>, <span class="co"># number of observations</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>            <span class="at">mean =</span> <span class="dv">0</span>, <span class="co"># mean</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>            <span class="at">sd =</span> <span class="dv">1</span>) <span class="co"># sd</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a> <span class="fu">hist</span>(x, <span class="at">probability=</span><span class="cn">TRUE</span>) <span class="co"># the command hist() creates a histogram using variable x,</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a> xx <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="fu">min</span>(x), <span class="fu">max</span>(x), <span class="at">length=</span><span class="dv">100</span>)</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a> <span class="fu">lines</span>(xx, <span class="fu">dnorm</span>(xx, <span class="at">mean=</span><span class="dv">0</span>, <span class="at">sd=</span><span class="dv">1</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="pdf-1" class="level3">
+<h3 class="anchored" data-anchor-id="pdf-1">PDF</h3>
+<p>As with the uniform distribution, we can use <code>dnorm</code> to plot the standard normal pdf.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a> <span class="co"># create a sequence of 100 equally spaced numbers between -4 and 4</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a> x <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="dv">4</span>, <span class="dv">4</span>, <span class="at">length=</span><span class="dv">100</span>)</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a> <span class="co"># create a vector of values that shows the height of the probability distribution</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a> <span class="co"># for each value in x</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a> y <span class="ot">&lt;-</span> <span class="fu">dnorm</span>(x)</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a> <span class="co"># plot x and y as a scatterplot with connected lines (type = "l") and add</span></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a> <span class="co"># an x-axis with custom labels</span></span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a> <span class="fu">plot</span>(x,y, <span class="at">type =</span> <span class="st">"l"</span>, <span class="at">lwd =</span> <span class="dv">2</span>, <span class="at">axes =</span> <span class="cn">FALSE</span>, <span class="at">xlab =</span> <span class="st">""</span>, <span class="at">ylab =</span> <span class="st">""</span>)</span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a> <span class="fu">axis</span>(<span class="dv">1</span>, <span class="at">at =</span> <span class="sc">-</span><span class="dv">3</span><span class="sc">:</span><span class="dv">3</span>, <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"-3s"</span>, <span class="st">"-2s"</span>, <span class="st">"-1s"</span>, <span class="st">"mean"</span>, <span class="st">"1s"</span>, <span class="st">"2s"</span>, <span class="st">"3s"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We have used the random values generated to observe the bell shaped distribution of this random variable. As it can be seen in the graph, the mean is zero (that is where all the values converge) and the standard deviation is one therefore, this is a standard normal PDF. We can change the numbers of mean and sd in the <code>rnorm()</code> command to make the distribution not standard as well.</p>
+</section>
+<section id="cdf-1" class="level3">
+<h3 class="anchored" data-anchor-id="cdf-1">CDF</h3>
+<p><code>pnorm()</code> - this function can give the entire CDF curve of a normally distributed random <em>variable</em> as well as give the probability of a normally distributed random <em>number</em> to be less than the value of a given number.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a> <span class="fu">curve</span>(<span class="fu">pnorm</span>(x), </span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>       <span class="at">xlim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">3.5</span>, <span class="fl">3.5</span>), </span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>       <span class="at">ylab =</span> <span class="st">"Probability"</span>, </span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>       <span class="at">main =</span> <span class="st">"Standard Normal Cumulative Distribution Function"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a> <span class="fu">pnorm</span>(<span class="fl">27.4</span>, <span class="at">mean=</span><span class="dv">50</span>, <span class="at">sd=</span><span class="dv">20</span>) <span class="co"># gives you the CDF at that specific location</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">pnorm</span>(<span class="fl">27.4</span>, <span class="dv">50</span>, <span class="dv">20</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The<code>qnorm()</code> function takes the density value and gives a number with a matching cumulative value. Therefore, <code>qnorm()</code> gives the the inverse of the CDF. <code>qnorm()</code> can also create a percent point function (ppf). A ppf is the inverse curve of the cumulative distribution function. The CDF of a specific value is the probability of a normally distributed value of a random variable to be less than the value of a <strong>given number</strong>. For the percent point function, we start with that probability and then compute the corresponding <strong>given number</strong> for the cumulative distribution. In other words the answer of <code>qnorm()</code> will be the number where the area before it is X% of the sample.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>  <span class="fu">curve</span>(<span class="fu">qnorm</span>(x), </span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>       <span class="at">xlim =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>), </span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>       <span class="at">xlab =</span> <span class="st">"Probability"</span>,</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>       <span class="at">ylab =</span> <span class="st">"x"</span>, </span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>       <span class="at">main =</span> <span class="st">"Quantile (inverse CDF) Function"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a> <span class="fu">qnorm</span>(<span class="fl">0.95</span>, <span class="at">mean=</span><span class="dv">100</span>, <span class="at">sd=</span><span class="dv">15</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Finally, the function <code>dnorm()</code> gives the height of the probability distribution at each point for a given mean and standard deviation. The height of the pdf curve is the density. This function can also be used to calculate the entire density curve, as observed in the command <em>lines(xx, dnorm(xx, mean=0, sd=1))</em></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a> <span class="fu">dnorm</span>(<span class="dv">100</span>, <span class="at">mean=</span><span class="dv">100</span>, <span class="at">sd=</span><span class="dv">15</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="students-t-distribution" class="level2">
+<h2 class="anchored" data-anchor-id="students-t-distribution">Student’s <span class="math inline">\(t\)</span>-Distribution</h2>
+<p>The <strong>Student’s <span class="math inline">\(t\)</span>-distribution</strong> is a continuous distribution that arises when estimating the sampling distribution of a normally distributed population in situations where the sample size is small and the population’s standard deviation is unknown. This may seem esoteric, but it’s actually really important: we will explore the concept of sampling distributions in a later module.</p>
+<p>The <span class="math inline">\(t\)</span>-distribution is based on the number of observations and the degrees of freedom. A degree of freedom (<span class="math inline">\(\nu\)</span>) refers to the maximum number of logically independent values, which are values that have the freedom to vary, in the data sample. In other words, it is the number of values that need to be known in order to know all of the values. For example, imagine you have 3 values which have an average of 5. If you sample two of the values and they turn out to be 4, and 5, even without sampling the final value, there is no freedom in the last value.</p>
+<p>In the case of the <span class="math inline">\(t\)</span>-distribution the degree(s) of freedom can be represented as <span class="math inline">\(\nu = n-1\)</span>, with <span class="math inline">\(n\)</span> being the sample size. When <span class="math inline">\(\nu\)</span> is large, the <span class="math inline">\(t\)</span>-distribution begins to look like a standard normal distribution. This approximation between standard normal and <span class="math inline">\(t\)</span>-distribution can start being noticed around <span class="math inline">\(\nu \geq 30\)</span>.</p>
+<p>As with the uniform and normal distribution, to generate random values that together have a t-distribution we add the prefix <code>r</code> to the name of the distribution, <code>rt()</code>.</p>
+<section id="simulation-2" class="level3">
+<h3 class="anchored" data-anchor-id="simulation-2">Simulation</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a> n <span class="ot">&lt;-</span> <span class="dv">100</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a> df <span class="ot">&lt;-</span> n <span class="sc">-</span> <span class="dv">1</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a> samples <span class="ot">&lt;-</span> <span class="fu">rt</span>(n, df)</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a> <span class="fu">hist</span>(samples,<span class="at">breaks =</span> <span class="dv">20</span>, <span class="at">freq =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a> xx <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="fu">min</span>(samples), <span class="fu">max</span>(samples), <span class="at">length=</span><span class="dv">100</span>)</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a> <span class="fu">lines</span>(xx, <span class="fu">dt</span>(xx, df))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>A very interesting characteristic of the t-distribution that can be observed from this graph is that, although it is bell-shaped and symmetrical like the normal distribution, the t-distribution is not as thin as a normal distribution. That means that the data is more spread out than a normal distribution a characteristic which is explained by the central limit theorem (CLT) and law of large numbers (LLN), concepts that will be explained in a future module.</p>
+</section>
+<section id="pdf-2" class="level3">
+<h3 class="anchored" data-anchor-id="pdf-2">PDF</h3>
+<p>The function <code>dt()</code> calculates the PDF of a particular variable or the density of a particular value of a variable, depending on the sample size and degrees of freedom. In the examples shown below we will be using the variable <code>ex.tvalues</code> which is a sequence of numbers ranging from -4 to 4 with increments of 0.01. Therefore there are 800 numbers generated which means the degrees of freedom = 799.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a> ex.tvalues <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="sc">-</span> <span class="dv">4</span>, <span class="dv">4</span>, <span class="at">by =</span> <span class="fl">0.01</span>)  <span class="co"># generating a sequence of number </span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a> ex_dt <span class="ot">&lt;-</span> <span class="fu">dt</span>(ex.tvalues, <span class="at">df =</span> <span class="dv">799</span>) <span class="co"># calculating the PDF</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a> <span class="fu">plot</span>(ex_dt, <span class="at">type=</span><span class="st">"l"</span>)     </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="cdf-2" class="level3">
+<h3 class="anchored" data-anchor-id="cdf-2">CDF</h3>
+<p>The <code>pt()</code> function calculates the entire CDF curve of a t-distributed random <em>variable</em> and gives the probability of a t-distributed random <em>number</em> that is less that the value of a given number.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a> ex_pt <span class="ot">&lt;-</span> <span class="fu">pt</span>(ex.tvalues, <span class="at">df =</span> <span class="dv">799</span>)   <span class="co"># calculating CDF</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">plot</span>(ex_pt, <span class="at">type =</span> <span class="st">"l"</span>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><code>qnorm()</code>- this function takes the probability value and gives a number whose cumulative value matches the probability value. <code>qnorm()</code> can also create a percent point function (ppf).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a> ex.qtvalues <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="at">by =</span> <span class="fl">0.01</span>)  <span class="co"># generating a sequence of number </span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a> ex_qt <span class="ot">&lt;-</span> <span class="fu">qt</span>(ex.qtvalues, <span class="at">df =</span> <span class="dv">99</span>)  <span class="co"># calculating the ppf</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a> <span class="fu">plot</span>(ex_qt, <span class="at">type =</span> <span class="st">"l"</span>) <span class="co"># plotting the ppf </span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Beyond these three common distributions, there are many other types of distributions which relatively accurately fit data. Examples include chi-square distribution or f-distribution. However, in rare cases, we may encounter variables for which we cannot fit a distribution. Perhaps the data is distributed sporadically and is not well approximated by any common distribution. In these cases, we describe it as a non-parametrical distribution.</p>
+</section>
+</section>
+</section>
+<section id="part-3-exercises" class="level1">
+<h1>Part 3: Exercises</h1>
+<section id="exercise-12" class="level2">
+<h2 class="anchored" data-anchor-id="exercise-12">Exercise 12</h2>
+<p>Which of the following random variables are most likely to be uniformally distributed.</p>
+<p><strong>A.</strong> The height of a UBC student<br>
+<strong>B.</strong> The wages of a UBC student<br>
+<strong>C.</strong> The birthday of a UBC student</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Enter your answer here as "A", "B", or "C"</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>answer_12 <span class="ot">&lt;-</span> <span class="st">"..."</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a><span class="fu">test_12</span>(answer_12)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="exercise-13" class="level2">
+<h2 class="anchored" data-anchor-id="exercise-13">Exercise 13</h2>
+<p>Which of the following random variables are most likely to be normally distributed.</p>
+<p><strong>A.</strong> The height of a UBC student<br>
+<strong>B.</strong> The grades of a particular course<br>
+<strong>C.</strong> The birthday of a UBC student</p>
+<div class="cell" data-tags="[]">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Enter your answer here as "A", "B", or "C"</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>answer_13 <span class="ot">&lt;-</span> <span class="st">"..."</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a><span class="fu">test_13</span>(answer_13)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="exercise-14" class="level2">
+<h2 class="anchored" data-anchor-id="exercise-14">Exercise 14</h2>
+<p>Given our uniform distribution <code>example_unif</code>, find <span class="math inline">\(F(72)\)</span>. Note that you don’t need to calculate the exact probability given the distribution. To answer the question, you only need to know that this random variable is uniformly distributed for values between 10 and 100.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Enter your answer as an integer below. Your answer should only have one decimal place. </span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>answer_14 <span class="ot">&lt;-</span> ...</span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="fu">test_14</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="exercise-15" class="level2">
+<h2 class="anchored" data-anchor-id="exercise-15">Exercise 15</h2>
+<p>Assume we have a standard normal distribution. Find <span class="math inline">\(F(0)\)</span></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Enter your answer as an integer below. Your answer should only have one decimal place</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>answer_15 <span class="ot">&lt;-</span> ...</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a><span class="fu">test_15</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="exercise-16" class="level2">
+<h2 class="anchored" data-anchor-id="exercise-16">Exercise 16</h2>
+<p>Let’s assume we have a students <span class="math inline">\(t-\)</span>distribtion that is nearly coincident to the corresponding normal distribution. What must be true?</p>
+<p><strong>A.</strong> The degrees of freedom parameter must be very large.<br>
+<strong>B.</strong> The degrees of freedom parameter must be very small.<br>
+<strong>C.</strong> The degrees of freedom parameter must be equal to the mean of the normal distribution.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Enter your answer here as "A", "B", or "C"</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>answer_16 <span class="ot">&lt;-</span> <span class="st">"..."</span></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a><span class="fu">test_16</span>(answer_16)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, function() {
+      let href = xref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children.length > 2) {
+          for (let i = 0; i < 2; i++) {
+            container.appendChild(note.children[i].cloneNode(true));
+          }
+          return container.innerHTML
+        } else {
+          return note.innerHTML;
+        }
+      } else {
+        return note.innerHTML;
+      }
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+          // target, if specified
+          link.setAttribute("target", "_blank");
+      }
+    }
+});
+</script>
+<nav class="page-navigation column-body">
+  <div class="nav-page nav-page-previous">
+      <a href="../../../docs/econ_325/index_325.html" class="pagination-link">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">0 - Overview of ECON 325</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../../../docs/econ_325/06_visualization_1/intro_to_visualization1.html" class="pagination-link">
+        <span class="nav-page-text">2 - Visualization I</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item">
+ <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/80x15.png"></a>.  <a rel="license" href="https://comet.arts.ubc.ca/pages/copyright.html">See details.</a>
+  </li>  
+</ul>
+    </div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item">
+ The COMET Project and the UBC Vancouver School of Economics are located on the traditional, ancestral and unceded territory of the xʷməθkʷəy̓əm (Musqueam) and Sḵwx̱wú7mesh (Squamish) peoples.
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+</body></html>

@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-GB" xml:lang="en-GB"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.36">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="COMET Team   Anneke Dresselhuis, Jonathan Graves">
+<meta name="dcterms.date" content="2023-01-12">
+<meta name="keywords" content="economics, econometrics, R, data, machine learning, UBC, COMET, geog 374, econ 325, econ 326, learning, teaching, learn r, r help, help, tutorial, r tutorial for beginners,learning statistics with r, learn r programming, learn statistics, linear regression, r machine learning, learn machine learning, university of british columbia, british columbia, r programming for beginners, r language tutorial, r tutorial for beginners, economic data, econometrics tutoring, economics help for students, economics homework help, oer resources for teachers, open educational resources for teachers, educational resource, oer project, oer materials, oer resources, learn economics online, learn econometrics, teach yourself economics, teach yourself econometrics, econometrics basics for beginners">
+<meta name="description" content="How do we make visualizations of data? This notebook uses the ggplot packages to help create impactful data visualizations using R. We will also discuss the rationale and principles of effective data design.">
+
+<title>COMET - 06 - ECON 325: Introduction to Data Visualization I</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<link href="../../../docs/econ_325/07_visualization_2/intro_to_visualization2.html" rel="next">
+<link href="../../../docs/econ_325/08_distribution/distribution.html" rel="prev">
+<link href="../../../media/comet_favicon.png" rel="icon" type="image/png">
+<script src="../../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<link rel="stylesheet" href="../../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a href="../../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../../media/logo_no_tiny_text.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">COMET</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../index.html" rel="" target=""><i class="bi bi-house-door" role="img">
+</i> 
+ <span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-get-started" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Get Started</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-get-started">    
+        <li>
+    <a class="dropdown-item" href="../../../pages/quickstart.html" rel="" target="">
+ <span class="dropdown-text">Quickstart Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../pages/installing_locally.html" rel="" target="">
+ <span class="dropdown-text">Install and Use COMET</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/intro_jupyter/intro_to_jupyter.html" rel="" target="">
+ <span class="dropdown-text">Learn about Jupyter</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/intro_r/introduction_to_R.html" rel="" target="">
+ <span class="dropdown-text">Learn about R</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/econ_prep/Introduction to Statistical Concepts.html" rel="" target="">
+ <span class="dropdown-text">Review High School Statistics</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-basics" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Basics</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-basics">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/index_intro.html" rel="" target="">
+ <span class="dropdown-text">Preliminary Material</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_325/index_325.html" rel="" target="">
+ <span class="dropdown-text">Introduction to Econometrics (ECON 325)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/econ_prep/Introduction to Statistical Concepts.html" rel="" target="">
+ <span class="dropdown-text">Review of Statistics</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-fundamentals" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Fundamentals</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-fundamentals">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_326/index_326.html" rel="" target="">
+ <span class="dropdown-text">Introduction to Empirical Models (ECON 326)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/geog_374/index_374.html" rel="" target="">
+ <span class="dropdown-text">Geographic Computation (GEOG 374)</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-projects" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Projects</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-projects">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_490/index_490.html" rel="" target="">
+ <span class="dropdown-text">Overview of ECON 490</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_490/index_490_r.html" rel="" target="">
+ <span class="dropdown-text">R Modules</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_490/index_490_stata.html" rel="" target="">
+ <span class="dropdown-text">STATA Modules</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-advanced" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Advanced</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-advanced">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_adv/index_adv.html" rel="" target="">
+ <span class="dropdown-text">Advanced Topics</span></a>
+  </li>  
+    </ul>
+  </li>
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-launch-comet" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+      <i class="bi bi-play" role="img">
+</i> 
+ <span class="menu-text">Launch COMET</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-launch-comet">    
+        <li>
+    <a class="dropdown-item" href="https://open.jupyter.ubc.ca/jupyter/hub/user-redirect/git-pull?repo=https%3A%2F%2Fgithub.com%2Fubcecon%2Fcomet-project&amp;urlpath=lab%2Ftree%2Fcomet-project%2F&amp;branch=main" rel="" target=""><i class="bi bi-cloud-check" role="img">
+</i> 
+ <span class="dropdown-text">Launch on JupyterOpen</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://ubc.syzygy.ca/jupyter/hub/user-redirect/git-pull?repo=https%3A%2F%2Fgithub.com%2Fubcecon%2Fcomet-project&amp;urlpath=lab%2Ftree%2Fcomet-project%2F&amp;branch=main" rel="" target=""><i class="bi bi-gear" role="img">
+</i> 
+ <span class="dropdown-text">Launch on Syzygy</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://colab.research.google.com/github/ubcecon/comet-project/blob/main/" rel="" target=""><i class="bi bi-google" role="img">
+</i> 
+ <span class="dropdown-text">Launch on Collab</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://github.com/ubcecon/comet-project/archive/refs/heads/main.zip" rel="" target=""><i class="bi bi-cloud-download" role="img">
+</i> 
+ <span class="dropdown-text">Launch Locally</span></a>
+  </li>  
+        <li><hr class="dropdown-divider"></li>
+        <li>
+    <a class="dropdown-item" href="https://github.com/ubcecon/comet-project/archive/refs/heads/data-only.zip" rel="" target=""><i class="bi bi-clipboard-data" role="img">
+</i> 
+ <span class="dropdown-text">Project Datasets</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="../../../#" rel="" target="">
+ <span class="menu-text">|</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-about" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">About</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-about">    
+        <li>
+    <a class="dropdown-item" href="../../../pages/team.html" rel="" target="">
+ <span class="dropdown-text">COMET Team</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../pages/using_comet.html" rel="" target="">
+ <span class="dropdown-text">Teach With COMET</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../pages/copyright.html" rel="" target="">
+ <span class="dropdown-text">Copyright Information</span></a>
+  </li>  
+    </ul>
+  </li>
+</ul>
+            <div class="quarto-navbar-tools">
+</div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../docs/econ_325/index_325.html">Introduction to Econometrics</a></li><li class="breadcrumb-item"><a href="../../../docs/econ_325/06_visualization_1/intro_to_visualization1.html">2 - Visualization I</a></li></ol></nav>
+      <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+      </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation docked overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_intro/index_intro.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true">
+ <span class="menu-text">Preliminary Material</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_intro/intro_r/introduction_to_R.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">0 - Intro to R</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_intro/intro_to_data/intro_to_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1 - Intro to Data (Part 1)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_intro/intro_to_data/intro_to_data2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2 - Intro to Data (Part 2)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_intro/econ_prep/Introduction to Statistical Concepts.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3 - Review of Basic Statistics</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="px-0"><hr class="sidebar-divider hi "></li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true">
+ <span class="menu-text">Introduction to Econometrics</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/index_325.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">0 - Overview of ECON 325</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/08_distribution/distribution.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1 - Distribution</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/06_visualization_1/intro_to_visualization1.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">2 - Visualization I</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/07_visualization_2/intro_to_visualization2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3 - Visualization II</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/01_central_tendency/central_tendency.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4 - Central Tendency</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/02_dispersion_and_dependence/dispersion_and_dependence.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">5 - Dispersion and Dependence</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/10_sampling_distributions/Sampling_distributions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6 - Sampling Distributions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/03_confidence_intervals/confidence_intervals.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">7 - Confidence Intervals</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/04_hypothesis_testing/hypothesis_testing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">8 - Hypothesis Testing</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/09_regression/simple_regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">9 - Simple Regression</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#outline" id="toc-outline" class="nav-link active" data-scroll-target="#outline">Outline</a>
+  <ul class="collapse">
+  <li><a href="#prerequisites" id="toc-prerequisites" class="nav-link" data-scroll-target="#prerequisites">Prerequisites</a></li>
+  <li><a href="#learning-outcomes" id="toc-learning-outcomes" class="nav-link" data-scroll-target="#learning-outcomes">Learning Outcomes</a></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
+  </ul></li>
+  <li><a href="#part-1-understanding-visualization" id="toc-part-1-understanding-visualization" class="nav-link" data-scroll-target="#part-1-understanding-visualization">Part 1: Understanding Visualization</a>
+  <ul class="collapse">
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#principles-of-design-data-visualization-dos-and-donts" id="toc-principles-of-design-data-visualization-dos-and-donts" class="nav-link" data-scroll-target="#principles-of-design-data-visualization-dos-and-donts">Principles of Design: Data Visualization <em>DOs</em> and <em>DONT’s</em></a></li>
+  <li><a href="#types-of-visualizations" id="toc-types-of-visualizations" class="nav-link" data-scroll-target="#types-of-visualizations">Types of Visualizations:</a></li>
+  <li><a href="#loading-data" id="toc-loading-data" class="nav-link" data-scroll-target="#loading-data">Loading data</a></li>
+  </ul></li>
+  <li><a href="#part-2-building-a-visualization" id="toc-part-2-building-a-visualization" class="nav-link" data-scroll-target="#part-2-building-a-visualization">Part 2: Building a Visualization</a>
+  <ul class="collapse">
+  <li><a href="#exporting-visualizations" id="toc-exporting-visualizations" class="nav-link" data-scroll-target="#exporting-visualizations">Exporting Visualizations</a></li>
+  </ul></li>
+  <li><a href="#part-3-making-your-own-chart" id="toc-part-3-making-your-own-chart" class="nav-link" data-scroll-target="#part-3-making-your-own-chart">Part 3: Making Your Own Chart</a></li>
+  </ul>
+<div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/ubcecon/comet-project/issues/new" class="toc-action">Report an issue</a></p></div></div><div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="intro_to_visualization1.ipynb" download="intro_to_visualization1.ipynb"><i class="bi bi-journal-code"></i>Jupyter</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content column-body" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">06 - ECON 325: Introduction to Data Visualization I</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">econ 325</div>
+    <div class="quarto-category">visualization</div>
+    <div class="quarto-category">ggplot</div>
+    <div class="quarto-category">charts</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    How do we make visualizations of data? This notebook uses the <code>ggplot</code> packages to help create impactful data visualizations using R. We will also discuss the rationale and principles of effective data design.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>COMET Team <br> <em>Anneke Dresselhuis, Jonathan Graves</em> </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">12 January 2023</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+</header>
+
+<section id="outline" class="level2">
+<h2 class="anchored" data-anchor-id="outline">Outline</h2>
+<section id="prerequisites" class="level3">
+<h3 class="anchored" data-anchor-id="prerequisites">Prerequisites</h3>
+<ul>
+<li>Introduction to Jupyter</li>
+<li>Introduction to R
+<ul>
+<li>Be able to load data and packages in R</li>
+<li>Be able to create variables and objects in R</li>
+<li>Be familiar with the general syntax of R commands</li>
+</ul></li>
+</ul>
+</section>
+<section id="learning-outcomes" class="level3">
+<h3 class="anchored" data-anchor-id="learning-outcomes">Learning Outcomes</h3>
+<ul>
+<li>Identify best practices for data visualization design</li>
+<li>Describe when to use the following kinds of visualizations to answer specific questions using a data set:
+<ul>
+<li>scatterplots</li>
+<li>line plots</li>
+<li>bar plots</li>
+<li>histograms</li>
+</ul></li>
+<li>Use the <code>ggplot2</code> package in R to create and refine the above visualizations using
+<ul>
+<li>geometric objects</li>
+<li>aesthetic mappings: <code>x</code>, <code>y</code>, <code>fill</code>, <code>color</code></li>
+<li>labeling: <code>xlab</code>, <code>ylab</code>, <code>labs</code></li>
+<li>font control and legend positioning: theme</li>
+</ul></li>
+<li>Describe the difference between vector and raster file outputs</li>
+<li>Use <code>ggsave</code> to save visualizations in <code>.png</code> and <code>.svg</code> format</li>
+</ul>
+</section>
+<section id="references" class="level3">
+<h3 class="anchored" data-anchor-id="references">References</h3>
+<ul>
+<li>Timbers, T., Campbell, T., Lee, M. (2022). <a href="https://datasciencebook.ca/viz.html"><em>Data Science: A First Introduction</em>.</a></li>
+<li>Metwalli, S. A. (2021, July 15). Data Visualization 101: How to choose a chart type. Medium. Retrieved June 10, 2022, from https://towardsdatascience.com/data-visualization-101-how-to-choose-a-chart-type-9b8830e558d6</li>
+</ul>
+</section>
+</section>
+<section id="part-1-understanding-visualization" class="level2">
+<h2 class="anchored" data-anchor-id="part-1-understanding-visualization">Part 1: Understanding Visualization</h2>
+<section id="introduction" class="level3">
+<h3 class="anchored" data-anchor-id="introduction">Introduction</h3>
+<blockquote class="blockquote">
+<p><strong>“The purpose of a visualization is to answer a question about a data set of interest.”</strong><br>
+Timbers, T., Campbell, T., Lee, M. (2022). <a href="https://datasciencebook.ca/viz.html"><em>Data Science: A First Introduction</em>.</a></p>
+</blockquote>
+<p>In econometrics, good data visualizations should always answer a well-thought-out and relevant economic research question. A good data visualization should also exist as a standalone explanation - that is, it should provide readers with a clear understanding of both the research question at hand and its answer in a way that doesn’t require further explanation.</p>
+<p>As we learn the iterative practice of making data visualizations, it’s helpful to keep the following questions in mind as we make decisions about what to include/exclude in our graphic:</p>
+<ul>
+<li><em>Who is our audience?</em></li>
+<li><em>What do they know?</em></li>
+<li><em>What is the question we’re trying to answer?</em></li>
+</ul>
+<p>Not only are data visualizations incredibly important as narrative outputs from data analysis, they are also a beneficial tool to use iteratively throughout our analysis to identify patterns or anomalies as we process our data. We’ll begin here with a few notes about best practices for visualizations.</p>
+</section>
+<section id="principles-of-design-data-visualization-dos-and-donts" class="level3">
+<h3 class="anchored" data-anchor-id="principles-of-design-data-visualization-dos-and-donts">Principles of Design: Data Visualization <em>DOs</em> and <em>DONT’s</em></h3>
+<blockquote class="blockquote">
+<p><strong>DO</strong> use data visualization to tell the story of the data <em>truthfully</em><br>
+<strong>DO</strong> remember that a visualization’s accuracy is only as good as the data is<br>
+<strong>DO</strong> label your axes in font sizes that are readable and use descriptive titles</p>
+</blockquote>
+<blockquote class="blockquote">
+<p><strong>DON’T</strong> choose colours that are very similar to each other when trying to distinguish 2 variables (eg, choose red and blue rather than red and orange)<br>
+<strong>DON’T</strong> use design features (eg, exaggerated scaling) to manipulate readers into believing a particular narrative of the data</p>
+</blockquote>
+</section>
+<section id="types-of-visualizations" class="level3">
+<h3 class="anchored" data-anchor-id="types-of-visualizations">Types of Visualizations:</h3>
+<p>The four plot types we will be working with in this worksheet are <strong>Scatter plots</strong>, <strong>Bar plots</strong>, <strong>Line plots</strong> and <strong>Histograms</strong> which can all be found in the <code>ggplot2</code> package.</p>
+<blockquote class="blockquote">
+<p>Note that there are many more types of plots that can be generated using this package. We’ll explore some of these in the notebook, <em>Introduction to Data Visualization II</em> or you can check out <a href="https://www.rstudio.com/resources/cheatsheets/">R studio’s ggplot2 Cheat Sheet</a> to see for yourself in the meantime.</p>
+</blockquote>
+<ol type="1">
+<li>A <strong>Scatter plot</strong> visualizes the relationship between two quantitative variables
+<ul>
+<li>This plot works great when we are interested in showing relationships and groupings among variables from relatively large datasets</li>
+</ul></li>
+<li>A <strong>Line plot</strong> visualizes trends with respect to an independent, ordered quantity (e.g., time)
+<ul>
+<li>This plot works great when one of our variables is ordinal (time-like) or when we want to display multiple series on a common timeline</li>
+</ul></li>
+<li>A <strong>Bar plot</strong> visualizes comparisons of amounts
+<ul>
+<li>This plot works great when we are interested in comparing a few categories as parts of a whole, or across time</li>
+</ul></li>
+<li>A <strong>Histogram</strong> visualizes the distribution of one quantitative variable
+<ul>
+<li>This plot works great when we are working with a discrete variable and are interested in visualizing all its possible values and how often they occur</li>
+</ul></li>
+</ol>
+<p><em>Definitions adapted from: <a href="https://datasciencebook.ca/viz.html"><em>Data Science: A First Introduction</em>.</a></em></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/plot_type_examples.png" title="Figure 4.1: Examples of scatter, line and bar plots, as well as histograms." class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">Examples of Four Plot Types</figcaption>
+</figure>
+</div>
+<p><em>Figure 1. Examples of scatter, line and bar plots, as well as histograms. (from <a href="https://datasciencebook.ca/viz.html">Data Science: A First Introduction</a>)</em></p>
+</section>
+<section id="loading-data" class="level3">
+<h3 class="anchored" data-anchor-id="loading-data">Loading data</h3>
+<p>In this tutorial, we will be working with the Penn World Table 10.0. This data is via:</p>
+<ul>
+<li>Feenstra, Robert C., Robert Inklaar and Marcel P. Timmer (2015), “The Next Generation of the Penn World Table” American Economic Review, 105(10), 3150-3182, available for download at https://www.rug.nl/ggdc/productivity/pwt/</li>
+</ul>
+<p>To download the dataset we will be using for this notebook:</p>
+<ol type="1">
+<li>Click the link provided above. The PWT page should appear</li>
+<li>Scroll down until three access options appear</li>
+<li>Click Stata and a Stata file (<code>.dta</code>) should immediately download. Now move that file to your media directory and we can start the analysis!</li>
+</ol>
+<p>We can now get started by importing the packages and data into our notebook, so that we can use it. You should also check out the documentation on the link above, if you’re not sure what a variable does or represents.</p>
+<div class="cell" data-pycharm="{&quot;name&quot;:&quot;#%%\n&quot;}">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"testing_intro_to_visualization.r"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-pycharm="{&quot;name&quot;:&quot;#%%\n&quot;}">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># import packages</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse) <span class="co"># contains ggplot2, which is what we'll be using!</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(haven)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># load the data</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>pwt_data <span class="ot">&lt;-</span> <span class="fu">read_dta</span>(<span class="st">"../datasets/pwt100.dta"</span>) <span class="co"># make sure that the .dta file has this exact name</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co"># declare factors</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>pwt_data <span class="ot">&lt;-</span> <span class="fu">as_factor</span>(pwt_data)</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>pwt_data <span class="ot">&lt;-</span> pwt_data <span class="sc">%&gt;%</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">countrycode =</span> <span class="fu">as.factor</span>(countrycode)) <span class="sc">%&gt;%</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">country =</span> <span class="fu">as.factor</span>(country)) <span class="sc">%&gt;%</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">currency_unit =</span> <span class="fu">as.factor</span>(currency_unit))</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="co"># check that it looks OK</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co"># there will be a lot of missing data</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(pwt_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>As you can see, this data set includes 12,810 observations and many different variables.</p>
+<p>Question time: <strong>How many variables are included in this data set?</strong><br>
+<em>Hint: variables are stored in columns</em></p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">#pycharm: {name: "#%%\n"}</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">#Fill in the ... below with your answer to the above question</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>answer_1 <span class="ot">&lt;-</span> ...</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="fu">test_1</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+<section id="understanding-ggplot2" class="level4">
+<h4 class="anchored" data-anchor-id="understanding-ggplot2">Understanding <code>ggplot2</code></h4>
+<p>R uses a “language” for how graphics are created called the <strong>grammar of graphics</strong>, which is a system of best practices from statistical visualization theory that centres data in the process.</p>
+<blockquote class="blockquote">
+<p><strong>Note</strong>: An important companion to this Notebook is the <code>ggplot2</code> cheatsheet that you can find among the RStudio collection of cheatsheets. This is CC-by-SA Material, and is available from RStudio’s <a href="https://www.rstudio.com/resources/cheatsheets/">website</a></p>
+</blockquote>
+</section>
+<section id="layers-with-ggplot" class="level4">
+<h4 class="anchored" data-anchor-id="layers-with-ggplot">Layers with <code>ggplot</code></h4>
+<p>Essentially, in this “grammar” of graphics, we create a series of “layers” which implement a specific visual output:</p>
+<ul>
+<li>First, we identify a dataset from which we want to create our graph (<code>data=</code>)</li>
+<li>Then, we associate variables in that dataset to <strong>aesthetics</strong> (<code>aes=</code>)
+<ul>
+<li><strong>Aesthetics</strong> represent different properties of a graph, like “what goes on the <span class="math inline">\(x\)</span>-axis”, or “what does the color of the line represent”. Each type of visualization is associated with a collection of necessary and optional aesthetic features.</li>
+</ul></li>
+<li>Next, we attach a coordinate system and a plot type to the graph using <code>geom</code>, which takes the aesthetics and describes them
+<ul>
+<li>This will also include options like <code>position</code> which indicates how to combine elements (e.g.&nbsp;stack the bars in a barchart, or place them side-by-side)</li>
+</ul></li>
+<li>Finally, we can tweak the visualization - such as adding labels or changing the colour scheme</li>
+</ul>
+<p>Let’s see what this looks like in practice.</p>
+</section>
+<section id="interpreting-the-data" class="level4">
+<h4 class="anchored" data-anchor-id="interpreting-the-data">Interpreting the Data</h4>
+<p>As we can see from our preview, this data set is quite complex. After spending some time with our data source, we understand a few of the key variables represent the following:</p>
+<p><code>rgdpe</code> = expenditure-side real GDP (millions of USD)<br>
+<code>pop</code> = population of a given country (millions of people)<br>
+<code>year</code> = year of data recording (1950-2019)<br>
+<code>country</code> = country being studied (183 countries are captured in this data set)<br>
+<code>hc</code> = an index of human capital per person, which is based on average years of schooling and the return to education<br>
+<code>emp</code> = number of persons engaged in employment (millions)</p>
+</section>
+<section id="beginning-our-analysis" class="level4">
+<h4 class="anchored" data-anchor-id="beginning-our-analysis">Beginning our Analysis</h4>
+<p>Let’s say we are interested in creating a visualization that answers the following question:<br>
+<strong>How has real GDP per Capita changed over time in North American countries?</strong></p>
+<div class="cell" data-pycharm="{&quot;is_executing&quot;:true,&quot;name&quot;:&quot;#%%\n&quot;}">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># First, filter the dataset to only include data on North American countries</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>NA_data <span class="ot">&lt;-</span> <span class="fu">filter</span>(pwt_data, (countrycode <span class="sc">==</span> <span class="st">"CAN"</span>)<span class="sc">|</span>(countrycode <span class="sc">==</span> <span class="st">"USA"</span>)<span class="sc">|</span>(countrycode <span class="sc">==</span> <span class="st">"MEX"</span>))</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># We can take a look at our the rgdpe/pop variable by making a quick histogram here</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>histogram <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="at">data =</span> NA_data, <span class="fu">aes</span>(<span class="at">x =</span> rgdpe<span class="sc">/</span>pop)) <span class="sc">+</span> </span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>             <span class="fu">geom_histogram</span>(<span class="at">colour =</span> <span class="st">"black"</span>, <span class="at">bins =</span> <span class="dv">20</span>)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>histogram</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>It looks like a solid number of GDP per capita measurements are under 20,000 - what might be driving this? Let’s get back to our main chart to find out!</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Use the ggplot command and specify the data frame that is to be used (NA_data in this case) and the set of plot aesthetics (which variables will be included) </span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>plot <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="at">data =</span> NA_data,  <span class="co"># this declares the data for the chart; all variable names are in this data</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>                <span class="fu">aes</span>(<span class="co"># this is a list of the aesthetic features of the chart</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>                    <span class="at">x =</span> year,   <span class="co"># for example, the x-axis will be "year" (a continuous variable)</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>                    <span class="at">y =</span> rgdpe<span class="sc">/</span>pop, <span class="co"># the y-axis will be expenditure-based real GDP per capita</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>                    <span class="at">fill =</span> country, <span class="co"># this means that the country variable in our dataset will determine the colour of the bars</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>                    <span class="at">color =</span> country <span class="co"># country variable will also determine the color of the borders or outline</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>                ),</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>                )</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Now, input the labels to the aesthetic features added above</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>plot <span class="ot">&lt;-</span> plot <span class="sc">+</span> <span class="fu">labs</span>( <span class="co"># add human-readable, aesthetic labels</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>                    <span class="at">x =</span> <span class="st">"Year"</span>,  <span class="co"># label for the x aesthetic (x-axis title)</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>                    <span class="at">y =</span> <span class="st">"Real GDP per capita (expenditure-based)"</span>, <span class="co">#y-axis title</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>                    <span class="at">color =</span> <span class="st">"Country"</span>, <span class="co"># adds the label "Country" to the legend and tells us which colour is used to represent which country</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>                    <span class="at">fill =</span> <span class="st">"Country"</span>, <span class="co"># similarly, tells us about the colours used to fill</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>                    <span class="at">title =</span> <span class="st">"North American Real GDP per Capita over Time"</span>) <span class="co"># and title of plot</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Because the variable "country" is expressed by colours, we are able to change the colours used in the chart using the commands below. Try playing with different palettes. To display other palettes use the command display.brewer.all()</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>plot <span class="ot">&lt;-</span> plot <span class="sc">+</span> <span class="fu">scale_fill_brewer</span>(<span class="at">palette=</span><span class="st">"Accent"</span>) <span class="co">#set the colour palette for fills</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>plot <span class="ot">&lt;-</span> plot <span class="sc">+</span> <span class="fu">scale_color_brewer</span>(<span class="at">palette=</span><span class="st">"Accent"</span>) <span class="co">#set the colour palette for outlines</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">repr.plot.width =</span> <span class="dv">15</span>, <span class="at">repr.plot.height =</span> <span class="dv">9</span>) <span class="co">#adjusts plot size: try playing around with the dimensions, and then return the values to width = 15 and height = 9</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a><span class="co"># Finally, input the type of vizualisation of the chart</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>plot1 <span class="ot">&lt;-</span> plot <span class="sc">+</span> <span class="fu">geom_col</span>( <span class="co"># now we add the visualization geom_col() produces a bar graph)</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>                    <span class="at">position =</span> <span class="st">"dodge"</span>) <span class="co"># this places the visualizations side-by-side</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>                                        <span class="co"># if you change position to "stack" it will be a stacked graph!</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>plot1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Beautiful! It’s also very easy to quickly change the visualization. For instance, if we wanted to make this a line graph instead of a bar chart, we could do the following:</p>
+<div class="cell" data-pycharm="{&quot;name&quot;:&quot;#%%\n&quot;}" data-tags="[]">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># fig.width = 40</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>plot2 <span class="ot">&lt;-</span> plot <span class="sc">+</span> <span class="fu">geom_line</span>()</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>plot2 <span class="co"># show the plot</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Nice! Don’t worry if any or all of this feels confusing right now - we’re going to work through a few more examples together. If you’re having trouble reading the text on your graphic outputs, we’ll walk through how to adjust text size in the next section as well!</p>
+</section>
+</section>
+</section>
+<section id="part-2-building-a-visualization" class="level2">
+<h2 class="anchored" data-anchor-id="part-2-building-a-visualization">Part 2: Building a Visualization</h2>
+<p>Next, let’s learn about how we build visualizations. It’s important to note that we should approach this <em>iteratively</em> by building our visualization piece-by-piece, making adjustments along the way. We don’t have to get it completely right on the first try!</p>
+<p>Let’s say we are interested in creating a visualization that answers the following question:<br>
+<strong>What is the relationship between GDP per capita and human capital in the world today?</strong></p>
+<p>The first thing we want to do is identify what data we need:</p>
+<ul>
+<li>We will need GDP, which we can get using either <code>rdgpe</code> or <code>rdgpo</code> (Quiz: what’s the difference?)</li>
+<li>We will need population, which we can get using <code>pop</code></li>
+<li>We will need human capital, which is the variable <code>hc</code></li>
+<li>We will need data from “today”, which is <code>year == 2019</code>, the most recent data in our sample</li>
+</ul>
+<p>Let’s start out by <code>filter</code>-ing the data to just get 2019 data.</p>
+<div class="cell" data-pycharm="{&quot;name&quot;:&quot;#%%\n&quot;}">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>figure_data <span class="ot">&lt;-</span> <span class="fu">filter</span>(pwt_data, year <span class="sc">==</span> <span class="dv">2019</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(figure_data<span class="sc">$</span>year)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Nice, it looks like we’ve got all the 2019 data! Next we need to start creating our object - however, we should pause for a moment an consider what kind of vizualization we want.</p>
+<ul>
+<li>Our question is about the relationship between two quantitative variables</li>
+<li>We are interested in understanding how they move together</li>
+</ul>
+<p>While there are a couple of options, we’ll start with a <strong>scatterplot</strong>. If we consult our <a href="https://www.rstudio.com/resources/cheatsheets/">cheat-sheet</a>, we can see that scatterplots are the <code>geom_point()</code> command. This <em>requires</em> the aesthetic properties:</p>
+<ul>
+<li><code>x</code>, the <span class="math inline">\(x\)</span>-axis</li>
+<li><code>y</code>, the <span class="math inline">\(y\)</span>-axis</li>
+</ul>
+<p>We then have other optional ones, like <code>alpha, color, fill, shape, size, stroke</code> which we won’t use here but you can check their function also on the <a href="https://www.rstudio.com/resources/cheatsheets/">R studio’s ggplot2 Cheat Sheet</a>.</p>
+<p>Notice an important fact: you can assign aesthetics on <em>either</em> the <code>ggplot</code> layer <em>or</em> on a <code>geom</code>. The difference is that the <code>ggplot</code> aesthetics are automatically inherited by all other layers; there’s no other real difference.</p>
+<blockquote class="blockquote">
+<p>Important Note: generally, any aesthetic property which can be assigned in <code>aes()</code> can also be assigned to the <code>geom</code> directly. For example, if you wanted to make a line dashed or a point red, you could do this by setting <code>geom_point(color = "red")</code>. However, this will apply to all parts of the <code>geom</code> so use it wisely!</p>
+</blockquote>
+<p>Let’s start simple, and make <code>x</code> represent human capital, and <code>y</code> represent real GDP per capita. We can start our visualization by creating our <code>ggplot</code> object and assigning all these properties:</p>
+<div class="cell" data-pycharm="{&quot;name&quot;:&quot;#%%\n&quot;}">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>figure <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="at">data =</span> figure_data, <span class="co"># associate the data we chose</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>                 <span class="fu">aes</span>(</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>                     <span class="at">x =</span> hc,  <span class="co"># x is human capital</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>                     <span class="at">y =</span> rgdpe<span class="sc">/</span>pop <span class="co"># we divide rgdpe by pop to get gdp per capita</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>                 ))</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>figure <span class="ot">&lt;-</span> figure <span class="sc">+</span> <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Human Capital"</span>,</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>                        <span class="at">y =</span> <span class="st">"Real GDP per capita (expenditure-based)"</span>,</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>                        <span class="at">title =</span> <span class="st">"Global GDP per Capita and Human Capital in 2019"</span>) <span class="sc">+</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>                        <span class="fu">theme</span>(</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>                            <span class="at">text =</span> <span class="fu">element_text</span>(</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>                                <span class="at">size =</span> <span class="dv">15</span>)) <span class="co">#increases text size: try playing around with this number!</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="co"># note: you can set aethestics to be simple functions of variables!</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>After running the previous cell, nothing was printed in our notebook; this is because we need to assign our visualization! Right now, it’s just data and properties. Let’s test it our by adding our <code>geom_point()</code> layer:</p>
+<div class="cell" data-pycharm="{&quot;name&quot;:&quot;#%%\n&quot;}">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>figure <span class="sc">+</span> <span class="fu">geom_point</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Nice! Already looking pretty good. But, there’s still some work to do to make this graph more readable and tell the story of the dataset. How about if we made the size of each point relative to the population? That way, bigger countries would be more prominent on the graph. We can do this by assigning the aesthetic again:</p>
+<div class="cell" data-pycharm="{&quot;name&quot;:&quot;#%%\n&quot;}">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>figure <span class="sc">+</span> <span class="fu">geom_point</span>(<span class="fu">aes</span>(</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>                    <span class="at">size =</span> pop,)) <span class="co"># assigns the size of the point to be relative to the population values</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Now, let’s make it more colourful. How about if we make colour of each point change as the employment (<code>emp</code>) rate changes? So, darker colors would represent higher labour force utilization. Again, we can do this by assigning the aesthetic:</p>
+<div class="cell" data-pycharm="{&quot;name&quot;:&quot;#%%\n&quot;}">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>figure <span class="ot">&lt;-</span> figure <span class="sc">+</span> <span class="fu">geom_point</span>(<span class="fu">aes</span>(</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>                    <span class="at">size =</span> pop,</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>                    <span class="at">colour =</span> <span class="dv">100</span><span class="sc">*</span>emp<span class="sc">/</span>pop))</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>figure</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Great work! We now have a solid visualization. Say we’re not the biggest fan of the colour blue and want to change it. The easiest way to set colours in R is using palettes. The list of all the palette options are:</p>
+<div class="cell" data-pycharm="{&quot;name&quot;:&quot;#%%\n&quot;}">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>RColorBrewer<span class="sc">::</span><span class="fu">display.brewer.all</span>() </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Let’s choose <code>YlOrRed</code>. We can apply this using the following (somewhat cryptic) command:</p>
+<div class="cell" data-pycharm="{&quot;name&quot;:&quot;#%%\n&quot;}">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>figure <span class="ot">&lt;-</span> figure <span class="sc">+</span> <span class="fu">scale_color_distiller</span>(<span class="at">palette=</span><span class="st">"YlOrRd"</span>)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>figure</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">repr.plot.width =</span> <span class="dv">15</span>, <span class="at">repr.plot.height =</span> <span class="dv">9</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>You might have noticed that we used <code>color_brewer</code> earlier and <code>color_distiller</code> here. <code>color_brewer</code> is for visualizations with discrete variables while <code>color_distiller</code> is for continuous. It doesn’t really matter why this is, but watch out for it; R will complain.</p>
+<p>Good work! We now have a publication quality visualization, ready to go. This is a good example of the process we go through when we build visualizations: a lot of experimenting, a lot of trial and error. Always ask yourself: “Is this effective? Is this what I want it to do?”</p>
+<section id="exporting-visualizations" class="level3">
+<h3 class="anchored" data-anchor-id="exporting-visualizations">Exporting Visualizations</h3>
+<p>Once we’ve decided that our graph can successfully answer our economic question, we’d like to export it from Jupyter. Once again, the <code>ggplot</code> package comes to our rescue with the following command:</p>
+<ul>
+<li><code>ggsave</code> allows us to save a visualization using the following key arguments
+<ul>
+<li><code>("file_name.file_format", my_plot, width = #, height = #)</code></li>
+</ul></li>
+</ul>
+<blockquote class="blockquote">
+<p>You can check out an expanded list of possible arguments at the <a href="https://www.rdocumentation.org/packages/ggplot2/versions/1.0.0/topics/ggsave">R documentation page for <code>ggsave</code></a></p>
+</blockquote>
+<ol type="1">
+<li>The first part of the argument, <code>"file_name.file_format"</code> is where we give our graphic a descriptive name and specify which file format we want our graphic to be saved in the Jupyter workspace. If you are saving to a specific folder, you can add this before the file name with a <code>/</code> in between to delineate the two (example: <code>"folder/file_name.file_format"</code>). The format you choose may depend on the context you plan to use the visualization in. Images are typically stored in either <strong>raster</strong> or <strong>vector</strong> formats. The following definitions are borrowed from <a href="https://datasciencebook.ca/viz.html#saving-the-visualization"><em>Data Science: A First Introduction</em>.</a></li>
+</ol>
+<p><strong>Raster images</strong> are represented as a 2-D grid of square pixels, each with its own color. Raster images are often compressed before storing so they take up less space. A compressed format is “lossy” if the image cannot be perfectly re-created when loading and displaying, with the hope that the change is not noticeable. “Lossless” formats, on the other hand, allow a perfect display of the original image.</p>
+<p>Common raster file types:</p>
+<ul>
+<li>JPEG (.jpg, .jpeg): lossy, usually used for photographs</li>
+<li>PNG (.png): lossless, usually used for plots / line drawings</li>
+<li>BMP (.bmp): lossless, raw image data, no compression (rarely used)</li>
+<li>TIFF (.tif, .tiff): typically lossless, no compression, used mostly in graphic arts, publishing</li>
+<li>Open-source software: GIMP</li>
+</ul>
+<p><strong>Vector images</strong> are represented as a collection of mathematical objects (lines, surfaces, shapes, curves). When the computer displays the image, it redraws all of the elements using their mathematical formulas.</p>
+<p>Common vector file types:</p>
+<ul>
+<li>SVG (.svg): general-purpose use</li>
+<li>EPS (.eps): general-purpose use (rarely used)</li>
+<li>Open-source software: Inkscape</li>
+</ul>
+<p>Raster and vector images have opposing advantages and disadvantages. A raster image of a fixed width and height takes the same amount of space and time to load regardless of what the image shows (the one caveat is that the compression algorithms may shrink the image more or run faster for certain images). A vector image takes space and time to load corresponding to how complex the image is, since the computer has to draw all the elements each time it is displayed. For example, if you have a scatter plot with 1 million points stored as an SVG file, it may take your computer some time to open the image. On the upside, with vector graphics you can zoom into / scale up the image as much as you like without it looking bad, while raster images eventually start to look “pixelated.”</p>
+<ol start="2" type="1">
+<li><p>The second part of the argument, <code>my_plot</code> specifies which plot in our analysis we’d like to export</p></li>
+<li><p>The last key part of the argument <code>width =</code> and <code>height =</code> specifies the dimensions of our image. Because we’ve tinkered with the graph output size using <code>options(repr.plot.width = 15, repr.plot.height = 9)</code> above in our code, we’ll want to use these dimensions as we export to ensure that our visualization isn’t cut off by R’s default saving dimensions. If we haven’t made modifications to the size, these commands can be left out.</p></li>
+</ol>
+<p>Try uncommenting the code section below and saving our “Global GDP per capita and Human Capital in 2019” graph in the Jupyter directory that this notebook is stored in.</p>
+<div class="cell" data-pycharm="{&quot;name&quot;:&quot;#%%\n&quot;}" data-tags="[]">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ggsave("gdp_hc_plot.png", figure, width = 15, height = 9)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Did you see file appear in the directory? Now try saving the same graph as an <code>.svg</code> in the code cell below.</p>
+<div class="cell" data-pycharm="{&quot;name&quot;:&quot;#%%\n&quot;}">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ggsave("gdp_hc_plot. ...", figure, width = ..., height = ...)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>As we have seen, R makes it easy to create high-quality, impactful graphics. We’ll let you try it on your own now!</p>
+</section>
+</section>
+<section id="part-3-making-your-own-chart" class="level2">
+<h2 class="anchored" data-anchor-id="part-3-making-your-own-chart">Part 3: Making Your Own Chart</h2>
+<p>For the final section of this notebook, you’ll make your own visualization using the Penn Data again. Suppose you are tasked with building a visualization which explores the following question: <strong>What is the relationship between the economic development of China and United States over time?</strong></p>
+<p>Some variables you might want to consider are:</p>
+<ul>
+<li><code>year</code>: the year of observation</li>
+<li><code>rtfpna</code>: total factor productivity <a href="https://en.wikipedia.org/wiki/Total_factor_productivity">(here’s a link, if you’re ECON 102 is rusty)</a></li>
+<li><code>rgdpe</code>: real GDP (expenditure-based)</li>
+<li><code>pop</code>: population</li>
+<li><code>ccon</code>: real consumption of households</li>
+<li><code>avh</code>: average hours worked</li>
+</ul>
+<p>To be clear: you don’t need to use <em>all</em> of these variables in your visualization.</p>
+<ol type="1">
+<li>Start by deciding what variables are <em>essential</em> and which ones are <em>optional</em>. Choose at least two to include in your visualization.</li>
+<li>Decide what kind of visualization you want to make. Relate your choices to the best practices for types of visualizations. &gt; You might want to consult the <a href="media/data-visualization.pdf">cheat-sheet</a> to see your options.</li>
+<li>Finally, decide how you want to present it; what should the final product look like?</li>
+</ol>
+<p>A good idea is to create it in layers, like we did before - updating as you go. We’ll start you off with some of the data and code scaffolding:</p>
+<div class="cell" data-pycharm="{&quot;name&quot;:&quot;#%%\n&quot;}">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># my_data &lt;- filter(pwt_data, (countrycode == "USA")|(countrycode == "CHN"))</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="co"># my_figure # give your plot a descriptive title</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="co"># &lt;- ggplot(data = my_data, aes( #add your aesthetics below</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="co">#                 x = ..., </span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="co">#                 y = ...,</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="co">#                 color = ...)) + # remember this is optional</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="co">#                 labs(x = "...", # what labels do you want to add?</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="co">#                     y = "...",</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="co">#                     title = "...") +</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="co">#                     theme(text = element_text(size = ...))+</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="co">#                 geom_...() # what geom will you use?  Does it need options?</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a><span class="co">#my_figure </span></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a><span class="co"># uncomment (delete the leading "#" symbol) to use these lines. </span></span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Pro tip, you can uncomment an entire section by highlighting it and selecting "command + /"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Try to see if you can piece together a decent graph using your learning from this notebook before you continue. Depending on the direction you choose, your plot might look something like this one below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/TFP_plot.png" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">Total Factor Productivity Plot</figcaption>
+</figure>
+</div>
+<p>This visualization was made using the following features:</p>
+<ul>
+<li><code>y = year</code>, <code>x = rtfpna</code></li>
+<li><code>geom_line()</code> function with argument: <code>size = 3</code> in between the parentheses to make the lines a bit more visible</li>
+<li><code>color = country</code> to create two unique lines on the graph for China and the US</li>
+<li><code>labs(color = "Country")</code> to give nice, human readable title to our color legend</li>
+</ul>
+<p>If you’re stuck, try to re-create this one, before starting on your own.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, function() {
+      let href = xref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children.length > 2) {
+          for (let i = 0; i < 2; i++) {
+            container.appendChild(note.children[i].cloneNode(true));
+          }
+          return container.innerHTML
+        } else {
+          return note.innerHTML;
+        }
+      } else {
+        return note.innerHTML;
+      }
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+          // target, if specified
+          link.setAttribute("target", "_blank");
+      }
+    }
+});
+</script>
+<nav class="page-navigation column-body">
+  <div class="nav-page nav-page-previous">
+      <a href="../../../docs/econ_325/08_distribution/distribution.html" class="pagination-link">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">1 - Distribution</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../../../docs/econ_325/07_visualization_2/intro_to_visualization2.html" class="pagination-link">
+        <span class="nav-page-text">3 - Visualization II</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item">
+ <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/80x15.png"></a>.  <a rel="license" href="https://comet.arts.ubc.ca/pages/copyright.html">See details.</a>
+  </li>  
+</ul>
+    </div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item">
+ The COMET Project and the UBC Vancouver School of Economics are located on the traditional, ancestral and unceded territory of the xʷməθkʷəy̓əm (Musqueam) and Sḵwx̱wú7mesh (Squamish) peoples.
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+</body></html>

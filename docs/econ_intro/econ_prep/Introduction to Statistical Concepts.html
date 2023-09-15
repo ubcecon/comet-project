@@ -1,0 +1,2003 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-GB" xml:lang="en-GB"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.36">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="COMET Team   Charlotte White, Anneke Dresselhuis, Jonathan Graves">
+<meta name="dcterms.date" content="2023-08-10">
+<meta name="keywords" content="economics, econometrics, R, data, machine learning, UBC, COMET, geog 374, econ 325, econ 326, learning, teaching, learn r, r help, help, tutorial, r tutorial for beginners,learning statistics with r, learn r programming, learn statistics, linear regression, r machine learning, learn machine learning, university of british columbia, british columbia, r programming for beginners, r language tutorial, r tutorial for beginners, economic data, econometrics tutoring, economics help for students, economics homework help, oer resources for teachers, open educational resources for teachers, educational resource, oer project, oer materials, oer resources, learn economics online, learn econometrics, teach yourself economics, teach yourself econometrics, econometrics basics for beginners">
+<meta name="description" content="This notebook introduces you to some fundamental statistics and basic probability concepts. It is designed to cover introductory statistics material taught in Foundations of Mathematics 12 and ECON 226: Making Sense of Economic Data for students who either haven’t taken these courses or who would like a refresher before going into ECON 325.">
+
+<title>COMET - Introduction to Statistical Concepts: Econ 325 Prep Course</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<link href="../../../docs/econ_intro/intro_to_data/intro_to_data2.html" rel="prev">
+<link href="../../../media/comet_favicon.png" rel="icon" type="image/png">
+<script src="../../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<link rel="stylesheet" href="../../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a href="../../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../../media/logo_no_tiny_text.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">COMET</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../index.html" rel="" target=""><i class="bi bi-house-door" role="img">
+</i> 
+ <span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-get-started" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Get Started</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-get-started">    
+        <li>
+    <a class="dropdown-item" href="../../../pages/quickstart.html" rel="" target="">
+ <span class="dropdown-text">Quickstart Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../pages/installing_locally.html" rel="" target="">
+ <span class="dropdown-text">Install and Use COMET</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/intro_jupyter/intro_to_jupyter.html" rel="" target="">
+ <span class="dropdown-text">Learn about Jupyter</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/intro_r/introduction_to_R.html" rel="" target="">
+ <span class="dropdown-text">Learn about R</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/econ_prep/Introduction to Statistical Concepts.html" rel="" target="">
+ <span class="dropdown-text">Review High School Statistics</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-basics" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Basics</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-basics">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/index_intro.html" rel="" target="">
+ <span class="dropdown-text">Preliminary Material</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_325/index_325.html" rel="" target="">
+ <span class="dropdown-text">Introduction to Econometrics (ECON 325)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/econ_prep/Introduction to Statistical Concepts.html" rel="" target="">
+ <span class="dropdown-text">Review of Statistics</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-fundamentals" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Fundamentals</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-fundamentals">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_326/index_326.html" rel="" target="">
+ <span class="dropdown-text">Introduction to Empirical Models (ECON 326)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/geog_374/index_374.html" rel="" target="">
+ <span class="dropdown-text">Geographic Computation (GEOG 374)</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-projects" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Projects</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-projects">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_490/index_490.html" rel="" target="">
+ <span class="dropdown-text">Overview of ECON 490</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_490/index_490_r.html" rel="" target="">
+ <span class="dropdown-text">R Modules</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_490/index_490_stata.html" rel="" target="">
+ <span class="dropdown-text">STATA Modules</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-advanced" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Advanced</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-advanced">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_adv/index_adv.html" rel="" target="">
+ <span class="dropdown-text">Advanced Topics</span></a>
+  </li>  
+    </ul>
+  </li>
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-launch-comet" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+      <i class="bi bi-play" role="img">
+</i> 
+ <span class="menu-text">Launch COMET</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-launch-comet">    
+        <li>
+    <a class="dropdown-item" href="https://open.jupyter.ubc.ca/jupyter/hub/user-redirect/git-pull?repo=https%3A%2F%2Fgithub.com%2Fubcecon%2Fcomet-project&amp;urlpath=lab%2Ftree%2Fcomet-project%2F&amp;branch=main" rel="" target=""><i class="bi bi-cloud-check" role="img">
+</i> 
+ <span class="dropdown-text">Launch on JupyterOpen</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://ubc.syzygy.ca/jupyter/hub/user-redirect/git-pull?repo=https%3A%2F%2Fgithub.com%2Fubcecon%2Fcomet-project&amp;urlpath=lab%2Ftree%2Fcomet-project%2F&amp;branch=main" rel="" target=""><i class="bi bi-gear" role="img">
+</i> 
+ <span class="dropdown-text">Launch on Syzygy</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://colab.research.google.com/github/ubcecon/comet-project/blob/main/" rel="" target=""><i class="bi bi-google" role="img">
+</i> 
+ <span class="dropdown-text">Launch on Collab</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://github.com/ubcecon/comet-project/archive/refs/heads/main.zip" rel="" target=""><i class="bi bi-cloud-download" role="img">
+</i> 
+ <span class="dropdown-text">Launch Locally</span></a>
+  </li>  
+        <li><hr class="dropdown-divider"></li>
+        <li>
+    <a class="dropdown-item" href="https://github.com/ubcecon/comet-project/archive/refs/heads/data-only.zip" rel="" target=""><i class="bi bi-clipboard-data" role="img">
+</i> 
+ <span class="dropdown-text">Project Datasets</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="../../../#" rel="" target="">
+ <span class="menu-text">|</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-about" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">About</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-about">    
+        <li>
+    <a class="dropdown-item" href="../../../pages/team.html" rel="" target="">
+ <span class="dropdown-text">COMET Team</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../pages/using_comet.html" rel="" target="">
+ <span class="dropdown-text">Teach With COMET</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../pages/copyright.html" rel="" target="">
+ <span class="dropdown-text">Copyright Information</span></a>
+  </li>  
+    </ul>
+  </li>
+</ul>
+            <div class="quarto-navbar-tools">
+</div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../docs/econ_intro/intro_r/introduction_to_R.html">Preliminary Material</a></li><li class="breadcrumb-item"><a href="../../../docs/econ_intro/econ_prep/Introduction to Statistical Concepts.html">3 - Review of Basic Statistics</a></li></ol></nav>
+      <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+      </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation docked overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_intro/index_intro.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true">
+ <span class="menu-text">Preliminary Material</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_intro/intro_r/introduction_to_R.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">0 - Intro to R</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_intro/intro_to_data/intro_to_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1 - Intro to Data (Part 1)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_intro/intro_to_data/intro_to_data2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2 - Intro to Data (Part 2)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_intro/econ_prep/Introduction to Statistical Concepts.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">3 - Review of Basic Statistics</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="px-0"><hr class="sidebar-divider hi "></li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true">
+ <span class="menu-text">Introduction to Econometrics</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/index_325.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">0 - Overview of ECON 325</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/08_distribution/distribution.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1 - Distribution</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/06_visualization_1/intro_to_visualization1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2 - Visualization I</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/07_visualization_2/intro_to_visualization2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3 - Visualization II</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/01_central_tendency/central_tendency.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4 - Central Tendency</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/02_dispersion_and_dependence/dispersion_and_dependence.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">5 - Dispersion and Dependence</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/10_sampling_distributions/Sampling_distributions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6 - Sampling Distributions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/03_confidence_intervals/confidence_intervals.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">7 - Confidence Intervals</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/04_hypothesis_testing/hypothesis_testing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">8 - Hypothesis Testing</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/09_regression/simple_regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">9 - Simple Regression</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#outline" id="toc-outline" class="nav-link active" data-scroll-target="#outline">Outline</a>
+  <ul class="collapse">
+  <li><a href="#prerequisites" id="toc-prerequisites" class="nav-link" data-scroll-target="#prerequisites">Prerequisites:</a></li>
+  <li><a href="#learning-objectives" id="toc-learning-objectives" class="nav-link" data-scroll-target="#learning-objectives">Learning Objectives</a></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
+  </ul></li>
+  <li><a href="#part-1-probability" id="toc-part-1-probability" class="nav-link" data-scroll-target="#part-1-probability">PART 1: PROBABILITY</a>
+  <ul class="collapse">
+  <li><a href="#case-study" id="toc-case-study" class="nav-link" data-scroll-target="#case-study">Case Study</a></li>
+  <li><a href="#events-relationships-and-probability-notation" id="toc-events-relationships-and-probability-notation" class="nav-link" data-scroll-target="#events-relationships-and-probability-notation">Events, Relationships, and Probability Notation</a></li>
+  <li><a href="#conditional-probability-and-independence" id="toc-conditional-probability-and-independence" class="nav-link" data-scroll-target="#conditional-probability-and-independence">Conditional Probability and Independence</a></li>
+  <li><a href="#distributions" id="toc-distributions" class="nav-link" data-scroll-target="#distributions">Distributions</a></li>
+  <li><a href="#probability-models" id="toc-probability-models" class="nav-link" data-scroll-target="#probability-models">Probability Models</a></li>
+  <li><a href="#exercise" id="toc-exercise" class="nav-link" data-scroll-target="#exercise">Exercise</a></li>
+  </ul></li>
+  <li><a href="#part-2-counting-permutations-and-combinations" id="toc-part-2-counting-permutations-and-combinations" class="nav-link" data-scroll-target="#part-2-counting-permutations-and-combinations">PART 2: COUNTING, PERMUTATIONS, AND COMBINATIONS</a></li>
+  <li><a href="#part-3-data" id="toc-part-3-data" class="nav-link" data-scroll-target="#part-3-data">PART 3: DATA</a>
+  <ul class="collapse">
+  <li><a href="#variable-types" id="toc-variable-types" class="nav-link" data-scroll-target="#variable-types">Variable Types:</a></li>
+  <li><a href="#data-types" id="toc-data-types" class="nav-link" data-scroll-target="#data-types">Data Types</a></li>
+  <li><a href="#data-visualizations" id="toc-data-visualizations" class="nav-link" data-scroll-target="#data-visualizations">Data Visualizations</a></li>
+  <li><a href="#summary-statistics-and-central-tendency" id="toc-summary-statistics-and-central-tendency" class="nav-link" data-scroll-target="#summary-statistics-and-central-tendency">Summary Statistics and Central Tendency</a></li>
+  </ul></li>
+  <li><a href="#part-4-inferential-statistics" id="toc-part-4-inferential-statistics" class="nav-link" data-scroll-target="#part-4-inferential-statistics">PART 4: INFERENTIAL STATISTICS</a>
+  <ul class="collapse">
+  <li><a href="#regressions" id="toc-regressions" class="nav-link" data-scroll-target="#regressions">Regressions</a></li>
+  <li><a href="#regression-models" id="toc-regression-models" class="nav-link" data-scroll-target="#regression-models">Regression Models</a></li>
+  <li><a href="#the-basis-of-statistical-inference" id="toc-the-basis-of-statistical-inference" class="nav-link" data-scroll-target="#the-basis-of-statistical-inference">The Basis of Statistical Inference</a></li>
+  </ul></li>
+  <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion">Conclusion</a></li>
+  </ul>
+<div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/ubcecon/comet-project/issues/new" class="toc-action">Report an issue</a></p></div></div><div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="Introduction to Statistical Concepts.ipynb" download="Introduction to Statistical Concepts.ipynb"><i class="bi bi-journal-code"></i>Jupyter</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content column-body" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Introduction to Statistical Concepts: Econ 325 Prep Course</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">introduction</div>
+    <div class="quarto-category">econ intro</div>
+    <div class="quarto-category">probability</div>
+    <div class="quarto-category">data</div>
+    <div class="quarto-category">descriptive statistics</div>
+    <div class="quarto-category">visualizations</div>
+    <div class="quarto-category">inferential statistics</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    This notebook introduces you to some fundamental statistics and basic probability concepts. It is designed to cover introductory statistics material taught in Foundations of Mathematics 12 and ECON 226: Making Sense of Economic Data for students who either haven’t taken these courses or who would like a refresher before going into ECON 325.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>COMET Team <br> <em>Charlotte White, Anneke Dresselhuis</em>, <em>Jonathan Graves</em> </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">10 August 2023</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+</header>
+
+<section id="outline" class="level2">
+<h2 class="anchored" data-anchor-id="outline">Outline</h2>
+<section id="prerequisites" class="level3">
+<h3 class="anchored" data-anchor-id="prerequisites">Prerequisites:</h3>
+<p>This notebook uses the <a href="https://jupyter.org/">Jupyter system</a>, which is a connected system of open-source tools designed to support interactive, web-based computing. This system allows you to run cells of code, answer questions and apply your learning as you go. To familiarize yourself with the Jupyter environment, please check out the following resources before continuing with this lesson. * Introduction to Jupyter * Additional resources for familiarizing yourself with the Jupyter: * <a href="https://comet.arts.ubc.ca/pages/installing_locally.html">Using COMET as a Student</a> * <a href="https://comet.arts.ubc.ca/pages/quickstart.html">Quickstart Guide</a></p>
+</section>
+<section id="learning-objectives" class="level3">
+<h3 class="anchored" data-anchor-id="learning-objectives">Learning Objectives</h3>
+<ul>
+<li>Describe the probability of an event, using accurate terms
+<ul>
+<li>Understand how to read basic probability notation</li>
+<li>Calculate the theoretical and experimental probability</li>
+</ul></li>
+<li>Describe and apply the fundamental rules of counting</li>
+<li>Gain familiarity with data types and their functions</li>
+<li>Identify common data visualizations and their uses</li>
+<li>Interpret regression equations and apply a regression to real-world examples</li>
+<li>Describe the connection between probability and statistical inferences</li>
+</ul>
+</section>
+<section id="references" class="level3">
+<h3 class="anchored" data-anchor-id="references">References</h3>
+<ul>
+<li>[Appleby &amp; Ranieri - iWrite Math 12: Foundations of Math, British Columbia Edition]</li>
+<li><a href="https://datasciencebook.ca/inference.html">Timbers, Campbell, and Lee - Chapter 10: Statistical Inference</a></li>
+<li>[De Veaux, Velleman, and Bock - Intro Stats]</li>
+<li><a href="https://openstax.org/books/introductory-statistics/pages/12-introduction">Illowsky and Dean - Chapter 12: Linear Regression and Correlation</a></li>
+</ul>
+<p>Before beginning the lesson, please run the below cell.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"functions.r"</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"tests.r"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="part-1-probability" class="level2">
+<h2 class="anchored" data-anchor-id="part-1-probability">PART 1: PROBABILITY</h2>
+<p>Probability is an area of study that deals with the mathematics of chance or prediction. This lesson is designed to prime you with some basic, introductory concepts that are essential for understanding both statistics and probability.</p>
+<p><strong>Material Covered:</strong> * Random events * Formal probability (terminology and notation) * Calculating theoretical and experimental probability * Unions, intersections, conditional probability and independence * Models for probability</p>
+<p>To begin, let’s familiarize ourselves with some of the basic terms used in the study of probability.</p>
+<ul>
+<li><strong>Random</strong>: an situation is random if we know the possible results it can have, but not which particular result has or will occur.</li>
+<li><strong>Trial</strong>: a single occasion where we observe a random situation. Since the situation is random, the result of the trial cannot be predicted with certainty<br>
+</li>
+<li><strong>Outcome</strong>: the result measured or reported from the trial</li>
+<li><strong>Sample space</strong>: all possible outcomes for a trial</li>
+<li><strong>Event</strong>: a group of one or more outcomes in a sample space<br>
+</li>
+<li><strong>Probability notation</strong>: a formal notation method of efficiently conveying probability concepts</li>
+</ul>
+<p>Although these may seem like abstract concepts, the reality is that we encounter these concepts in our lives on a daily basis.</p>
+<p>Think about rolling a standard, six-sided die.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/Dice_2005.jpg" class="img-fluid figure-img" alt="game die"></p>
+<figcaption class="figure-caption">A standard six-sided die, used for a number of games (Credit: <a href="https://commons.wikimedia.org/wiki/File:Dice_2005.jpg">Roger McLassus</a>)</figcaption>
+</figure>
+</div>
+<ul>
+<li>Rolling the die would be considered the <em>trial</em> in this example, which could result in six distinct <em>outcomes</em> based on which side of the die is facing up: 1,2,3,4,5,6.</li>
+<li>To help differentiate the outcomes from other mathematical objects, we can use <em>probability notation</em> and list all possible outcomes within curly brackets, separated by commas: {1,2,3,4,5,6}.</li>
+<li>This list of outcomes makes up the <em>sample space</em>.</li>
+<li>We could also group our outcomes into <em>events</em>, such as ‘rolling an even number’ or ‘rolling an odd number’.</li>
+</ul>
+<p>We can think about probability in terms of <em>likelihood</em>, which means how “likely” an event is. If we are familiar with the circumstances surrounding an event (the trial, outcome(s), and sample space) we are able to understand the likelihood of an event. For each event, there is both a theoretical and experimental probability<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>. The theoretical probability can be calculated as follows:</p>
+<p><span class="math display">\[
+P(A) = \frac{\text{\# of outcomes in A }}{\text{\# total possible outcomes in the sample space }}
+\]</span></p>
+<p>Where <span class="math inline">\(P(A)\)</span> is the probability notation which describes the <strong>probability</strong> of event <span class="math inline">\(A\)</span> occurring.</p>
+<p>When you toss a die, there is a theoretical probability for each event possible, which depends on the outcomes which make up the event.</p>
+<p>For example, <span class="math inline">\(P(\text{rolling an odd number})\)</span> would be the number of outcomes in this event, which is three (rolling a one, a three, or a five), divided by the total possible outcomes which we know to be six. Therefore, <span class="math inline">\(P(\text{rolling an odd number}) = 0.5\)</span>.</p>
+<p>By these kinds of calculations, we can assign a numerical value between 0 and 1 to the likelihood of an event occurring.</p>
+<p>So, if you roll a die ten times, are you guaranteed to roll five even numbers and five odd numbers? Not necessarily; however, if you were to conduct these trials and record your results you could calculate the experimental probability.</p>
+<p><span class="math display">\[
+P(A) = \frac{\text{\# of times event A occurs}}{\text{\# total number of trials}}
+\]</span></p>
+<p>Experimental probability is calculated on the basis of events that occurred, whereas theoretical probability is based purely on mathematical reasoning.</p>
+<p>With a small number of trials, there may be large differences in these two values. It’s conceivable that if you rolled a die four times, you could get an even number every time, making <span class="math inline">\(P(\text{rolling an odd number}) = 0\)</span>. That’s very different from the value of <span class="math inline">\(0.5\)</span> that we calculated earlier.</p>
+<p>What if you rolled a thousand times, though? Intuitively, you might already have realized that the more times we repeat this random process, the more likely it is that the experimental probability of our event of interest will settle towards its expected probability.</p>
+<p><strong>Question 1:</strong> True or False? The combined probability of all outcomes in a sample space will always be equal to 1. Try it with the dice example!</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>answer_1 <span class="ot">&lt;-</span> <span class="st">''</span> <span class="co"># your answer here('true' or 'false')</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_1</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+<p>So we now know how to calculate the probability that an event will occur. What about the probability that it will <em>not</em> occur? This is called the <strong>complementary event</strong>.</p>
+<p>In a situation where there are only two possible outcomes, the complementary event is relatively straightforward. Consider a coin toss; what is the complement of the event “lands on heads”? If you’re thinking “lands on tails”, you would be partially right. The complementary event would really be “does not land on heads”. Since there’s only two outcomes in the sample space, then “lands on tails” is the only way to achieve the complementary event in this example.</p>
+<p>However, this changes when there are more possible outcomes – like rolling a six-sided die. Now, the probability of the complement to “rolling a one” is the combined probability of rolling a two, three, four, five, or six.</p>
+<section id="case-study" class="level3">
+<h3 class="anchored" data-anchor-id="case-study">Case Study</h3>
+<p>To better understand these ideas, we will use a case study: <em>salmon fishing</em> in British Columbia.</p>
+<p>In BC, salmon are an important economic resource both for commercial sales and personal consumption. They also are a source of livelihood and with high cultural significance for some communities. They play a major role as a keystone species in coastal ecosystems for their critical place in the food chain and significant contributions to nutrient cycling throughout their life cycles, which keep the surrounding streams, trees, and soils healthy. Given their importance, there is a need to maintain strong records of populations to inform decisions about fishing regulations and habitat protections in order to maintain strong salmon populations.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/Sockeye_salmon_swimming_right.jpg" class="img-fluid figure-img" alt="sockeye salmon"></p>
+<figcaption class="figure-caption">A sockeye salmon, one of BC’s most distinctive fish (Credit: <a href="https://commons.wikimedia.org/wiki/File:Sockeye_salmon_swimming_right.jpg">Milton Love</a>)</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/Joe_Sum_salmon_fishing.jpg" class="img-fluid figure-img" alt="Chinese immigrant Joe Sum fishing salmon"></p>
+<figcaption class="figure-caption">Chinese immigrant Joe Sum fishing for Salmon in Vancouver, BC, c.&nbsp;August 1945. Many immigrants and Indigenous people worked in salmon fisheries and canneries during the 20th century. (Credit: <a href="https://recherche-collection-search.bac-lac.gc.ca/eng/home/record?app=fonandcol&amp;IdNumber=3601932">Library and Archives Canada</a>)</figcaption>
+</figure>
+</div>
+<p>Imagine you’re out fishing for salmon. Each time you cast out your line, there are five possible types of salmon it may come up with: <em>Sockeye</em>, <em>Chum</em>, <em>Coho</em>, <em>Chinook</em>, and <em>Pink</em>. For the following questions, assume that each type of salmon is equally likely to bite your fishing rod.</p>
+<p><strong>Question 2:</strong> What is the theoretical probability of catching a Coho salmon? Please give your answer to two decimal places.</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>answer_2 <span class="ot">&lt;-</span> <span class="co"># your answer here</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_2</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+<p>Despite the integral role of salmon in supporting BC’s coastal ecosystems and communities, data show that many salmon populations are declining due to pressures from climate change, habitat loss and pollution, and fishing. As part of its response, the department of Fisheries and Oceans Canada restricts the <a href="https://www.pac.dfo-mpo.gc.ca/fm-gp/rec/bc-zones-cb-eng.html#management-areas">type and size of fish</a> commercial fishers are allowed to catch and retain. Off the coast of Salt Spring Island, for example, it is not permitted to catch and take home any Coho, Chinook, or Sockeye salmon.</p>
+<p><strong>Question 3:</strong> Suppose you are fishing off Saltspring Island. With this regulation in effect, what is the theoretical probability of catching a salmon that you can take home with you?</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>answer_3 <span class="ot">&lt;-</span> <span class="co"># your answer here</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_3</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+<p><strong>Question 4:</strong> What is the theoretical probability of the complementary event? Please give your answer to two decimal places.</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>answer_4 <span class="ot">&lt;-</span> <span class="co"># your answer here</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_4</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+</section>
+<section id="events-relationships-and-probability-notation" class="level3">
+<h3 class="anchored" data-anchor-id="events-relationships-and-probability-notation">Events, Relationships, and Probability Notation</h3>
+<p>We’ll consider catching a salmon we can take home event <span class="math inline">\(A\)</span> (Chum, Pink), and catching one that we cannot take home (Chinook, Sockeye, or Coho) event <span class="math inline">\(B\)</span>. We would denote their probabilities as <span class="math inline">\(P(A)\)</span> and <span class="math inline">\(P(B)\)</span> respectively. We could also write them as <span class="math inline">\(P(A)\)</span> and <span class="math inline">\(P(A')\)</span>, since these are complementary events.</p>
+<p>In this case, <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span> are <strong>mutually exclusive events</strong>, meaning that they have no common outcomes. In any of the possible outcomes of what salmon you catch, either event <span class="math inline">\(A\)</span> <em>or</em> event <span class="math inline">\(B\)</span> will occur, but never both <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span> at the same time. This is the case with all sets of events which are complementary events, as there are no common outcomes.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/diagrams/events_outcomes1.png" class="img-fluid figure-img" alt="A chart displaying the outcomes included in event A (Chum, Pink) and event B(Chinook, Sockeye, Coho)"></p>
+<figcaption class="figure-caption">A chart displaying the outcomes included in events A and B.</figcaption>
+</figure>
+</div>
+<p>Suppose you’re allowed to take home Chum and Pink salmon, but you only enjoy eating Sockeye, Coho, and Pink salmon. We’ll consider catching a salmon you are allowed to take home as event <span class="math inline">\(A\)</span>, and catching a salmon you <em>want</em> to take home event <span class="math inline">\(B\)</span>. These events are not mutually exclusive. They each have an individual probability of occurring, as well as a joint probability of both events occurring.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/diagrams/events_outcomes2.png" class="img-fluid figure-img" alt="A chart displaying the outcomes included in event A (Chum , Pink) and event B(Sockeye, Coho, Pink)"></p>
+<figcaption class="figure-caption">A chart displaying the outcomes included in events A and B.</figcaption>
+</figure>
+</div>
+<p>We can use probability notation when exploring the joint-probability of two events (<span class="math inline">\(A\)</span>,<span class="math inline">\(B\)</span>). In probability notation, the symbol <span class="math inline">\(\cup\)</span> is used to express an <strong>intersection</strong> as follows: <span class="math display">\[
+P(A\cap B)
+\]</span></p>
+<p>This intersection is the joint-probability, or the probability of both event <span class="math inline">\(A\)</span> <em>and</em> <span class="math inline">\(B\)</span> occuring. The event <span class="math inline">\((A\cap B)\)</span> occurs only when both <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span> occur simultaneously. There is only an intersection when the events are not mutually exclusive.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/diagrams/joint_probability.png" class="img-fluid figure-img" alt="A venn diagram of circles A and B, which shows that the joint-probability of events A and B can be visualized as the area of overlap."></p>
+<figcaption class="figure-caption">A venn diagram to help visualize the concept of joint-probability.</figcaption>
+</figure>
+</div>
+<p>To calculate the probability of the intersection, we need to calculate and combine the probability of all outcomes that are included in both events.</p>
+<p><strong>Question 5:</strong> If catching a Pink or Chum salmon is event <span class="math inline">\(A\)</span>, and catching a Pink, Sockeye, or Coho salmon is event <span class="math inline">\(B\)</span>, what is <span class="math inline">\(P(A\cap B)\)</span>? Assume that your sample space includes all five species of salmon, and that each is equally likely to be caught. Please give your answer to one decimal place.</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>answer_5 <span class="ot">&lt;-</span>  <span class="co"># your answer here</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_5</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+<p>We can also use a similar notation to express a <strong>union</strong>: <span class="math display">\[
+P(A\cup B)
+\]</span></p>
+<p>Event <span class="math inline">\((A \cup B)\)</span> occurs if either <span class="math inline">\(A\)</span> <em>or</em> <span class="math inline">\(B\)</span> <em>or</em> both occur. This can happen regardless of whether <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span> are mutually exclusive.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/diagrams/types_of_unions.png" class="img-fluid figure-img" alt="A pair of venn diagrams representing relationships between events A and B; mutually exclusive events have no area of overlap, whereas non-mutually exclusive events do"></p>
+<figcaption class="figure-caption">A pair of venn diagrams to help visualize types of unions.</figcaption>
+</figure>
+</div>
+<p>In calculating the probability of a union, however, it does matter if the events are mutually exclusive. If <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span> are mutually exclusive, then: <span class="math display">\[
+P(A\cup B) = P(A) + P(B)
+\]</span></p>
+<p>If <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span> are not mutually exclusive, then:</p>
+<p><span class="math display">\[
+P(A\cup B) = P(A) + P(B) - P(A\cap B)
+\]</span></p>
+<p>The joint probability is subtracted to avoid “double-counting” the area of overlap between <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span>.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/diagrams/calculating_unions.png" class="img-fluid figure-img" alt="A pair of venn diagrams visualizing the calculation of the probability for union."></p>
+<figcaption class="figure-caption">A pair of venn diagrams to help visualize probability calculations.</figcaption>
+</figure>
+</div>
+<p><strong>Question 6:</strong> If catching a Pink or Chum salmon is event <span class="math inline">\(A\)</span>, and catching a Pink, Sockeye, or Coho salmon is event <span class="math inline">\(B\)</span>, what is <span class="math inline">\(P(A\cup B)\)</span>? Assume that your sample space includes all five species of salmon, and that each is equally likely to be caught. Please give your answer to one decimal place.</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>answer_6 <span class="ot">&lt;-</span>  <span class="co"># your answer here</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_6</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+</section>
+<section id="conditional-probability-and-independence" class="level3">
+<h3 class="anchored" data-anchor-id="conditional-probability-and-independence">Conditional Probability and Independence</h3>
+<p>If you toss a coin and it lands on heads, the probabilities of the outcomes for your next coin flip remain unchanged. This is because tossing a coin is an <strong>independent event</strong>. Even though we are expecting an approximately equal number of heads and tails outcomes from the total number of tosses we perform, we know that the outcome of our toss has no power to dictate the following coin toss.</p>
+<p>Let’s return to our fishing example. Say you cast out your line once and catch a Chinook salmon, put it in your boat, then you cast out your line again. Has the probability of your outcome changed because you caught a Chinook salmon? What about if you had put the Chinook back in the water after you’d caught it?</p>
+<p>It might be challenging to conceptualize how these events would impact each other in such a large body of water like the ocean. Think about how this would work if instead we had a pond, with only a few salmon.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/diagrams/fishing_pond.png" class="img-fluid figure-img" alt="A visual of a pond with ten salmon, and the resulting pond of nine salmon after one salmon as been removed."></p>
+<figcaption class="figure-caption">A diagram of fish in a pond, showing how probability changes as the number of a certain type of fish decreases</figcaption>
+</figure>
+</div>
+<p>You can easily see now how removing a fish from the pond after you catch it would affect the probability of the next fish you catch. In this case, the succession of trials would <em>not</em> be independent.</p>
+<p><strong>Conditional probability</strong> allows us to understand the probability of events as they relate to the probability of other events.</p>
+<p>See the below contingency table showing some sample data that could have been collected about salmon caught in a certain region.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/diagrams/contingency_table.png" class="img-fluid figure-img" alt="A contingency table; wild Coho = 32, hatchery Coho = 60, total Coho = 92, wild Sockeye = 15, hatchery Sockeye = 50, total Sockeye = 65, total salmon = 157"></p>
+<figcaption class="figure-caption">A contingency table showing a possible configuration of hatchery and wild salmon caught for two different species</figcaption>
+</figure>
+</div>
+<p>Take a minute to familiarize yourself with the table. In total there were 157 salmon caught in the sampling period. One hundred and ten of them were hatchery salmon, forty-seven were wild. Sixty-five of them were Sockeye, ninety-two of them were Coho, and wild and hatchery fish were represented for both species in different amounts, as you can see from the values in the middle of the table.</p>
+<p>You are able to easily see that the probability of catching a wild salmon is <span class="math inline">\(47/157 = 0.299\)</span>. Would this probability change if we knew that we were only going to catch Coho? You might notice that wild salmon make up a much larger percentage of the Coho, so we would have a higher probability of catching a wild salmon in the case where we know it will be a Coho salmon. This is because we’re now observing a <em>conditional</em> distribution of the sixty-five Coho salmon. This probability is expressed as:</p>
+<p><span class="math display">\[
+P(A|B)
+\]</span></p>
+<p>Where <span class="math inline">\(A\)</span> would be the event ‘catching a wild salmon’ and <span class="math inline">\(B\)</span> would be the event ‘catching a Coho salmon’. <span class="math inline">\(P(A|B)\)</span> then means ‘the probability of catching a wild salmon <em>given</em> that it’s a Coho salmon’. In this case <span class="math inline">\(P(A|B) = 32/92 = 0.35\)</span>.</p>
+<p><strong>Question f:</strong> What is the probability of catching a sockeye salmon given that it’s a wild salmon? Please round your answer to two decimal places.</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>answer_6<span class="fl">.1</span> <span class="ot">&lt;-</span> <span class="co"># your answer here</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_6.1</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+</section>
+<section id="distributions" class="level3">
+<h3 class="anchored" data-anchor-id="distributions">Distributions</h3>
+<p>In the previous example, we began exploring instances where the probabilities are not equal among the different outcomes. In controlled settings like rolling dice or tossing coins, we can easily see why we would assume equal probability in events- these specific trials have been designed to give no advantage to one outcome or another.</p>
+<p>However, for other random events, the probability of outcomes is not equal. When you cast your line into the water, the probability that you will catch a given species of salmon is not going to be equal, and may depend on where you are and the abundance of different salmon species in that area, or any other number of factors. This is a <strong>probability distribution</strong> which refers to the pattern or arrangement of probabilities in a population.</p>
+<p>Over the course of an afternoon, you cast your line out 15 times. If the probabilities of catching each of the five salmon species were equal, your distribution would look like this:</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th>Salmon</th>
+<th>Frequency</th>
+<th>Probability</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Pink</td>
+<td>3</td>
+<td>1/5</td>
+</tr>
+<tr class="even">
+<td>Sockeye</td>
+<td>3</td>
+<td>1/5</td>
+</tr>
+<tr class="odd">
+<td>Chum</td>
+<td>3</td>
+<td>1/5</td>
+</tr>
+<tr class="even">
+<td>Coho</td>
+<td>3</td>
+<td>1/5</td>
+</tr>
+<tr class="odd">
+<td>Chinook</td>
+<td>3</td>
+<td>1/5</td>
+</tr>
+</tbody>
+</table>
+<p>But experimentally, that’s not what happens. Instead you find somethings like this:</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th>Salmon</th>
+<th>Frequency</th>
+<th>Probability</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Pink</td>
+<td>2</td>
+<td>2/15</td>
+</tr>
+<tr class="even">
+<td>Sockeye</td>
+<td>1</td>
+<td>1/15</td>
+</tr>
+<tr class="odd">
+<td>Chum</td>
+<td>4</td>
+<td>4/15</td>
+</tr>
+<tr class="even">
+<td>Coho</td>
+<td>7</td>
+<td>7/15</td>
+</tr>
+<tr class="odd">
+<td>Chinook</td>
+<td>0</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p>Note that the probabilities still total 1.</p>
+<p>Distributions are usually described as functions: the function takes in a possible event, then reports back the probability of that event occurring.</p>
+</section>
+<section id="probability-models" class="level3">
+<h3 class="anchored" data-anchor-id="probability-models">Probability Models</h3>
+<p>One helpful tool to help understand this better is the use of <strong>probability models</strong>, which is a mathematical description of an experiment. Using probability models, we can use our understanding of probabilities to predict random behaviour.</p>
+<p>The below table displays a sample probability distribution for the number of fish caught in a day.</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th>Outcome (number of fish) <span class="math inline">\(x\)</span></th>
+<th>Probability <span class="math inline">\(P(x)\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0</td>
+<td>0.15</td>
+</tr>
+<tr class="even">
+<td>1</td>
+<td>0.23</td>
+</tr>
+<tr class="odd">
+<td>2</td>
+<td>0.28</td>
+</tr>
+<tr class="even">
+<td>3</td>
+<td>0.22</td>
+</tr>
+<tr class="odd">
+<td>4</td>
+<td>0.12</td>
+</tr>
+</tbody>
+</table>
+<p>Given these probabilities, how many fish can we expect to catch on a day out? While there is no way of knowing exactly what will happen on a given day, we can figure out what to expect by calculating the <strong>expected value</strong>. The equation to establish this is:</p>
+<p><span class="math display">\[
+E(X) = \sum_x x \cdot P(x)
+\]</span></p>
+<p>Where <span class="math inline">\(E(x)\)</span> is the expected value of random variable <span class="math inline">\(X\)</span>, <span class="math inline">\(x\)</span> is a particular value that the random variable can take on, and <span class="math inline">\(P(x)\)</span> is the probability of that value occurring. In the following example, we will use this equation to determine the answer to our previous question: how many fish can we expect to catch in a day?</p>
+<p><span class="math display">\[
+E(X) = \sum_x x \cdot P(x)\\
+\]</span> <span class="math display">\[
+E(X) = (0\cdot 0.15)+(1\cdot 1.23)+(2 \cdot 0.28)+(3 \cdot 0.22)+(4 \cdot 0.12)
+\]</span> <span class="math display">\[
+E(X) = 1.93
+\]</span></p>
+<p>So this means that on average, we can expect 1.93 fish to be caught in one day. This doesn’t mean that we certainly will catch this number of fish each day. In fact, as you might have noticed, it isn’t possible to catch a fraction of a fish. This is simply an average.</p>
+<p>If we’re fishing for recreational purposes, it may not be as important to know this number. Consider how that might change if fishing is a part of our livelihood. Knowing the number of fish we can expect to catch might then help us to make decisions about how much time we need to spend fishing, or how to price our fish. This is a common application of probability models.</p>
+</section>
+<section id="exercise" class="level3">
+<h3 class="anchored" data-anchor-id="exercise">Exercise</h3>
+<p>Now it’s your turn. The below sample probability distribution shows the average size of different salmon species in BC.</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th>Salmon</th>
+<th>Length (cm)</th>
+<th>Probability</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Pink</td>
+<td>51</td>
+<td>0.27</td>
+</tr>
+<tr class="even">
+<td>Sockeye</td>
+<td>68</td>
+<td>0.55</td>
+</tr>
+<tr class="odd">
+<td>Chum</td>
+<td>76</td>
+<td>0.18</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Question 6.2:</strong> What is the expected length in cm of a salmon that you catch? Please give you answer to two decimal places.</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>answer_6<span class="fl">.2</span> <span class="ot">&lt;-</span> <span class="co"># your answer here</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_6.2</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+</section>
+</section>
+<section id="part-2-counting-permutations-and-combinations" class="level2">
+<h2 class="anchored" data-anchor-id="part-2-counting-permutations-and-combinations">PART 2: COUNTING, PERMUTATIONS, AND COMBINATIONS</h2>
+<p>You may have noticed that the probability of an outcome had a lot to do with the <em>possibilities</em> that existed for a trial. In determining probability, we often will need to know that total number of possible outcomes, and what those outcomes are. To do that, we need to have efficient ways to count them!</p>
+<p><strong>Material Covered:</strong> * Fundamental counting principles * Calculating permutations with repeated elements * Calculating combinations</p>
+<p>Imagine you’re preparing to go on a fishing trip. This could look different for everyone, but below is a list of options for how you might approach different aspects of your trip.</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th>Transportation</th>
+<th>Location</th>
+<th>Fishing Method</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Driving</td>
+<td>Estuary</td>
+<td>Net</td>
+</tr>
+<tr class="even">
+<td>Walking</td>
+<td>River</td>
+<td>Weir</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td></td>
+<td>Rod</td>
+</tr>
+</tbody>
+</table>
+<blockquote class="blockquote">
+<p><em>Fishing Weirs</em>: You may or may not be familiar with the term ‘weir’, which is a structure placed across a channel of water to trap fish. In BC, many Indigenous fishers used this technology to not only catch fish, but to collect information on the size of the year’s salmon run, which could inform harvesting practices. Weirs were banned by the Canadian government in an effort of colonization, but in recent years, some coastal communities have been reviving the practice as an effective method to continue monitoring salmon populations.</p>
+</blockquote>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/Salmon_weir_at_Quamichan_Village.jpg" class="img-fluid figure-img" alt="Fishing Weir"></p>
+<figcaption class="figure-caption">A fishing weir from the mid-1800s on the Cowichan River (Credit: <a href="https://commons.wikimedia.org/wiki/File:Salmon_weir_at_Quamichan_Village_on_the_Cowichan_River,_Vancouver_Island.jpg">Fredrick Dally</a>)</figcaption>
+</figure>
+</div>
+<p>How many different ways could we go about this fishing trip if we have to choose just one method at each level? To illustrate this, we’ll draw out our options as a decision tree.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/diagrams/tree_diagram1.png" class="img-fluid figure-img" alt="A tree diagram summarizing all 12 possible outcomes fishing trips from the list of options."></p>
+<figcaption class="figure-caption">A tree diagram of the possible ways to go on a fishing trip based on the above table.</figcaption>
+</figure>
+</div>
+<p>When it’s drawn in a tree format like this, we can simply count up the total number of outcomes. When we don’t want to take the time to draw a diagram, or the numbers are too large to do so, we can also calculate the total outcomes using the <strong>fundamental counting principle</strong>. By this principle, we know that if there are <em>m</em> choices at the first stage, and <em>n</em> choices at the second stage, then the total number of outcomes is <span class="math inline">\(m \cdot n\)</span>.</p>
+<p><span class="math display">\[
+\text{Total # of ways} = \text{2 transportation} \times \text{2 location} \times \text{3 fishing methods} = 12
+\]</span></p>
+<p>We’ll continue to illustrate this with the example of salmon. If we were to catch any five salmon, we can create several different arrangements based on the species of salmon we have caught.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/diagrams/possible_outcomes.png" class="img-fluid figure-img" alt="A table showing the five possible options of species (Pink, Coho, Sockeye, Chinook, Chum) for each of the five fish caught"></p>
+<figcaption class="figure-caption">A table showing the possible outcomes for each “spot”</figcaption>
+</figure>
+</div>
+<p><strong>Question 7:</strong> Use the fundamental counting principle to calculate how many arrangements you can make using all five fish. Give your answer as a whole number, with no decimals. <em>Hint: the total number of “levels” you have is five, and each species of fish represents a possibility at each level.</em></p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>answer_7 <span class="ot">&lt;-</span> <span class="co"># your answer here</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_7</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+<p>Now what if our salmon were in a small pond again, and there is only one of each species? This means that at each level, we would have one less possible species to draw than the previous level.</p>
+<p><strong>Question 8:</strong> If we start with five possible species, how many total arrangements of salmon will we have?</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>answer_8 <span class="ot">&lt;-</span> <span class="co"># your answer here</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_8</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+<p>In this particular example, we could also write the answer out using <strong>factorial notation</strong>. Factorial notation expresses a product of all positive integers which lead up to a number. In the below equation, the factorial notation is on the left, expressing the full formula on the right.<br>
+<span class="math display">\[
+5! = 5 \times 4 \times 3 \times 2 \times 1
+\]</span></p>
+<p>This provides us with a way to simplify equations, and becomes important as we continue to build an understanding of counting.</p>
+<p>In our previous examples, we were using the fundamental counting rule to calculate the number of arrangements we could generate from a given set of elements (salmon species). In these examples, the order of the elements matters. Catching a Pink salmon as your first fish brings you to a whole new branch of the decision tree than drawing it after catching another fish, and will therefore lead to different outcomes.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/diagrams/tree_diagram2.png" class="img-fluid figure-img" alt="A tree diagram showing that there are sie possible outcomes from a pond with this combination of fish"></p>
+<figcaption class="figure-caption">A tree digram showing all the possible outcomes for a pond with a Pink, Coho, and Chum salmon”</figcaption>
+</figure>
+</div>
+<p>When order is important to the arrangement of elements, it is called a <strong>permutation</strong>. When you’re using <em>all</em> the possible elements at a time, the number of permutations in a set of <span class="math inline">\(n\)</span> elements is equal to <span class="math inline">\(n!\)</span>. We can see this in the above decision tree. If we were to only have the option of catching <em>Pink</em>, <em>Coho</em>, or <em>Chum</em> salmon (<span class="math inline">\(n = 3\)</span>), then our number of permutations would be: <span class="math display">\[
+3! = 3 \times 2 \times 1 = 6
+\]</span></p>
+<p>Now, what if we’re calculating how many permutations can be made for just a <em>portion</em> of the available elements? For example, how many permutations of two different salmon can we create from a list of all five salmon?</p>
+<p>Just like before when we were calculating all the permutations for catching five fish, at the first level, all five options are available. Then there are four at the next level. <span class="math display">\[
+\text{Permutations (P)} = 5 \times 4 = 20
+\]</span></p>
+<p>We stop after this because we are only looking for combinations of two.</p>
+<p><strong>Question 9:</strong> How many permutations of <em>three</em> different salmon can we create from a list of all five salmon?</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>answer_9 <span class="ot">&lt;-</span> <span class="co"># your answer here</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_9</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+<p>The general rule for counting permutations like this is the below equation: <span class="math display">\[
+_{n}P_{r} = \frac{n!}{(n-r)!}
+\]</span></p>
+<p>where <span class="math inline">\(n\)</span> is the number of possible different elements (for example, five possible species of salmon) and <span class="math inline">\(r\)</span> is the number of elements you’d like in the permutation (for example, permutations of three different salmon). <span class="math display">\[
+_{5}P_{3} = \frac{5!}{(5-3)!} = \frac{5!}{2!} = \frac{5\times4\times3\times2!}{2!} = 5\times4\times3
+\]</span></p>
+<blockquote class="blockquote">
+<p><em>Note</em>: This equation still holds true when the number of total elements is the same as the number of elements in our permutation. <span class="math inline">\(0!\)</span> is equal to 1, not 0! When <span class="math inline">\(n = r\)</span>, the bottom of the equation becomes one, so our number of permutations is just equal to <span class="math inline">\(n!\)</span>, as we determined in previous examples.</p>
+</blockquote>
+<p>In calculating permutations, we assume we will not repeat elements. There is only one Pink salmon in the pond, therefore it can only show up once in our equation. The equation for permutations changes, however, when the number the list of elements contains repetitions.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/diagrams/permutations_repetitions.png" class="img-fluid figure-img" alt="A visualisation showing how the number of permutations was is reduced when a repeat of the element (two of the same salmon species) are introduced"></p>
+<figcaption class="figure-caption">A comparison of two ponds, displaying how the number of permutations changes when there are repetitions in the dataset”</figcaption>
+</figure>
+</div>
+<p>Above are two fish ponds containing different fish, and the associated permutations of three using all the fish in the pond. On the left, there are no repeated species, but on the right, there are two pink salmon. Using our equation without accounting for the repeated species, we would see the same number of permutations for both ponds. Visually, though, we can tell that some of the permutations on the left side have repeated.</p>
+<p>To account for repetitions within a list of elements, we use the following equation:</p>
+<p><span class="math display">\[
+P = \frac{n!}{a!\times b!\times c!}
+\]</span></p>
+<p>where <span class="math inline">\(a\)</span>, <span class="math inline">\(b\)</span>, and <span class="math inline">\(c\)</span> are the number of repetitions for different elements. In the case of pond 2, we have just one repeating element (<span class="math inline">\(a\)</span>) with two repetitions. If our list had other elements which have repetitions, they would be included as <span class="math inline">\(b\)</span>, <span class="math inline">\(c\)</span>, and so on. So we would calculate this as:</p>
+<p><span class="math display">\[
+P = \frac{n!}{a!}= \frac{3!}{2!} = \frac{3\times2\times1}{2\times1} = 3
+\]</span></p>
+<p><strong>Question d:</strong> How many permutations could we generate from the following list of elements: <em>Chum</em>, <em>Pink</em>, <em>Pink</em>, <em>Coho</em>, <em>Coho</em>, <em>Sockeye</em>?</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>answer_10 <span class="ot">&lt;-</span> <span class="co"># your answer here</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_10</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+<p>Through all of these examples, we have been assuming that the order of the species we catch matters. This is explicit to permutations. When determining the number of permutations, catching a Pink salmon and then a Coho salmon is a different outcome than catching a Coho salmon and then a Pink salmon. What about instances where order doesn’t matter? The selection of a set of elements when order is <em>not</em> important is referred to as a <strong>combination</strong>.</p>
+<p>Let’s think back to our original pond, where we have one of each salmon species, for a total of five salmon. When we calculated all of the possible <em>permutations</em> for the order in which we catch the salmon, we had a very high number. How would this number change when we are trying to calculate the possible <em>combinations</em>? If you have exactly five different fish, how many total combinations of five fish can you think of?</p>
+<p>You can probably see that although the number of permutations is very high, in this case there is <em>only one</em> combination of fish species. This is because the number of combinations from a list of elements can be expressed as:</p>
+<p><span class="math display">\[
+_{n}C_{r} = \frac{_{n}P_{r}}{r!} = \frac{n!}{(n-r)! r!}
+\]</span></p>
+<p>where <span class="math inline">\(C\)</span> is the number of combinations, <span class="math inline">\(n\)</span> is the number of possible different elements, and <span class="math inline">\(r\)</span> is the number of elements which are being taken at a time in the combination or permutation.</p>
+<p><strong>Question 11:</strong> Earlier we calculated the number of permutations of three different salmon we could make from a list of all five salmon. How many <em>combinations</em> of three could we make from a list of all five salmon?</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>answer_11 <span class="ot">&lt;-</span> <span class="co"># your answer here</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_11</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+</section>
+<section id="part-3-data" class="level2">
+<h2 class="anchored" data-anchor-id="part-3-data">PART 3: DATA</h2>
+<p>Now that we have an understanding of counting and probability, we can begin diving into one of the most important elements of good statistics: data.</p>
+<p><strong>Material Covered:</strong> * Key components of data * Variables * Types of data * Basic data visualization * Describing data through central tendency</p>
+<p>As our modern world continues to push forward technologically through innovations in AI, modeling, algorithms, and personalized digital advertising, you may be hearing lots about data in the world around you at the moment. But what are data? Very broadly, data is information that has been collected for some purpose or another.</p>
+<p>Below are some helpful definitions to understand data:</p>
+<ul>
+<li><strong>Dataset</strong>: a structured collection of numbers and characters.</li>
+<li><strong>Variable</strong>: a characteristic, number, or quantity that can be measured.</li>
+<li><strong>Observation</strong>: all of the measurements for a given entity.</li>
+<li><strong>Value</strong>: a single measurement of a single variable for a given entity.</li>
+</ul>
+<p>Data can be structured into datasets in many ways, but most commonly will be presented as <strong>tabular data</strong>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(salmon_data) <span class="co"># run this cell to view some tabular data!</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>In the above example, the rows represent observations. In this case, each fish caught represents a unique observation. The columns, meanwhile, are the variables in this dataset. Each observation has a value assigned in each variable. The variables are what hold information about the same characteristic (species, size, etc.) for all the observations.</p>
+<section id="variable-types" class="level3">
+<h3 class="anchored" data-anchor-id="variable-types">Variable Types:</h3>
+<p>The type of characteristic and the way that it is recorded will change the way that we can use a variable within a dataset. For example, suppose we have a survey which asks participants the following questions and store the answers in two separate variables.</p>
+<blockquote class="blockquote">
+<ol type="1">
+<li>Are you concerned about the state of salmon stocks in BC (yes or no)</li>
+<li>How much salmon do you consume in a year _________ <em>(grams)</em></li>
+</ol>
+</blockquote>
+<p>To report the data values you collected for question 1, it may make sense ‘#/% of respondents are concerned about the state of salmon stocks in BC’, but would the same approach work for the second question?</p>
+<p>Similarly, you may be able to calculate an average number of grams of salmon consumed per person based on the data collected from the second question, but no such calculation could be done for the data from the first question.</p>
+<p>This is because the data collected from these two questions are <em>fundamentally different types of data</em>, and therefore have fundamentally different ways of being reported, used, and interpreted.</p>
+<p>Variables which contain information on what group or category an individual (observation) belongs to are referred to as <strong>qualitative variables</strong>, or sometimes categorical or nominal variables. Qualitative data generally answer descriptive questions (what, where, how) and often take the form of text responses - like question 1 in our example.</p>
+<p>By nature of being qualitative, these types of data are more limited in their applications, but be aware: just because a qualitative variable is more limited in its application does not necessarily make it less useful or informative.</p>
+<p><strong>Quantitative variables</strong>, meanwhile, contain numerical data which express a measurable quality of the observations. In addition to the numeric values, these variables are described using a form of measurement units —for example, centimeters, kilometers per hour, or degrees Celsius— which provide meaning to the numeric data by indicating the scale of measurement.</p>
+<p>Within quantitative variables, there are important distinctions. Think back to our probability model data, where we explored the mean expected value for the number of salmon we would catch in a day. The data from which this probability model was drawn would have recorded a numeric value, with <em>salmon</em> as the measurement unit, and is therefore quantitative data.</p>
+<p>However, there is a limitation on the values that this response could take on in that it is only possible to catch a whole fish at a time. This quantitative variable is therefore a <strong>discrete variable</strong>, as we can list all possible outcomes. Conversely, the variable that would have recorded the length of the fish was not limited in this way. A salmon could be any fraction of a centimeter in length, and the number of values that the variable could take on is limited only by the precision of our measuring tools. This type of quantitative variable is called a <strong>continuous variable</strong>.</p>
+<p>Keep in mind that just because a variable is recorded as a number does not necessarily mean it is a quantitative variable. In some cases, qualitative variables may be labeled using numerals, or converted to numbers for ease of management, but they are still at their core recording categories of the observations.</p>
+<p>In other cases, qualitative data is collected using a scale. For example, a survey may ask you to rate an experience on a scale from one to ten. Although the value assigned is a numeric response, it is still qualitative data, as this scale is a unitless creation, which has no set distances between values. The responses on the scale cannot therefore be interpreted numerically, but is still useful as a way of categorizing the way that participants felt about an experience. This particular type of variable is referred to as an <strong>ordinal variable</strong>.</p>
+<p>Below is a list of sample variables that could be collected.</p>
+<table class="table">
+<colgroup>
+<col style="width: 5%">
+<col style="width: 94%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>Variable</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>driving speed, in kilometers/hour</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>the recorded hair color of an individual</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>the number of bedrooms in a house</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>an individual’s perceived understanding of a topic, rated on a scale from 1-10</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td>the banking institution of an individual</td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td>amount of fertilizer applied to a field, measured in kilograms per hectare</td>
+</tr>
+<tr class="odd">
+<td>7</td>
+<td>number of clients served at a business in a day</td>
+</tr>
+<tr class="even">
+<td>8</td>
+<td>numerical area code of a surveyed group</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Question #12:</strong> Which of the above variables are continuous quantitative variables. Please list all applicable, separated by commas, in ascending order</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>answer_12 <span class="ot">&lt;-</span> <span class="st">''</span> <span class="co">#your answer here ('1,2,3..')</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_12</span> ()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+<p><strong>Question 13:</strong> Which of the above variables are qualitative variables? Please list all applicable, separated by commas**</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>answer_13 <span class="ot">&lt;-</span> <span class="st">'...'</span> <span class="co">#your answer here ('1,2,3..')</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_13</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+</section>
+<section id="data-types" class="level3">
+<h3 class="anchored" data-anchor-id="data-types">Data Types</h3>
+<p>There are many different types of data, which depend on the kinds of values stored in the variables.</p>
+<p><strong>Cross-sectional data</strong> are data which present information on multiple observations at a single moment in time.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/diagrams/cross_sectional_data.png" class="img-fluid figure-img" alt="Sample data recording information about participants' age, height, city of residence, etc."></p>
+<figcaption class="figure-caption">A table of sample cross sectional data.</figcaption>
+</figure>
+</div>
+<p><strong>Time series data</strong> are data which contain values for a single individual over time. For example, the below table shows the changes over time to a single salmon stock.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(population_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>Panel data</strong> are data which contain values for multiple observations over time.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/diagrams/panel_data.png" class="img-fluid figure-img" alt="Sample data recording information about voting turnout and population for two different cities, for multiple years."></p>
+<figcaption class="figure-caption">A table of sample panel data.</figcaption>
+</figure>
+</div>
+<blockquote class="blockquote">
+<p><em>Think Deeper</em>: There are lots of data being collected, made available, and strategically presented from a variety of different sources. When interpreting data, you’ll need to be exercising your information literacy skills, and making sure that you’re critically examining the source of the dataset. You may want to ask yourself questions like: who created this dataset, what interest do they have in this information, and how was this information collected?</p>
+</blockquote>
+</section>
+<section id="data-visualizations" class="level3">
+<h3 class="anchored" data-anchor-id="data-visualizations">Data Visualizations</h3>
+<p>One common way of beginning to understand the data is through data visualization. Good data visualizations should always answer a well-thought-out and relevant research question. Good data visualization should also exist as a standalone explanation - that is, it should provide readers with a clear understanding of both the research question at hand and its answer in a way that doesn’t require further explanation.</p>
+<table class="table">
+<colgroup>
+<col style="width: 5%">
+<col style="width: 94%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>Quality</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>use design features to manipulate readers into believing a particular narrative of the data</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>remember that a visualization’s accuracy is only as good as the data is</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>use data visualization to tell the story of the data truthfully</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>label your axes in font sizes that are readable and use descriptive titles</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td>choose colours that are very similar each other when trying to distinguish 2 variables</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Question 14:</strong> From the above list of qualities, which do you think you should keep in mind as good practices when creating visualizations? Please list selected answers in ascending order, separated by commas.</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>answer_14 <span class="ot">&lt;-</span> <span class="st">'...'</span> <span class="co"># your answer here ('1,2,3..')</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_14</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+<p>There are many different kinds of visualizations, but we’ll just focus on some of the most common types.</p>
+<blockquote class="blockquote">
+<p>A <strong>scatter plot</strong> visualizes the relationship between two quantitative variables</p>
+</blockquote>
+<p>This plot works great when we are interested in showing relationships and groupings among variables from relatively large datasets</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>scatter <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="at">data =</span> salmon_data, <span class="fu">aes</span>(<span class="at">x =</span> length, <span class="at">y =</span> mass, <span class="at">color =</span> species))<span class="sc">+</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span><span class="st">"length of fish (cm)"</span>,</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"mass of fish (kg)"</span>, </span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">"Mass and Length of Salmon, by Species"</span>)<span class="sc">+</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>() <span class="sc">+</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span> (</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">24</span>),</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">18</span>),</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.text =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">16</span>),</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">legend.text =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">14</span>),</span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">legend.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">16</span>)) <span class="sc">+</span></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">aspect.ratio =</span> <span class="fl">1.5</span></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>   )</span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>scatter <span class="sc">+</span> <span class="fu">geom_point</span>(<span class="at">pch =</span> <span class="dv">19</span>, <span class="at">cex =</span> <span class="fl">2.6</span>) <span class="sc">+</span> <span class="fu">scale_color_brewer</span>(<span class="at">palette=</span><span class="st">"Set2"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<blockquote class="blockquote">
+<p>A <strong>line plot</strong> visualizes trends with respect to an independent, ordered quantity (e.g., time).</p>
+</blockquote>
+<p>This plot works great when one of our variables is ordinal (time-like) or when we want to display multiple series on a common timeline.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>line <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="at">data =</span> population_data, <span class="fu">aes</span>(<span class="at">x =</span> year, <span class="at">y =</span> run_size, <span class="at">color =</span> region))<span class="sc">+</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span><span class="st">"Year"</span>,</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>      <span class="at">y =</span> <span class="st">"Run Size (conservation units)"</span>,</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>      <span class="at">title =</span> <span class="st">"Chinook Salmon Yearly Run Size, by Region"</span>) <span class="sc">+</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span> (</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">14</span>),</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">14</span>),</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.text =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">12</span>),</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">legend.text =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">8</span>),</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">legend.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">12</span>)) </span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>line <span class="sc">+</span> <span class="fu">geom_line</span>(<span class="at">size =</span> <span class="fl">1.5</span>) <span class="sc">+</span> <span class="fu">scale_color_brewer</span>(<span class="at">palette=</span><span class="st">"Accent"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<blockquote class="blockquote">
+<p>A <strong>bar plot</strong> visualizes comparisons of amounts.</p>
+</blockquote>
+<p>This plot works great when we are interested in comparing a few categories as parts of a whole, or across time.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>bar <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="at">data =</span> salmon_data, <span class="fu">aes</span>(species, <span class="at">fill =</span> species))<span class="sc">+</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span><span class="st">"Salmon Species"</span>,</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Count"</span>,</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">"Count of Salmon by Species"</span>) <span class="sc">+</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span> (</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">24</span>),</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">18</span>),</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.text =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">16</span>)</span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>    ) </span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>bar <span class="sc">+</span> <span class="fu">geom_bar</span>() <span class="sc">+</span> <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"#EAB676"</span>,<span class="st">"#CADFBB"</span>,<span class="st">"#D0E5E9"</span>,<span class="st">"#F8DDF2"</span>,<span class="st">"#FFA095"</span>))  </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<blockquote class="blockquote">
+<p>A <strong>histogram</strong> visualizes the distribution of one quantitative variable</p>
+</blockquote>
+<p>This plot works great when we are working with a discrete variable and are interested in visualizing all its possible values and how often they occur. They can also be used for continuous variables as in the below graph.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>histogram <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="at">data =</span> salmon_data, <span class="fu">aes</span>(length)) <span class="sc">+</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span><span class="st">"Salmon Length (cm)"</span>,</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Count"</span>,</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">"Length of Salmon"</span>) <span class="sc">+</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span> (</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">24</span>),</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">18</span>),</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.text =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">16</span>)</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>    ) </span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>histogram <span class="sc">+</span> <span class="fu">geom_histogram</span>(<span class="at">fill =</span> <span class="st">"darkseagreen3"</span>, <span class="at">color =</span> <span class="st">"darkseagreen4"</span>, <span class="at">binwidth =</span> <span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="summary-statistics-and-central-tendency" class="level3">
+<h3 class="anchored" data-anchor-id="summary-statistics-and-central-tendency">Summary Statistics and Central Tendency</h3>
+<p>Importantly, data also allows us to explore <strong>statistics</strong>, which is the field of mathematics that is concerned with the analysis and manipulation of data. There are a number of different analyses within statistics that each play a role in interpreting data and driving decisions. One common way of using data is the computation of <strong>summary statistics</strong>, which are statistics that describe the general behaviour of variables.</p>
+<section id="central-tendency---mean" class="level4">
+<h4 class="anchored" data-anchor-id="central-tendency---mean">Central Tendency - Mean</h4>
+<p>In statistics, central tendency refers to the idea of how different interpretations of the term “middle” can be used to describe a probability distribution or dataset. In this notebook, we’ll think about central tendency in terms of numerical values which describe a given subset of the dataset. This concept is important because we often deal with incredibly large datasets that are too big to describe in their entirety.</p>
+<p>The first, and most referenced measure of central tendency is the <strong>sample mean</strong> (also referred to as the <strong>arithmetic mean</strong>). The mean of a variable is the average value of that variable, which can be found by summing together all values that a variable takes on in a set of observations and dividing by the total number of observations used. This is an intuitive measure of central tendency that many of us think of when we are trying to describe data. The formula for the sample mean is below.</p>
+<p><span class="math display">\[
+\bar{x} = \frac{1}{n}\sum_{i=1}^{n} x_i =  \frac{\text{Sum of All Data Points}}{\text{Total Number of Data Points}}
+\]</span></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">view</span>(salmon_data) <span class="co">#run this cell to call the table of data from before  </span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>Question 15:</strong> What is the mean length of the first 10 salmon in this dataset? Please round your answer to two decimal places.</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>answer_15 <span class="ot">&lt;-</span> <span class="co"># your answer here </span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_15</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+</section>
+<section id="central-tendency---median" class="level4">
+<h4 class="anchored" data-anchor-id="central-tendency---median">Central Tendency - Median</h4>
+<p>Another common measure of central tendency is the <strong>median</strong>. The median is the value which exactly splits the observations for a variable in our data set in half when ordered in increasing (or decreasing) order. For instance, if we had observations for <code>variable 1</code> of 60000, 45000, and 72000, our median value for <code>variable 1</code> would be 60000 because there is exactly one observation above (70000) and one observation below (45000) this value.</p>
+<p>To find the median of a variable, we order all of our observations in ascending (or descending) order, then find the value in the middle of this ordered list. This works great when we have an odd number of numbers to list (i.e.&nbsp;9 observations). However, for a list which is of even length (i.e.&nbsp;has 10 observations), we must take the middle <em>two</em> observations and take their arithmetic mean (sound familiar!). A formula for finding the median in each of these two cases is below.</p>
+<p>Arrange data in ascending (or descending) order. Let <span class="math inline">\(n\)</span> be the number of data points. If <span class="math inline">\(n\)</span> is odd, then:</p>
+<p><span class="math display">\[
+\text{Median} = \frac{n+1}{2}\text{th data point}
+\]</span></p>
+<p>Otherwise,</p>
+<p><span class="math display">\[
+\text{Median}  = \frac{1}{2} [\frac{n}{2}\text{th data point} + (\frac{n}{2} + 1)\text{th data point}]
+\]</span></p>
+<p>In other words, the median value is the value that is, quite literally, in the middle of the dataset. Half of the values in the dataset are above it and half are below it.</p>
+<p>The median alone, however, is limited in its use. Take for example the two datasets below.</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th>Obs</th>
+<th>variable 1</th>
+<th>variable 2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>1.1</td>
+<td>1.8</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>0.8</td>
+<td>1.8</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>1.6</td>
+<td>1.7</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>2.1</td>
+<td>1.7</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td>2</td>
+<td>1.5</td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td>2.2</td>
+<td>2.6</td>
+</tr>
+<tr class="odd">
+<td>7</td>
+<td>1.7</td>
+<td>2.4</td>
+</tr>
+<tr class="even">
+<td>8</td>
+<td>1.8</td>
+<td>3.3</td>
+</tr>
+<tr class="odd">
+<td>9</td>
+<td>2.1</td>
+<td>2.3</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Question 16:</strong> What is the median value for <code>variable 1</code>? Please give your answer to one decimal place.</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>answer_16 <span class="ot">&lt;-</span>  <span class="co"># your answer here </span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_16</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+<p><strong>Question 17</strong> What is the median value for <code>variable 2</code>?</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>answer_17 <span class="ot">&lt;-</span> <span class="co"># your answer here </span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_17</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+<p>What do you notice about these two values?</p>
+<p>To help understand why the median can be an incomplete description of the data by itself, let’s see what these two variables look like as histograms.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a> <span class="co">#run this cell to see histograms!</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>))   </span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(variable_1,                   </span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">breaks=</span> <span class="dv">5</span>,                </span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"Variable 1"</span>, </span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>     <span class="at">main=</span><span class="st">"Histogram Variable 1"</span>,                    </span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="st">"darkseagreen3"</span>,  </span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlim =</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="fl">3.5</span>) )    </span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(variable_2,                  </span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>     <span class="at">breaks=</span> <span class="dv">5</span>,                </span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"Variable 2"</span>, </span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a>     <span class="at">main=</span><span class="st">"Histogram Variable 2"</span>,                    </span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="st">"darkslategray3"</span>,</span>
+<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlim =</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="fl">3.5</span>) )  </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>As we can see from these graphs, these data are very distributed very differently!</p>
+<blockquote class="blockquote">
+<p><em>Think deeper</em>: Can you calculate the means for these data? How does knowing both values of central tendency change how you understand the distribution of the data?</p>
+</blockquote>
+</section>
+</section>
+</section>
+<section id="part-4-inferential-statistics" class="level2">
+<h2 class="anchored" data-anchor-id="part-4-inferential-statistics">PART 4: INFERENTIAL STATISTICS</h2>
+<p><strong>Material covered:</strong> * Regression models * Samples vs.&nbsp;population * Point estimates and statisitcal inference * Sampling vairability and normal distribution</p>
+<section id="regressions" class="level3">
+<h3 class="anchored" data-anchor-id="regressions">Regressions</h3>
+<p>Up until this point, all of these techniques have looked at variables in isolation of one another. In reality though, the variables within datasets are often connected to each other through relationships with varied complexity. In statistics, <strong>regressions</strong> present a way to analyze these relationships.</p>
+<p>Let’s return to our fishing dataset. In BC, there are rules in place which limit the size of salmon that recreational fishers are permitted to take home. The size limits are based on a salmon’s length in centimeters measured from the tip of the nose to the tail fork. These regulations have been introduced to help ensure that an adequate number of mature salmon are able to return to their spawning grounds. For Chinook salmon in the Lower Mainland region of BC, this means a maximum of ten salmon over 50 cm in length.</p>
+<p>If you are catching salmon for food, however, it might not be immediately clear what kind of limitation this places on how much salmon you have available to eat; someone eating salmon may not typically think about it in terms of length. They instead might want to think about this regulation as the <em>relationship</em> between the salmon’s length and its weight.</p>
+<p>To begin exploring some of this relationships, let’s start off with a visualization:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(salmon_data<span class="sc">$</span>length,</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>     salmon_data<span class="sc">$</span>mass, </span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">'length (cm)'</span>, <span class="co"># provide a descriptive label</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">'mass (kg)'</span>, <span class="co"># provide a descriptive label</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">'Scatter plot of salmon length vs. mass'</span>, <span class="co"># provide a descriptive title</span></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="st">'darkorchid4'</span></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>     ) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>You can probably tell that there is definitely some relationship between length of the salmon and its mass- but it can be difficult to understand completely using a scatter plot alone. There are far too many points, and too much going on.</p>
+</section>
+<section id="regression-models" class="level3">
+<h3 class="anchored" data-anchor-id="regression-models">Regression Models</h3>
+<p>This is where a <em>regression model</em> comes in. A regression model specifies the relationship between two variables. For example, a linear relationship would be:</p>
+<p><span class="math display">\[
+M_i = \beta_0 + \beta_1 W_i
+\]</span></p>
+<p>Where <span class="math inline">\(M_i\)</span> is the market income of individual <span class="math inline">\(i\)</span>, and <span class="math inline">\(W_i\)</span> is their wage. We normally refer to <span class="math inline">\(M_i\)</span> as the <strong>outcome</strong> variable, and <span class="math inline">\(W_i\)</span> as the <strong>explanatory</strong> variable; these may also be referred to as <em>dependent</em> and <em>independent</em> variables, depending on the field.</p>
+<p>A model like this is our description of what this relationship is - but it depends on two unknowns: <span class="math inline">\(\beta_0\)</span>, <span class="math inline">\(\beta_1\)</span>.</p>
+<ul>
+<li>The <span class="math inline">\(\beta_0\)</span> and <span class="math inline">\(\beta_1\)</span> are <strong>parameters</strong> of the model: they are numbers that determine the relationship (intercept and slope) between <span class="math inline">\(M_i\)</span> and <span class="math inline">\(W_i\)</span>. In our model <span class="math inline">\(\beta_0\)</span> is the intercept, which tells us where the line hits the y-axis. <span class="math inline">\(\beta_1\)</span> is the slope, which tells us how rapidly $M_i $ changes with respect to <span class="math inline">\(W_i\)</span></li>
+<li>This is a linear relationship because the model we have specified is linear in the coefficients, giving us an equation of a straight line through the data.</li>
+</ul>
+<p>Let’s try this out on our own dataset. Use the below sliders to move the line around. See if you can get a line running through all the data points.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(salmon_data<span class="sc">$</span>length,</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>     salmon_data<span class="sc">$</span>mass, </span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">'length (cm)'</span>, <span class="co"># provide a descriptive label</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">'mass (kg)'</span>, <span class="co"># provide a descriptive label</span></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">'Scatter plot of salmon length vs. mass'</span>, <span class="co"># provide a descriptive title</span></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="st">'darkorchid4'</span></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>     ) </span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(a,b, <span class="at">col =</span> <span class="st">"black"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>a <span class="ot">=</span> <span class="sc">-</span><span class="dv">1</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>b <span class="ot">=</span>  <span class="sc">-</span><span class="fl">0.4</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a> <span class="co">#Change these numbers and re-run the cell!</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Of course, we will never get a line which goes through every point; it is unlikely, if not impossible, for (<span class="math inline">\(M_i = \beta_0 + \beta_1 W_i\)</span>) to completely explain everything about our data. We need to include a term which captures everything which is <em>not</em> described by this relationship. This is called the <em>residual</em> term (meaning “leftover”). The <span class="math inline">\(\epsilon_i\)</span> is the <strong>residual</strong>: a component that corresponds to the part of the data which is <em>not</em> described by the model</p>
+<p>Conceptually, we can think about a regression as two parts: the part of the relationship explained by our model (<span class="math inline">\(M_i = \beta_0 + \beta_1 W_i\)</span>) and the part which is not explained (<span class="math inline">\(\epsilon_i\)</span>). Even though not everything is explained by the model, there is still a “best” line that we can draw through the data. In fact, the residuals help in being able to know what it is. In simplified terms, the residuals assists in mathematically determining the line of best fit by providing a measure of minimizing the distance between all the individual data points and the line. We’ll do this automatically and fit it to the plot below.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(salmon_data<span class="sc">$</span>length,</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>     salmon_data<span class="sc">$</span>mass, </span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">'length (cm)'</span>, <span class="co"># provide a descriptive label</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">'mass (kg)'</span>, <span class="co"># provide a descriptive label</span></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">'Scatter plot of salmon length vs. mass'</span>, <span class="co"># provide a descriptive title</span></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="st">'darkorchid4'</span></span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>     ) </span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(slr, <span class="at">col =</span> <span class="st">"black"</span>)</span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a><span class="fu">text</span>(<span class="dv">70</span>, <span class="dv">1</span>, <span class="st">'y = -3.7192 + 0.1036x'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We write the complete <em>regression equation</em> by combining the two parts of the model:</p>
+<p><span class="math display">\[
+M_i = \beta_0 + \beta_1 W_i + \epsilon_i
+\]</span></p>
+<p>Keep in mind though that this equation represents the “true” relationship that exists. Meanwhile, when we create models, we are <em>predicting</em> the values as best we can based on our data. Therefore, we would write are linear models in the following format:</p>
+<p><span class="math display">\[
+\hat{y} = b_0 + b_1x
+\]</span></p>
+<p>In this model, the <span class="math inline">\(b_0\)</span> and <span class="math inline">\(b_1\)</span> are no longer parameters, but <strong>coefficients</strong> of the linear model. You’ll also notice that <span class="math inline">\(M_i\)</span> has changed to <span class="math inline">\(\hat{y}\)</span> (called ‘y-hat’), indicating that it is the <strong>predicted value</strong> of the model based on value <span class="math inline">\(x\)</span>.</p>
+<p>The goal of regression analysis is to:</p>
+<ol type="1">
+<li>Estimate this equation (and especially the model parameters) as accurately as possible.</li>
+<li>Learn about the relationship between <span class="math inline">\(M_i\)</span> and <span class="math inline">\(W_i\)</span> from the results of that estimation.</li>
+</ol>
+<p><strong>Question 18:</strong> What is the estimated value of the slope in our linear regression? Please give your answer to 4 decimal places.</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>answer_18 <span class="ot">&lt;-</span> <span class="co"># your answer here</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_18</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+<p><strong>Question 19:</strong> Using the model we have developed, predict how many grams of fish we can expect from a salmon measuring 52.54 cm in length. Please round your answer to two decimal places.</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>answer_19 <span class="ot">&lt;-</span> <span class="co"># your answer here</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_19</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+</section>
+<section id="the-basis-of-statistical-inference" class="level3">
+<h3 class="anchored" data-anchor-id="the-basis-of-statistical-inference">The Basis of Statistical Inference</h3>
+<p>Now that we have an understanding of a simple regression, you may have realized that we have begun to go beyond simply what we can learn from the data about the dataset itself, but what we can <em>infer</em> from the data about information outside of the dataset. In this last section, we will start to unpack the basis of statistical inference, and how it’s possible.</p>
+<p>One of the common uses for data is to help to understand some ‘truth’ about a particular group. See the following example of a headline from the <a href="https://psf.ca/news-media/86-bc-residents-show-high-levels-concern-about-declining-salmon-stocks/">Pacific Salmon Foundation</a>: “86% of B.C. residents show high levels of concern about declining salmon stocks.</p>
+<p>Think about this statement for a minute, and ask yourself: how do we know this? Did the Pacific Salmon Foundation ask each and every BC resident what they thought about the declining salmon stocks? The answer of course is no, they did not- how could they? But that doesn’t mean that this statement is incorrect. They’ve just used statistics to arrive at this conclusion. When it’s not practical to measure this information directly, <em>statistical inference</em> gives us a method of evaluating it from a subset of the population.</p>
+<p>For example, we might want to know how many BC residents are concerned about the state of the province’s salmon stocks. We are interested in making a conclusion about <em>all</em> BC residents, which we would call the <strong>population</strong>. In statistics, population refers to the complete group of individuals or instances we are interested in studying. From this population, we would like to compute a quantity, which is the proportion of individuals who are concerned about the salmon stocks in BC. This value we are trying to compute is referred to as a population <strong>parameter</strong>. A parameter is a numerical characteristic which is true of the <em>entire</em> population.</p>
+<p>As we’ve established, a parameter may be challenging or impossible to compute directly. We don’t have the resources to ask every BC resident to answer this question. Instead, we can estimate this information by taking the measurements from a representative <strong>sample</strong> of the population. A sample is a subset of individuals which have been selected from the population. When we use a sample to summarize a characteristic of the data, it is called a <strong>statistic</strong>. We understand that this sample can be used to make conclusions about the larger population, and this is the basis of <strong>statistical inference</strong>.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/diagrams/population_sample.png" class="img-fluid figure-img" alt="A diagram displaying how sample data is taken from a larger populuation"></p>
+<figcaption class="figure-caption">A diagram which shows that the sample is a representation of the population.</figcaption>
+</figure>
+</div>
+<p>The above statistic is given as a <strong>proportion</strong>, and expresses the share of an outcome of a variable in relation to the whole. We formally use <span class="math inline">\(\pi\)</span> to denote a proportion when we’re talking about a proportion of the population, and <span class="math inline">\(\hat{p}\)</span> when we’re talking about the proportion of a sample. We can calculate proportions using:</p>
+<p><span class="math display">\[
+\hat{p} = \frac{x}{n}
+\]</span></p>
+<p>Where <span class="math inline">\(n\)</span> is the number of ‘successes’ for the proportion of interest (in our case, how many people said that they <em>are</em> concerned about BC’s salmon stocks) and <span class="math inline">\(x\)</span> is the total number of observations in the dataset (how many people were surveyed).</p>
+<blockquote class="blockquote">
+<p><em>Note</em>: When we talk, we would normally describe proportions using percentages. People frequently say things like “we’ve completed 60% of our tasks”, or “12% of our clients were unsatisfied with their service”, as this helps when communicating mathematical information verbally. When writing things formally in statistics, however, we use decimal points to convey the same information. For example, 60% becomes 0.6, and 12% becomes 0.12.</p>
+</blockquote>
+<p>Suppose we want to better understand the reasons that the entire population of BC residents harbours concerns for salmon stocks. To determine this, we poll 100 randomly selected British Columbians and arrive at the following dataset:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/diagrams/sample_1_data.png" class="img-fluid figure-img" alt="Not concerned = 13, ecosystem/environmental = 44, livelihood = 15, consumption = 28, total = 100"></p>
+<figcaption class="figure-caption">A table of sample data of the primary reason the polled participants feel concerned about salmon stocks.</figcaption>
+</figure>
+</div>
+<p><strong>Question 20:</strong> What is the proportion of this sample who are concerned about salmon stocks for reasons related to ecosystem health? Please provide your answer as a decimal value (e.g.&nbsp;50% = 0.5).</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>answer_20 <span class="ot">&lt;-</span> <span class="co"># your answer here</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_20</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+<p>Because we used a sample to arrive at this number and not the entire population, this calculation is only a <strong>point estimate</strong> of the population parameter, meaning it’s out best guess at a single value. Say we repeat this poll on a new group of British Columbians, and obtain the following dataset:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/diagrams/sample_2_data.png" class="img-fluid figure-img" alt="For the polled participants, not concerned = 17, ecosystem/environmental = 47, livelihood = 23, consumption = 13, total = 100"></p>
+<figcaption class="figure-caption">Another table of sample data of the primary reason the polled participants feel concerned about salmon stocks.</figcaption>
+</figure>
+</div>
+<p><strong>Question 21:</strong> What is the proportion of <em>this</em> sample who are concerned about salmon stocks for reasons related to ecosystem health? Please provide your answer as a decimal value (e.g.&nbsp;50% = 0.5).</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>answer_21 <span class="ot">&lt;-</span> <span class="co"># your answer here</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_21</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+<p>As you probably expected, these point estimates are not the same due to <strong>sampling variability</strong>, or sample-to-sample differences. This kind of variability is both common and expected when collecting data.</p>
+<p>So, if there’s variability in our point estimates, how can we ever know the population parameter? In truth, there will always be uncertainty in statistics, and we can only ever use estimates; however, statistical analysis provides us with methods to make these estimates robust.</p>
+<p>Let’s take another three samples and see what we have.</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th>Sample</th>
+<th>Proportion</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>0.44</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>0.47</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>0.47</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>0.39</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td>0.45</td>
+</tr>
+</tbody>
+</table>
+<p>We can display these results as a histogram to better understand them.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>histogram_5_samples <span class="co">#run this cell to view the our five_sample_histogram</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Suppose we kept repeated this with new samples asking this same question, and continued calculating this proportion. The results are displayed below.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">View</span>(sample_data) <span class="do">## run this cell to view the dataset</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Now change the histogram to add more lines of data to the histogram in increments of ten in the indicated place below (“change me”), until you’ve included all 100 observations. Re-run the whole cell after every addition to see how adding more samples changes the histogram.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>histogram_100_samples <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="at">data =</span> sample_data[<span class="dv">1</span><span class="sc">:</span><span class="dv">100</span> <span class="co">#(change me --&gt; 1:10, 1:20, 1:30... etc.)!</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>                                           </span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>                                           ,],  <span class="fu">aes</span>(<span class="at">x =</span> Proportion)) <span class="sc">+</span></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">fill =</span> <span class="st">"dodgerblue3"</span>, <span class="at">color =</span> <span class="st">"lightgrey"</span>, <span class="at">bins =</span> <span class="dv">8</span>) <span class="sc">+</span></span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Sample proportions"</span>, <span class="at">y =</span> <span class="st">"Count"</span>, <span class="at">main =</span> <span class="st">"Histogram: 100 Samples"</span>) <span class="sc">+</span></span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">24</span>),</span>
+<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.text =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">22</span>))</span>
+<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-10"><a href="#cb39-10" aria-hidden="true" tabindex="-1"></a>histogram_100_samples</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Notice how the shape of the histogram changes? With this larger set of data, it looks far more symetrical, with a single peak close to 0.5. This bell-curve shaped is called a <strong>normal distribution</strong> of data.</p>
+<p>If we were to continue polling until we included all possible samples of a given size (<span class="math inline">\(n\)</span>), we would see it become even more symmetrical, and centered perfectly on <span class="math inline">\(\pi\)</span>, the true proportion of BC residents who are concerned about salmon stocks for reasons primarily related to environmental or ecosystem health. This is a mathematically proven concept which is fundamental to inferential statistics.</p>
+<p>Knowing that this is the case does not necessarily mean that the proportion we calculate from our sample will always be very close to the true parameter of the population. Sampled values have the potential to actually be quite different from their corresponding parameters.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/diagrams/histogram_100.jpg" class="img-fluid figure-img" alt="A bin in the histogram records a value much higher than most of the other values"></p>
+<figcaption class="figure-caption">An example of a sampled value which is very different from the majority of other samples</figcaption>
+</figure>
+</div>
+<p>Nevertheless, knowing how these values are distributed around the population parameter allows us to make strong conclusions about how accurate our statistics are. Our sample statistic could be very different from the true value of <span class="math inline">\(\sigma\)</span>. But is it likely? How likely? Conversely, what is the likelihood that it is very close? With enough information about our sample, these questions can be answered through calculation!</p>
+<p>This is because statistics is directly connected to probability. Statistical inference is based on understanding the <em>probability</em> that with any given sample size, (<span class="math inline">\(n\)</span>), the true characteristic of the population (<span class="math inline">\(\sigma\)</span> or <span class="math inline">\(\mu\)</span>) will fall a certain distance from the sampled value (<span class="math inline">\(p\)</span> or <span class="math inline">\(\bar{p}\)</span>).</p>
+</section>
+</section>
+<section id="conclusion" class="level2">
+<h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
+<p>As you can see, the world of probability and statistics is incredibly fascinating, with so many important applications. In this notebook, we learned about probability, counting, data, and statistics using the state of BC salmon as a case study to provide insight into how these skills can be used to understand natural resource management and ecological conservation efforts. The importance of salmon to many people who call our province home means that it is critical to continue to use data and statistics to thoughtfully address the threats and opportunities for the future of salmon in BC.</p>
+<p>After having completed this introductory course, you should have a solid foundation of knowledge about the relationships between probability, statistics, and data, and some of the applications of these concepts in the world around us.</p>
+
+
+</section>
+<aside id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn1"><p>Sometimes also called the <em>empirical</em> probability<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</aside>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, function() {
+      let href = xref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children.length > 2) {
+          for (let i = 0; i < 2; i++) {
+            container.appendChild(note.children[i].cloneNode(true));
+          }
+          return container.innerHTML
+        } else {
+          return note.innerHTML;
+        }
+      } else {
+        return note.innerHTML;
+      }
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+          // target, if specified
+          link.setAttribute("target", "_blank");
+      }
+    }
+});
+</script>
+<nav class="page-navigation column-body">
+  <div class="nav-page nav-page-previous">
+      <a href="../../../docs/econ_intro/intro_to_data/intro_to_data2.html" class="pagination-link">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">2 - Intro to Data (Part 2)</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item">
+ <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/80x15.png"></a>.  <a rel="license" href="https://comet.arts.ubc.ca/pages/copyright.html">See details.</a>
+  </li>  
+</ul>
+    </div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item">
+ The COMET Project and the UBC Vancouver School of Economics are located on the traditional, ancestral and unceded territory of the xʷməθkʷəy̓əm (Musqueam) and Sḵwx̱wú7mesh (Squamish) peoples.
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+</body></html>

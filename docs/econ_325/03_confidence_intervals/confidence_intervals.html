@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-GB" xml:lang="en-GB"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.36">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="COMET Team   Anneke Dresselhuis, Colby Chambers, Jonathan Graves">
+<meta name="dcterms.date" content="2023-01-12">
+<meta name="keywords" content="economics, econometrics, R, data, machine learning, UBC, COMET, geog 374, econ 325, econ 326, learning, teaching, learn r, r help, help, tutorial, r tutorial for beginners,learning statistics with r, learn r programming, learn statistics, linear regression, r machine learning, learn machine learning, university of british columbia, british columbia, r programming for beginners, r language tutorial, r tutorial for beginners, economic data, econometrics tutoring, economics help for students, economics homework help, oer resources for teachers, open educational resources for teachers, educational resource, oer project, oer materials, oer resources, learn economics online, learn econometrics, teach yourself economics, teach yourself econometrics, econometrics basics for beginners">
+<meta name="description" content="What does it mean to be confident in a statistical estimate? This notebook is an introduction confidence, and confidence intervals - especially in the context of the mean value of a variable.">
+
+<title>COMET - 03 - ECON 325: Confidence Intervals</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<link href="../../../docs/econ_325/04_hypothesis_testing/hypothesis_testing.html" rel="next">
+<link href="../../../docs/econ_325/10_sampling_distributions/Sampling_distributions.html" rel="prev">
+<link href="../../../media/comet_favicon.png" rel="icon" type="image/png">
+<script src="../../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<link rel="stylesheet" href="../../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a href="../../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../../media/logo_no_tiny_text.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">COMET</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../index.html" rel="" target=""><i class="bi bi-house-door" role="img">
+</i> 
+ <span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-get-started" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Get Started</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-get-started">    
+        <li>
+    <a class="dropdown-item" href="../../../pages/quickstart.html" rel="" target="">
+ <span class="dropdown-text">Quickstart Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../pages/installing_locally.html" rel="" target="">
+ <span class="dropdown-text">Install and Use COMET</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/intro_jupyter/intro_to_jupyter.html" rel="" target="">
+ <span class="dropdown-text">Learn about Jupyter</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/intro_r/introduction_to_R.html" rel="" target="">
+ <span class="dropdown-text">Learn about R</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/econ_prep/Introduction to Statistical Concepts.html" rel="" target="">
+ <span class="dropdown-text">Review High School Statistics</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-basics" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Basics</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-basics">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/index_intro.html" rel="" target="">
+ <span class="dropdown-text">Preliminary Material</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_325/index_325.html" rel="" target="">
+ <span class="dropdown-text">Introduction to Econometrics (ECON 325)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/econ_prep/Introduction to Statistical Concepts.html" rel="" target="">
+ <span class="dropdown-text">Review of Statistics</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-fundamentals" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Fundamentals</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-fundamentals">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_326/index_326.html" rel="" target="">
+ <span class="dropdown-text">Introduction to Empirical Models (ECON 326)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/geog_374/index_374.html" rel="" target="">
+ <span class="dropdown-text">Geographic Computation (GEOG 374)</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-projects" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Projects</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-projects">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_490/index_490.html" rel="" target="">
+ <span class="dropdown-text">Overview of ECON 490</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_490/index_490_r.html" rel="" target="">
+ <span class="dropdown-text">R Modules</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_490/index_490_stata.html" rel="" target="">
+ <span class="dropdown-text">STATA Modules</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-advanced" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Advanced</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-advanced">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_adv/index_adv.html" rel="" target="">
+ <span class="dropdown-text">Advanced Topics</span></a>
+  </li>  
+    </ul>
+  </li>
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-launch-comet" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+      <i class="bi bi-play" role="img">
+</i> 
+ <span class="menu-text">Launch COMET</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-launch-comet">    
+        <li>
+    <a class="dropdown-item" href="https://open.jupyter.ubc.ca/jupyter/hub/user-redirect/git-pull?repo=https%3A%2F%2Fgithub.com%2Fubcecon%2Fcomet-project&amp;urlpath=lab%2Ftree%2Fcomet-project%2F&amp;branch=main" rel="" target=""><i class="bi bi-cloud-check" role="img">
+</i> 
+ <span class="dropdown-text">Launch on JupyterOpen</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://ubc.syzygy.ca/jupyter/hub/user-redirect/git-pull?repo=https%3A%2F%2Fgithub.com%2Fubcecon%2Fcomet-project&amp;urlpath=lab%2Ftree%2Fcomet-project%2F&amp;branch=main" rel="" target=""><i class="bi bi-gear" role="img">
+</i> 
+ <span class="dropdown-text">Launch on Syzygy</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://colab.research.google.com/github/ubcecon/comet-project/blob/main/" rel="" target=""><i class="bi bi-google" role="img">
+</i> 
+ <span class="dropdown-text">Launch on Collab</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://github.com/ubcecon/comet-project/archive/refs/heads/main.zip" rel="" target=""><i class="bi bi-cloud-download" role="img">
+</i> 
+ <span class="dropdown-text">Launch Locally</span></a>
+  </li>  
+        <li><hr class="dropdown-divider"></li>
+        <li>
+    <a class="dropdown-item" href="https://github.com/ubcecon/comet-project/archive/refs/heads/data-only.zip" rel="" target=""><i class="bi bi-clipboard-data" role="img">
+</i> 
+ <span class="dropdown-text">Project Datasets</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="../../../#" rel="" target="">
+ <span class="menu-text">|</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-about" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">About</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-about">    
+        <li>
+    <a class="dropdown-item" href="../../../pages/team.html" rel="" target="">
+ <span class="dropdown-text">COMET Team</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../pages/using_comet.html" rel="" target="">
+ <span class="dropdown-text">Teach With COMET</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../pages/copyright.html" rel="" target="">
+ <span class="dropdown-text">Copyright Information</span></a>
+  </li>  
+    </ul>
+  </li>
+</ul>
+            <div class="quarto-navbar-tools">
+</div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../docs/econ_325/index_325.html">Introduction to Econometrics</a></li><li class="breadcrumb-item"><a href="../../../docs/econ_325/03_confidence_intervals/confidence_intervals.html">7 - Confidence Intervals</a></li></ol></nav>
+      <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+      </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation docked overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_intro/index_intro.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true">
+ <span class="menu-text">Preliminary Material</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_intro/intro_r/introduction_to_R.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">0 - Intro to R</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_intro/intro_to_data/intro_to_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1 - Intro to Data (Part 1)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_intro/intro_to_data/intro_to_data2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2 - Intro to Data (Part 2)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_intro/econ_prep/Introduction to Statistical Concepts.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3 - Review of Basic Statistics</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="px-0"><hr class="sidebar-divider hi "></li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true">
+ <span class="menu-text">Introduction to Econometrics</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/index_325.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">0 - Overview of ECON 325</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/08_distribution/distribution.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1 - Distribution</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/06_visualization_1/intro_to_visualization1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2 - Visualization I</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/07_visualization_2/intro_to_visualization2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3 - Visualization II</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/01_central_tendency/central_tendency.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4 - Central Tendency</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/02_dispersion_and_dependence/dispersion_and_dependence.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">5 - Dispersion and Dependence</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/10_sampling_distributions/Sampling_distributions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6 - Sampling Distributions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/03_confidence_intervals/confidence_intervals.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">7 - Confidence Intervals</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/04_hypothesis_testing/hypothesis_testing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">8 - Hypothesis Testing</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/09_regression/simple_regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">9 - Simple Regression</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#outline" id="toc-outline" class="nav-link active" data-scroll-target="#outline">Outline</a>
+  <ul class="collapse">
+  <li><a href="#prerequisites" id="toc-prerequisites" class="nav-link" data-scroll-target="#prerequisites">Prerequisites</a></li>
+  <li><a href="#outcomes" id="toc-outcomes" class="nav-link" data-scroll-target="#outcomes">Outcomes</a></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
+  </ul></li>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#confidence-intervals-and-point-estimates" id="toc-confidence-intervals-and-point-estimates" class="nav-link" data-scroll-target="#confidence-intervals-and-point-estimates">Confidence Intervals and Point Estimates</a>
+  <ul class="collapse">
+  <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example">Example</a></li>
+  </ul></li>
+  <li><a href="#confidence-levels" id="toc-confidence-levels" class="nav-link" data-scroll-target="#confidence-levels">Confidence Levels</a></li>
+  <li><a href="#calculating-confidence-intervals" id="toc-calculating-confidence-intervals" class="nav-link" data-scroll-target="#calculating-confidence-intervals">Calculating Confidence Intervals</a></li>
+  <li><a href="#confidence-intervals-for-the-sample-mean" id="toc-confidence-intervals-for-the-sample-mean" class="nav-link" data-scroll-target="#confidence-intervals-for-the-sample-mean">Confidence Intervals for the Sample Mean</a>
+  <ul class="collapse">
+  <li><a href="#case-1-we-know-the-population-standard-deviation" id="toc-case-1-we-know-the-population-standard-deviation" class="nav-link" data-scroll-target="#case-1-we-know-the-population-standard-deviation">Case 1: We Know the Population Standard Deviation</a></li>
+  <li><a href="#case-2-we-dont-know-the-population-standard-deviation" id="toc-case-2-we-dont-know-the-population-standard-deviation" class="nav-link" data-scroll-target="#case-2-we-dont-know-the-population-standard-deviation">Case 2: We Don’t Know the Population Standard Deviation</a></li>
+  <li><a href="#exercise" id="toc-exercise" class="nav-link" data-scroll-target="#exercise">Exercise</a></li>
+  </ul></li>
+  <li><a href="#confidence-intervals-for-the-sample-proportion" id="toc-confidence-intervals-for-the-sample-proportion" class="nav-link" data-scroll-target="#confidence-intervals-for-the-sample-proportion">Confidence Intervals for the Sample Proportion</a>
+  <ul class="collapse">
+  <li><a href="#the-only-case-we-dont-know-the-population-standard-deviation" id="toc-the-only-case-we-dont-know-the-population-standard-deviation" class="nav-link" data-scroll-target="#the-only-case-we-dont-know-the-population-standard-deviation">The Only Case: We Don’t Know the Population Standard Deviation</a></li>
+  <li><a href="#exercise-1" id="toc-exercise-1" class="nav-link" data-scroll-target="#exercise-1">Exercise</a></li>
+  </ul></li>
+  <li><a href="#confidence-intervals-for-the-sample-variance" id="toc-confidence-intervals-for-the-sample-variance" class="nav-link" data-scroll-target="#confidence-intervals-for-the-sample-variance">Confidence Intervals for the Sample Variance</a>
+  <ul class="collapse">
+  <li><a href="#the-only-case-we-dont-know-the-population-standard-deviation-1" id="toc-the-only-case-we-dont-know-the-population-standard-deviation-1" class="nav-link" data-scroll-target="#the-only-case-we-dont-know-the-population-standard-deviation-1">The Only Case: We Don’t Know the Population Standard Deviation</a></li>
+  <li><a href="#exercise-2" id="toc-exercise-2" class="nav-link" data-scroll-target="#exercise-2">Exercise</a></li>
+  </ul></li>
+  <li><a href="#factors-which-impact-the-width-of-confidence-intervals" id="toc-factors-which-impact-the-width-of-confidence-intervals" class="nav-link" data-scroll-target="#factors-which-impact-the-width-of-confidence-intervals">Factors Which Impact the Width of Confidence Intervals</a></li>
+  <li><a href="#changing-the-sample-size" id="toc-changing-the-sample-size" class="nav-link" data-scroll-target="#changing-the-sample-size">Changing the Sample Size</a></li>
+  <li><a href="#changing-the-confidence-level" id="toc-changing-the-confidence-level" class="nav-link" data-scroll-target="#changing-the-confidence-level">Changing the Confidence Level</a>
+  <ul class="collapse">
+  <li><a href="#exercise-3" id="toc-exercise-3" class="nav-link" data-scroll-target="#exercise-3">Exercise</a></li>
+  </ul></li>
+  <li><a href="#common-misconceptions" id="toc-common-misconceptions" class="nav-link" data-scroll-target="#common-misconceptions">Common Misconceptions</a>
+  <ul class="collapse">
+  <li><a href="#misconception-1" id="toc-misconception-1" class="nav-link" data-scroll-target="#misconception-1">Misconception 1:</a></li>
+  <li><a href="#misconception-2" id="toc-misconception-2" class="nav-link" data-scroll-target="#misconception-2">Misconception 2:</a></li>
+  </ul></li>
+  <li><a href="#misconception-3" id="toc-misconception-3" class="nav-link" data-scroll-target="#misconception-3">Misconception 3:</a></li>
+  </ul>
+<div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/ubcecon/comet-project/issues/new" class="toc-action">Report an issue</a></p></div></div><div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="confidence_intervals.ipynb" download="confidence_intervals.ipynb"><i class="bi bi-journal-code"></i>Jupyter</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content column-body" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">03 - ECON 325: Confidence Intervals</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">econ 325</div>
+    <div class="quarto-category">mean</div>
+    <div class="quarto-category">confidence</div>
+    <div class="quarto-category">confidence interval</div>
+    <div class="quarto-category">simulation</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    What does it mean to be confident in a statistical estimate? This notebook is an introduction confidence, and confidence intervals - especially in the context of the mean value of a variable.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>COMET Team <br> <em>Anneke Dresselhuis, Colby Chambers, Jonathan Graves</em> </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">12 January 2023</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+</header>
+
+<section id="outline" class="level2">
+<h2 class="anchored" data-anchor-id="outline">Outline</h2>
+<section id="prerequisites" class="level3">
+<h3 class="anchored" data-anchor-id="prerequisites">Prerequisites</h3>
+<ul>
+<li>Introduction to Jupyter <br></li>
+<li>Introduction to R <br></li>
+<li>Introduction to Visualization <br></li>
+<li>Central Tendency <br></li>
+<li>Distribution <br></li>
+<li>Dispersion and Dependence <br></li>
+</ul>
+</section>
+<section id="outcomes" class="level3">
+<h3 class="anchored" data-anchor-id="outcomes">Outcomes</h3>
+<p>After completing this notebook, you will be able to: * Interpret and report confidence intervals * Calculate confidence intervals under a variety of conditions * Understand how the scope of sampling impacts confidence intervals</p>
+</section>
+<section id="references" class="level3">
+<h3 class="anchored" data-anchor-id="references">References</h3>
+<ul>
+<li><a href="https://rpubs.com/pgrosse/545955">Simulating the Construction of Confidence Intervals for Sample Means</a></li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"testing_confidence_intervals.r"</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># importing typical packages</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(haven)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># loading the dataset</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>census_data <span class="ot">&lt;-</span> <span class="fu">read_dta</span>(<span class="st">"../datasets/01_census2016.dta"</span>)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co"># cleaning the dataset</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>census_data <span class="ot">&lt;-</span> <span class="fu">filter</span>(census_data, <span class="sc">!</span><span class="fu">is.na</span>(census_data<span class="sc">$</span>wages))</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>census_data <span class="ot">&lt;-</span> <span class="fu">filter</span>(census_data, <span class="sc">!</span><span class="fu">is.na</span>(census_data<span class="sc">$</span>mrkinc))</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>census_data <span class="ot">&lt;-</span> <span class="fu">filter</span>(census_data, census_data<span class="sc">$</span>pkids <span class="sc">!=</span> <span class="dv">9</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="introduction" class="level1">
+<h1>Introduction</h1>
+<p>So far, we have developed a strong grasp of core concepts in statistics. We’ve learned about measures of central tendency and variation, as well as how these measures relate to distributions. We have also learned about random sampling and how sampling distributions can shed light on the parameters of a population distribution.</p>
+<p>So, how can we apply this knowledge to real empirical work? While another notebook that covers hypothesis testing will provide a deeper answer to this question, this current notebook provides a starting point. In this notebook, we will learn about a key concept which relates to how we report our results empirically when sampling from a population. This is the idea of a <strong>confidence interval</strong>.</p>
+</section>
+<section id="confidence-intervals-and-point-estimates" class="level1">
+<h1>Confidence Intervals and Point Estimates</h1>
+<p>A <strong>confidence interval</strong> is an estimate that gives us a range of values within which we expect a population parameter to fall. Put another way, it provides a range within which we can have a certain degree of <em>confidence</em> that a desired parameter, such as a population mean, lies.</p>
+<p>This is in contrast to a <strong>point estimate</strong>. A point estimate is a specific estimated value of another object, like a population parameter. For instance, the sample mean and sample standard deviation are point estimates of the population mean and the population standard deviation (respectively).</p>
+<p>Let’s make this concrete with an example.</p>
+<section id="example" class="level2">
+<h2 class="anchored" data-anchor-id="example">Example</h2>
+<p>Suppose that we want to know the mean GPA of undergraduate students at universities across Canada. Finding this exact mean (the population mean) would require us to collect the GPA of every single undergraduate student in the country without error: a nearly impossible task. As a result, and as we have already seen, we collect a sample of students and find the mean of their GPAs (the sample mean). This allows us to make inferences about the desired, yet unobtainable, population mean. The sample mean we find is called our point estimate.</p>
+<p>However, as we already learned, this sample mean will be different every time we draw a different random sample of undergraduate students. Suppose one random sample we draw just so happens to include many high-achieving students, while another does not. The first sample will give us a very high point estimate for the population mean, while the second sample will give us a point estimate much lower.</p>
+<p>So our question becomes: how can we report an estimate for the population mean GPA if we draw a different mean GPA for every possible sample? This is where <strong>confidence intervals</strong> become useful. They allow us to combine information about central tendency and dispersion into a single object.</p>
+</section>
+</section>
+<section id="confidence-levels" class="level1">
+<h1>Confidence Levels</h1>
+<p>As we will see, every time we draw a sample and get a new point estimate, we can compute a confidence interval to describe the precision of this estimate. To calculate this confidence interval, we always must choose a <strong>confidence level</strong>. This is a percentage which represents the long-run percentage of confidence intervals within which we would expect to actually find our desired population parameter.</p>
+<p>We choose a higher confidence level when we want to have more certainty in our confidence interval serving as a good estimate for the population parameter of interest. The most commonly chosen confidence level is 95%, but other values are also common.</p>
+<blockquote class="blockquote">
+<p>In our GPA example, this means that if we drew random samples of undergraduate students 1000 different times and got 1000 sample mean point estimates and corresponding confidence intervals, we would expect 950 of these confidence intervals to contain the actual average GPA of all Canadian undergraduates.</p>
+</blockquote>
+<p>Of course, we cannot conclusively <em>find</em> the desired population mean to prove this; however, choosing a high confidence level gives us more certainty that any one of our hypothetical confidence intervals (including the one we actually calculate from our specific sampling) includes our unknowable parameter of interest. When we choose a confidence level of 95% and calculate a confidence interval around our sample mean point estimate, we say that we are <strong>95% confident</strong> that the true mean GPA of all Canadian undergraduates lies in this range.</p>
+<p>Let’s now see how we actually calculate a confidence interval for a given point estimate and confidence level.</p>
+</section>
+<section id="calculating-confidence-intervals" class="level1">
+<h1>Calculating Confidence Intervals</h1>
+<p>The official representation of a confidence interval is the following:</p>
+<p><span class="math display">\[
+(\text{point estimate} - \text{margin of error}, \text{point estimate} + \text{margin of error})
+\]</span></p>
+<p>or</p>
+<p><span class="math display">\[
+\text{point estimate} \pm \text{margin of error}
+\]</span></p>
+<p>where our point estimate is just the sample statistic we find from our random sample. The margin of error is the more cumbersome piece to calculate. It is subtracted and added from our point estimate to find the <strong>lower bound</strong> and <strong>upper bound</strong> of our confidence interval estimate. While this general formula and format for the confidence interval always holds, calculating the margin of error varies depending on what sample statistic we are looking at and what we know about our population. Let’s look at few important special cases.</p>
+</section>
+<section id="confidence-intervals-for-the-sample-mean" class="level1">
+<h1>Confidence Intervals for the Sample Mean</h1>
+<p>When we want to construct a confidence interval for a sample mean we’ve found (e.g.&nbsp;the mean GPA of a sample of Canadian undergraduates), we must first reflect on how we gathered our data and what its sampling distribution looks like. This is because we must meet the following three conditions in order to construct a valid confidence interval for a sample mean in the first place: &gt; 1. We must have a random sample (typically found through simple random sampling) 2. The sampling distribution of the sample means is approximately normal, which can be met through one of the following ways: <br> a. our original population is normally distributed <br> b. our sample size is &gt; 120 (invokes the Central Limit Theorem) 3. Our sample observations must be independent, for instance: <br> a. we sample with replacement (when we record an observation, we put it back in the population with the possibility of drawing it again) <br> b. our sample size is &lt; 10% of the population size</p>
+<p>If each of conditions 1-3 are met, we are able to construct a valid confidence interval around our sample mean point estimate. There are two different cases for this construction, but they’re pretty similar.</p>
+<section id="case-1-we-know-the-population-standard-deviation" class="level2">
+<h2 class="anchored" data-anchor-id="case-1-we-know-the-population-standard-deviation">Case 1: We Know the Population Standard Deviation</h2>
+<p>In rare instances, we may know the variance (and thus standard deviation) of our original population of interest. In this case, we are able to consult our trustworthy <span class="math inline">\(z\)</span>-statistic when calculating the margin of error in our confidence interval. We use the following formula to calculate the confidence interval for a sample mean when our population standard deviation is known:</p>
+<p><span class="math display">\[
+\bar x \pm z_{\alpha / 2} \cdot \frac{\sigma}{\sqrt n}
+\]</span></p>
+<p>where <span class="math inline">\(\bar x\)</span> is the sample mean, <span class="math inline">\(z\)</span> is the critical value (from the standard normal distribution) for a chosen confidence level <span class="math inline">\(1-\alpha\)</span>, <span class="math inline">\(\sigma\)</span> is the population standard deviation, and <span class="math inline">\(n\)</span> is the sample size.</p>
+<p>However, this case is extremely rare. After all, it requires us to know the standard deviation but not the mean of a population! Typically we either have very good information on a population (and thus know both its mean and standard deviation) or we don’t (and thus don’t know either its mean or standard deviation). Nonetheless, it is good to keep this case in mind since it occasionally comes up.</p>
+</section>
+<section id="case-2-we-dont-know-the-population-standard-deviation" class="level2">
+<h2 class="anchored" data-anchor-id="case-2-we-dont-know-the-population-standard-deviation">Case 2: We Don’t Know the Population Standard Deviation</h2>
+<p>Much more frequently, we won’t know the population standard deviation. In this case, we must instead invoke the <span class="math inline">\(t\)</span>-distribution when calculating the margin of error for our confidence intervals. We also use the sample standard deviation in place of the population standard deviation, since we do know this statistic. The calculation procedure otherwise follows exactly as before in Case 1.</p>
+<p><span class="math display">\[
+\bar x \pm t_{\alpha / 2} \cdot \frac{s}{\sqrt n}
+\]</span> <br> where <span class="math inline">\(\bar x\)</span> is the sample mean, <span class="math inline">\(t\)</span> is the critical value (from the <span class="math inline">\(t\)</span>-distribution) for a chosen confidence level <span class="math inline">\(1-\alpha\)</span>, <span class="math inline">\(s\)</span> is the sample standard deviation, and <span class="math inline">\(n\)</span> is the sample size.</p>
+<p>We can use an example from our dataset to emphasize this point. Let’s construct a 95% confidence interval for the sample mean of the variable <code>wages</code>. We can immediately calculate its mean, which serves as our sample mean point estimate.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># calculating the sample mean of wages</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">mean</span>(census_data<span class="sc">$</span>wages)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Now that we have this point estimate, we can calculate our margin of error around it. To do so, we must first find 3 other statistics: the <span class="math inline">\(t\)</span> value corresponding to a 95% confidence level, the standard deviation of <code>wages</code>, and the sample size (the number of observations recorded for <code>wages</code>).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># finding the sample size and associated degrees of freedom</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="fu">nrow</span>(census_data)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> n <span class="sc">-</span> <span class="dv">1</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co"># finding the t value for a confidence level of 95% (noticing this value converges on the z value as so we could have used this too)</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>t <span class="ot">&lt;-</span> <span class="fu">qt</span>(<span class="at">p =</span> <span class="fl">0.05</span>, <span class="at">df =</span> df)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co"># finding the sample standard deviation of wages</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>s <span class="ot">&lt;-</span> <span class="fu">sd</span>(census_data<span class="sc">$</span>wages)</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co"># calculating the lower and upper bounds of the desired confidence interval</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>lower_bound <span class="ot">&lt;-</span> x <span class="sc">-</span> (t<span class="sc">*</span>s<span class="sc">/</span><span class="fu">sqrt</span>(n))</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>upper_bound <span class="ot">&lt;-</span> x <span class="sc">+</span> (t<span class="sc">*</span>s<span class="sc">/</span><span class="fu">sqrt</span>(n))</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>lower_bound</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>upper_bound</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>In a formal setting, we would thus report the following: We are 95% confident that the mean wage of all Canadians ranges between <span class="math inline">\(54274\)</span> and <span class="math inline">\(54690\)</span> . We also know this is a valid confidence interval estimate because our <code>wages</code> variable and the procedure for sampling it meets all of the three criteria outlined: Statistics Canada (the source for this data) utilizes random sampling, our sample size is <span class="math inline">\(n &gt; 30\)</span> and thus we don’t even need to check the distribution of <code>wages</code>, and our sample size <span class="math inline">\(n\)</span> is &lt; 10% of the total population (since the total population of Canada is about 38 million). This is a very small confidence interval. We can understand this by looking at our formula for calculating it and realizing that our sample size, <span class="math inline">\(n\)</span>, is very large. This adds precision to our confidence interval estimate, highlighted in the narrowness of the interval we found above.</p>
+</section>
+<section id="exercise" class="level2">
+<h2 class="anchored" data-anchor-id="exercise">Exercise</h2>
+<p>Matilda (she/her) takes a random sample of 10 books from a library in order to estimate the average number of pages among all books in the library. Let’s assume the library is very large and the library does not keep record of the specifics of its overall population of books in terms of their pages. Does it make more sense for Matilda to use a standard z distribution or student’s t distribution when calculating the margin of error for her confidence interval?</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>answer_1 <span class="ot">&lt;-</span> <span class="st">"X"</span> <span class="co"># your answer for "z" or "t" in place of "X"</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_1</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>From her sample, Matilda finds a sample mean of 280 and sample variance of 400. She wants to construct a 90% confidence interval to estimate the population mean number of pages. What will be the upper and lower bounds of this interval (assuming its a valid confidence interval)?</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># your code here</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>answer_2 <span class="ot">&lt;-</span> <span class="co"># your answer for the lower bound here, rounded to 2 decimal places</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>answer_3 <span class="ot">&lt;-</span> <span class="co"># your answer for the upper bound here, rounded to 2 decimal places</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="fu">test_2</span>()</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="fu">test_3</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="confidence-intervals-for-the-sample-proportion" class="level1">
+<h1>Confidence Intervals for the Sample Proportion</h1>
+<p>While we’ve looked at the example of mean GPA throughout this notebook, we can also calculate confidence intervals for sample proportions as well. Imagine we have just two political parties (A and B), compulsory voting, and we want to know the proportion of the population that voted for party A. Of course, this would be quite costly and time-consuming to calculate, so we instead collect a sample and corresponding sample proportion. This sample proportion becomes our point estimate around which we construct a confidence interval to estimate the population proportion with a certain degree of confidence. Before we begin constructing this interval, we must make sure that our sampling process again satisfies three conditions; this time, however, the second of these three conditions will be different:</p>
+<blockquote class="blockquote">
+<ol type="1">
+<li>We must have a random sample (typically found through simple random sampling)</li>
+<li>The sampling distribution of the sample proportions is normally distributed, which typically requires there to be at least 10 “successes” and 10 “failures” in our sample (in the example above, this would mean at least 10 people in our sample voted for party A and at least 10 people voted for party B). We can see here that very small sample sizes (i.e.&nbsp;<span class="math inline">\(n = 5\)</span>, <span class="math inline">\(n = 10\)</span>, etc. will fail this condition)</li>
+<li>Our sample observations must be independent, which can be met through one of the following two ways: <br></li>
+</ol>
+<ol type="a">
+<li>we sample with replacement (when we record an observation, we put it back in the population with the possibility of drawing it again) <br></li>
+<li>our sample size is &lt; 10% of the population size</li>
+</ol>
+</blockquote>
+<p>If conditions 1-3 are all met, we are able to construct a valid confidence interval around our sample proportion point estimate. We now turn to the one case we must consider when calculating the margin of error and confidence interval for sample proportions.</p>
+<section id="the-only-case-we-dont-know-the-population-standard-deviation" class="level2">
+<h2 class="anchored" data-anchor-id="the-only-case-we-dont-know-the-population-standard-deviation">The Only Case: We Don’t Know the Population Standard Deviation</h2>
+<p>This is the only case we have to worry about when calculating the sample proportion. This is because the population standard deviation is necessarily a function of the population proportion and sample size <span class="math inline">\(n\)</span>. Thus, if we knew the population standard deviation, we would necessarily know the population proportion and there would be no point in sampling and constructing confidence intervals to estimate it! For this reason, we worry about only the one case where we don’t know the standard deviation of the population. The formula for the confidence interval of a sample proportion is below:</p>
+<p><span class="math display">\[
+\hat P \pm z_{\alpha / 2} \cdot \sqrt \frac {\hat P \cdot(1 - \hat P)}{n}
+\]</span></p>
+<p>where <span class="math inline">\(\hat P\)</span> is the sample proportion, <span class="math inline">\(z\)</span> is the critical value (from the standard normal table) for a chosen confidence level <span class="math inline">\(1-\alpha\)</span>, and <span class="math inline">\(n\)</span> is the sample size.</p>
+<p>Let’s do an example. Let’s calculate a 95% confidence interval for the sample proportion of the census dataset who has one or more kids in their household (<code>pkids == 1</code>). We can immediately calculate our sample proportion, which serves us our point estimate.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># calculating our sample proportion of observations with pkids == 1</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>p <span class="ot">&lt;-</span> <span class="fu">sum</span>(census_data<span class="sc">$</span>pkids <span class="sc">==</span> <span class="dv">1</span>) <span class="sc">/</span> n</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>p</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Now that we have our sample proportion, we can find our <span class="math inline">\(z\)</span> critical value for a 95% confidence level, as well as use our sample proportion <span class="math inline">\(\hat{p}\)</span> and sample size <span class="math inline">\(n\)</span>, to calculate our confidence interval.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># finding the z value for a confidence level of 95%</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>z <span class="ot">&lt;-</span> <span class="fu">qnorm</span>(<span class="at">p =</span> <span class="fl">0.05</span>, <span class="at">lower.tail=</span><span class="cn">FALSE</span>)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># calculating the lower and upper bounds of the desired confidence interval</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>lower_bound <span class="ot">&lt;-</span> p <span class="sc">-</span> z<span class="sc">*</span><span class="fu">sqrt</span>(p<span class="sc">*</span>(<span class="dv">1</span><span class="sc">-</span>p)<span class="sc">/</span>n)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>upper_bound <span class="ot">&lt;-</span> p <span class="sc">+</span> z<span class="sc">*</span><span class="fu">sqrt</span>(p<span class="sc">*</span>(<span class="dv">1</span><span class="sc">-</span>p)<span class="sc">/</span>n)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>lower_bound</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>upper_bound</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>From our above calculations, we can say that we are 95% confident that the true proportion of Canadians with a child in their household ranges between 0.7075% - 0.7104%. Importantly, it is possible to run into cases where the upper or lower bound of the confidence interval for a sample proportion is outside of the accepted domain of [0, 1]. This is particularly likely when our sample proportion point estimate is already very high or low, and then our sample size is not very large. In these cases, we may choose to either report the true interval or cap or interval at 0 or 1 accordingly, with a note that this does not reflect the full confidence interval found. However, these cases are rare. We can check for ourselves that the above confidence interval is valid since it obeys all three of the criteria we have layed out for confidence interval estimating sample proportions.</p>
+</section>
+<section id="exercise-1" class="level2">
+<h2 class="anchored" data-anchor-id="exercise-1">Exercise</h2>
+<p>Matilda now wants to know the proportion of students in her school who are left-handed. Let’s assume her sampling procedure meets all of the criteria for constructing a valid confidence interval. She takes a sample of 200 students and finds that 22 of them are left-handed. What is the upper and lower bound of a 98% confidence interval for the proportion of the school’s overall student body that are left-handed?</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># your code here</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>answer_4 <span class="ot">&lt;-</span> <span class="co"># your answer for the lower bound here, rounded to 3 decimal places (in proportion form, i.e. 10% = 0.1)</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>answer_5 <span class="ot">&lt;-</span> <span class="co"># your answer for the upper bound here, rounded to 3 decimal places (in proportion form, i.e. 10% = 0.1)</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="fu">test_4</span>()</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="fu">test_5</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Let’s imagine that our sample size and confidence level are fixed and cannot be changed. What sample proportion of students who are left-handed would result in the smallest confidence interval possible?</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>answer_6 <span class="ot">&lt;-</span> <span class="co"># your answer for the sample proportion here (i.e. 10% = 0.1)</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_6</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="confidence-intervals-for-the-sample-variance" class="level1">
+<h1>Confidence Intervals for the Sample Variance</h1>
+<p>Finally, we may want to construct confidence intervals for a sample variation itself in order to estimate the population standard deviation that we do not know. The following conditions must be met for this confidence interval to be valid:</p>
+<blockquote class="blockquote">
+<ol type="1">
+<li>We must have a random sample (typically found through simple random sampling)</li>
+<li>Our original population is normally distributed or at least symmetrically distributed without many outliers. If this does not hold, our sample size must be &gt; 120 (invokes the Central Limit Theorem)</li>
+<li>Our sample observations must be independent, which can be met through one of the following two ways: <br></li>
+</ol>
+<ol type="a">
+<li>we sample with replacement (when we record an observation, we put it back in the population with the possibility of drawing it again) <br></li>
+<li>our sample size is &lt; 10% of the population size</li>
+</ol>
+</blockquote>
+<p>If conditions 1-3 are all met, we are able to construct a valid confidence interval for our sample variance point estimate.</p>
+<section id="the-only-case-we-dont-know-the-population-standard-deviation-1" class="level2">
+<h2 class="anchored" data-anchor-id="the-only-case-we-dont-know-the-population-standard-deviation-1">The Only Case: We Don’t Know the Population Standard Deviation</h2>
+<p>We only need worry about this case when calculating confidence intervals for the sample variance. This is because, if we knew the population standard deviation, we would necessarily know the population variance and thus constructing a confidence interval to estimate this number would be useless! Instead, we assume we have only a sample variance to rely on. It should be noted that the formula we will use works a bit differently in this case. Rather than add and subtract a margin of error to our point estimate, we will instead use our point estimate to calculate the lower and upper bounds of our confidence interval directly.</p>
+<p><span class="math display">\[
+(\frac{(n - 1) \cdot s^2}{\chi^2_{\alpha/{2}}}, \frac{(n - 1) \cdot s^2}{\chi^2_{1 - \alpha/{2}}})
+\]</span></p>
+<p>where <span class="math inline">\(n\)</span> is the sample size, <span class="math inline">\(s^2\)</span> is the sample variance, and <span class="math inline">\(\chi^2\)</span> is the chi-squared value for a chosen confidence level <span class="math inline">\(1 - \alpha\)</span> and degrees of freedom <span class="math inline">\(n - 1\)</span>.</p>
+<p>Constructing this type of confidence interval may feel a bit less intuitive and familiar than the previous two. This is because the sample variance does not follow a normal distribution. Unlike the sample mean and sample proportion, it follows a different, decisively non-normal distribution: the <span class="math inline">\(\chi^2\)</span> distribution. For this reason, we construct our confidence intervals for this sample statistic differently, as depicted above.</p>
+<p>Let’s do one final example to reinforce the calculation of confidence intervals for this type of sample statistic. We will construct a 95% confidence interval for the sample mean of <code>mrkinc</code>. Our procedure will follow exactly the steps above, although this time we need to use the chi-squared distribution in place of the t or z distributions. We can calculate our sample variance first.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># calculating the variance of mrkinc</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>var <span class="ot">&lt;-</span> <span class="fu">var</span>(census_data<span class="sc">$</span>mrkinc)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>var</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Now that we have our sample variance (which is quite large), we can find the other statistics necessary to calculate our confidence interval estimate.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># finding the chi-squared values for a 95% confidence level and n - 1 degrees of freedom</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>upper_chi <span class="ot">&lt;-</span> <span class="fu">qchisq</span>(<span class="at">p =</span> <span class="fl">0.05</span>, <span class="at">df =</span>df, <span class="at">lower.tail =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>lower_chi <span class="ot">&lt;-</span> <span class="fu">qchisq</span>(<span class="at">p =</span> <span class="fl">0.05</span>, <span class="at">df =</span> df, <span class="at">lower.tail =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="co"># calculating the upper and lower bounds of the desired confidence interval</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>lower_bound <span class="ot">&lt;-</span> (df<span class="sc">*</span>var)<span class="sc">/</span>lower_chi</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>upper_bound <span class="ot">&lt;-</span> (df<span class="sc">*</span>var)<span class="sc">/</span>upper_chi</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>lower_bound</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>upper_bound</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>From the above, we can say that we are 95% confident that the variance of market income among all Canadians is within (767761585, 7745209769). This is quite a large interval, but given the size of the variance for this variable, this is reasonable.</p>
+</section>
+<section id="exercise-2" class="level2">
+<h2 class="anchored" data-anchor-id="exercise-2">Exercise</h2>
+<p>Finally, Matilda wants to know the variance of weights of all cars ever sold at her father’s car dealership. Naturally, since she can’t find the variance of the thousands of cars sold, she consults the dealership archives and takes a random sample of 40 cars and records their weights. She finds that they have a sample mean weight of 5,000 pounds and a sample variance of 250,000. Matilda wants to construct a 95% confidence interval estimate for the population variance. Given the information above, what are the upper and lower bounds of this confidence interval?</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># your code here</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>answer_7 <span class="ot">&lt;-</span> <span class="co"># your answer for the lower bound here, rounded to the nearest whole number</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>answer_7 <span class="ot">&lt;-</span> <span class="co"># your answer for the upper bound here, rounded to the nearest whole number</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="fu">test_7</span>()</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="fu">test_8</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Let’s now say that Matilda draws a new random sample of 40 cars and reports 95% confidence that the population variance of car weights falls within the confidence interval (490000, 640000). Under this sampling procedure, what is the 95% confidence interval estimate for the standard deviation of weights of all cars ever sold at the dealership?</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>answer_10 <span class="ot">&lt;-</span> <span class="co"># your answer for the lower bound here</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>answer_11 <span class="ot">&lt;-</span> <span class="co"># your answer for the upper bound here</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="fu">test_10</span>()</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="fu">test_11</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="factors-which-impact-the-width-of-confidence-intervals" class="level1">
+<h1>Factors Which Impact the Width of Confidence Intervals</h1>
+<p>Looking at the above formulas, we now have a better understanding of exactly what factors go into calculating a confidence interval. More specifically, we can see that no matter the parameter we are estimating, we always need the following numbers: a confidence level and sample size. These numbers are chosen early on during the sampling procedure. Thus, they can easily be changed. Let’s explore what happens to our confidence intervals when we change each of these numbers.</p>
+</section>
+<section id="changing-the-sample-size" class="level1">
+<h1>Changing the Sample Size</h1>
+<p>Let’s say we want to change our sample size <span class="math inline">\(n\)</span>. If we increase our sample size <span class="math inline">\(n\)</span>, we can see mathematically that in all cases our margin of error goes down (or our bounds explicitly come closer together in the case of sampling variance). As a result, our confidence interval shrinks. This makes sense intuitively. If we draw a larger sample, then for any confidence level we can expect to estimate our desired population parameter more precisely. This is indicated by a narrower confidence interval. The same logic applies when we decrease our sample size <span class="math inline">\(n\)</span>. Both our margin of error and confidence interval will increase, indicative of the fact that our sample is smaller and we therefore have less precision in estimating our population parameter of interest. To see this point interactively, modify the code below by changing the input for <span class="math inline">\(n\)</span> (currently set at 30). We can see that the size of the confidence intervals increases or decreases depending on whether we decrease or increase the simulated sample size.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>population <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="dv">10000</span>, <span class="dv">0</span>, <span class="dv">1</span>)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">2</span>)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co"># defining a function which outputs a confidence interval for a given sample size</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>create_confidence_intervals <span class="ot">&lt;-</span> <span class="cf">function</span>(n) {</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    x <span class="ot">=</span> <span class="fu">mean</span>(<span class="fu">sample</span>(population, n))</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    z <span class="ot">=</span> <span class="fu">qnorm</span>(<span class="at">p =</span> <span class="fl">0.05</span>, <span class="at">lower.tail=</span><span class="cn">FALSE</span>)</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    lower <span class="ot">=</span> x <span class="sc">-</span> (z<span class="sc">*</span><span class="dv">1</span><span class="sc">/</span><span class="fu">sqrt</span>(n))</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>    upper <span class="ot">=</span> x <span class="sc">+</span> (z<span class="sc">*</span><span class="dv">1</span><span class="sc">/</span><span class="fu">sqrt</span>(n))</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>    df <span class="ot">=</span> <span class="fu">data.frame</span>(lower, upper)</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(<span class="fu">c</span>(lower, upper))</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a><span class="co"># calling the function, tweak default sample size 30 here!</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a><span class="fu">create_confidence_intervals</span>(<span class="dv">30</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="changing-the-confidence-level" class="level1">
+<h1>Changing the Confidence Level</h1>
+<p>Now suppose we instead want to change our confidence level. If we increase our confidence level, we are saying that if we hypothetically calculated many confidence intervals, the percentage of these intervals containing our desired population parameter should increase. We are thus asking for confidence interval estimates which capture the true paramater of interest more often. To capture this paramater more frequently for a given sample size, the width of our confidence interval (the range of possibilities for capturing the true parameter) must naturally increase. Similar logic applies to decreasing our confidence level: our confidence interval increases. This all occurs mathematically through an increase or decrease in our margin of error (or bounds) respectively, engendered by an increase or decrease in our <span class="math inline">\(z\)</span> or <span class="math inline">\(t\)</span> critical value. To see this point interactively, modify the code below by changing the input for <span class="math inline">\(\alpha\)</span> (currently set at 0.05, indicating a 95% confidence level). We can see that the vertical length (width) of the confidence intervals increases or decreases depending on whether we increase or decrease the simulated confidence level.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>population <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="dv">10000</span>, <span class="dv">0</span>, <span class="dv">1</span>)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">2</span>)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co"># defining a function which outputs a confidence interval for a given confidence level</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>create_confidence_intervals <span class="ot">&lt;-</span> <span class="cf">function</span>(alpha) {</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    x <span class="ot">=</span> <span class="fu">mean</span>(<span class="fu">sample</span>(population, <span class="dv">100</span>))</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    z <span class="ot">=</span> <span class="fu">qnorm</span>(<span class="at">p =</span> alpha, <span class="at">lower.tail=</span><span class="cn">FALSE</span>)</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>    lower <span class="ot">=</span> x <span class="sc">-</span> (z<span class="sc">*</span><span class="dv">1</span><span class="sc">/</span><span class="fu">sqrt</span>(<span class="dv">100</span>))</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>    upper <span class="ot">=</span> x <span class="sc">+</span> (z<span class="sc">*</span><span class="dv">1</span><span class="sc">/</span><span class="fu">sqrt</span>(<span class="dv">100</span>))</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>    df <span class="ot">=</span> <span class="fu">data.frame</span>(lower, upper)</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(<span class="fu">c</span>(lower, upper))</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a><span class="co"># calling the function, tweak default 0.05 alpha (95% confidence level) here!</span></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a><span class="fu">create_confidence_intervals</span>(<span class="fl">0.05</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="exercise-3" class="level2">
+<h2 class="anchored" data-anchor-id="exercise-3">Exercise</h2>
+<p>Matilda thinks that one of her confidence intervals above is too wide and wishes to narrow it. What could she do in order to achieve this goal?</p>
+<ul>
+<li>A. increase the sample size and higher the confidence level</li>
+<li>B. decrease the sample size and lower the confidence level</li>
+<li>C. increase the sample size and lower the confidence level</li>
+<li>D. decrease the sample size and higher the confidence level</li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>answer_1 <span class="ot">&lt;-</span> <span class="st">"..."</span> <span class="co"># enter your choice here</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_11</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="common-misconceptions" class="level1">
+<h1>Common Misconceptions</h1>
+<p>Up to this point, we’ve covered what confidence intervals are, how we calculate them, and how they’re sensitive to two key parameters. Let’s lastly clarify a couple of misconceptions about the interpretation of confidence intervals.</p>
+<section id="misconception-1" class="level2">
+<h2 class="anchored" data-anchor-id="misconception-1">Misconception 1:</h2>
+<p><em>If we have a 95% confidence interval, this is a concrete range under which our estimated population paramater must fall</em>.</p>
+<p>Hopefully the error in this way of thinking is quite clear now. If we repeated our sampling procedure many times and constructed a confidence interval each time, we would expect about 95% of these confidence intervals to contain our true parameter. However, this is not 100%. Theoretically, about 5% of our confidence intervals will not contain the true paramater. There is no stopping the actual confidence interval we calculate from being one of those 5%. Due to this, we cannot say with absolute certainty that our true paramater lies within the interval that we calculate. It is a common mistake to assume that a confidence interval is an official range within which the true paramater need fall. It can fall anywhere, it is just quite likely (very likely if our confidence level is high enough) that it falls within the interval calculated, hence we can have some trust in it as an estimator. This is why the confidence interval is an <em>estimator</em> and not a concrete range of possible values for our population paramater. If we had 100% certainty the true paramater fell within our calculated interval, it would not be much of an estimator but instead just a complete spectrum of the possible values the paramater could take on.</p>
+</section>
+<section id="misconception-2" class="level2">
+<h2 class="anchored" data-anchor-id="misconception-2">Misconception 2:</h2>
+<p><em>If we have a confidence level of 95%, 95% of our population data must lie within the calculated confidence interval</em>.</p>
+<p>This is not true. Our confidence level indicates the long run percentage of constructed confidence intervals which contain our true parameter. It says nothing about the spread of our actual data. To find the range within which 95% of our data lie, we must consult a histogram for the population. It could easily be the case that our data is quite bimodally distributed (around half of our data is clustered far to the left of our mean, and the other half is clustered far to the right of our mean). In this case, our calculated 95% confidence interval will likely contain very little (much less than 95%) of the data.</p>
+</section>
+</section>
+<section id="misconception-3" class="level1">
+<h1>Misconception 3:</h1>
+<p><em>If we have a confidence level of 95%, a confidence interval calculated from a sample of 500 observations will more likely contain the true paramater than a confidence interval calculated from a sample of 100 observations.</em></p>
+<p>This one might feel quite counterintuitive. After all, we already know from the previous section that a confidence interval generated from the sample <span class="math inline">\(n = 500\)</span> will be smaller than one generated from <span class="math inline">\(n = 100\)</span>. However, think about the nuance of this statement. A confidence level by definition is the percentage of calculated intervals we expect to contain the true paramater of interest if we calculated these intervals over and over. In this situation, any one interval from a sample of <span class="math inline">\(n = 100\)</span> has a 95% of containing the true paramater, just as any one interval from a sample of <span class="math inline">\(n = 500\)</span> has a 95% of containing the true paramater. Each interval (the wider one from <span class="math inline">\(n = 100\)</span> and narrower one from <span class="math inline">\(n= 500\)</span>) has a chance of containing the true parameter in relation to all other calculated intervals for that same sample size. The probability of a given interval containing the true paramater is in no way influenced by or varies with the sample size. This probability only changes when we change our confidence level.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+🔎 <strong>Let’s think critically</strong>
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<blockquote class="blockquote">
+<p>🟠 Every research context will drastically shape how confidence intervals are approached. As we have seen, the volume and quality of data affect how accurate data analyses can be, and many rules of thumb in data science are simply that - rules of thumb, as opposed to hard facts about how to report statistics.<br>
+🟠 What are some situations where you want to know that something is true with nearly 100% confidence?<br>
+🟠 What are some situations where the uncertainty of statistic is maybe not so bad?<br>
+🟠 What does it <em>really</em> mean to have something within or outside of a confidence interval?</p>
+</blockquote>
+</div>
+</div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, function() {
+      let href = xref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children.length > 2) {
+          for (let i = 0; i < 2; i++) {
+            container.appendChild(note.children[i].cloneNode(true));
+          }
+          return container.innerHTML
+        } else {
+          return note.innerHTML;
+        }
+      } else {
+        return note.innerHTML;
+      }
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+          // target, if specified
+          link.setAttribute("target", "_blank");
+      }
+    }
+});
+</script>
+<nav class="page-navigation column-body">
+  <div class="nav-page nav-page-previous">
+      <a href="../../../docs/econ_325/10_sampling_distributions/Sampling_distributions.html" class="pagination-link">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">6 - Sampling Distributions</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../../../docs/econ_325/04_hypothesis_testing/hypothesis_testing.html" class="pagination-link">
+        <span class="nav-page-text">8 - Hypothesis Testing</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item">
+ <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/80x15.png"></a>.  <a rel="license" href="https://comet.arts.ubc.ca/pages/copyright.html">See details.</a>
+  </li>  
+</ul>
+    </div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item">
+ The COMET Project and the UBC Vancouver School of Economics are located on the traditional, ancestral and unceded territory of the xʷməθkʷəy̓əm (Musqueam) and Sḵwx̱wú7mesh (Squamish) peoples.
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+</body></html>

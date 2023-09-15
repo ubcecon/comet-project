@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-GB" xml:lang="en-GB"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.36">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="COMET Team   Jonathan Graves, Jonah Heyl, Anneke Dresselhuis, Rathin Dharani, Devan Rawlings, Jasmine Arora">
+<meta name="dcterms.date" content="2023-07-11">
+<meta name="keywords" content="economics, econometrics, R, data, machine learning, UBC, COMET, geog 374, econ 325, econ 326, learning, teaching, learn r, r help, help, tutorial, r tutorial for beginners,learning statistics with r, learn r programming, learn statistics, linear regression, r machine learning, learn machine learning, university of british columbia, british columbia, r programming for beginners, r language tutorial, r tutorial for beginners, economic data, econometrics tutoring, economics help for students, economics homework help, oer resources for teachers, open educational resources for teachers, educational resource, oer project, oer materials, oer resources, learn economics online, learn econometrics, teach yourself economics, teach yourself econometrics, econometrics basics for beginners">
+<meta name="description" content="What is a regression model? This notebook introduces simple (i.e.&nbsp;one-variable) regression by comparing it to a comparison-of-means test. We also look at a few issues in regression, and the interpretation of a regression model.">
+
+<title>COMET - 09 - ECON 325: Simple Regression</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<link href="../../../docs/econ_325/04_hypothesis_testing/hypothesis_testing.html" rel="prev">
+<link href="../../../media/comet_favicon.png" rel="icon" type="image/png">
+<script src="../../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<link rel="stylesheet" href="../../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a href="../../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../../media/logo_no_tiny_text.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">COMET</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../index.html" rel="" target=""><i class="bi bi-house-door" role="img">
+</i> 
+ <span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-get-started" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Get Started</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-get-started">    
+        <li>
+    <a class="dropdown-item" href="../../../pages/quickstart.html" rel="" target="">
+ <span class="dropdown-text">Quickstart Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../pages/installing_locally.html" rel="" target="">
+ <span class="dropdown-text">Install and Use COMET</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/intro_jupyter/intro_to_jupyter.html" rel="" target="">
+ <span class="dropdown-text">Learn about Jupyter</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/intro_r/introduction_to_R.html" rel="" target="">
+ <span class="dropdown-text">Learn about R</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/econ_prep/Introduction to Statistical Concepts.html" rel="" target="">
+ <span class="dropdown-text">Review High School Statistics</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-basics" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Basics</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-basics">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/index_intro.html" rel="" target="">
+ <span class="dropdown-text">Preliminary Material</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_325/index_325.html" rel="" target="">
+ <span class="dropdown-text">Introduction to Econometrics (ECON 325)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/econ_prep/Introduction to Statistical Concepts.html" rel="" target="">
+ <span class="dropdown-text">Review of Statistics</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-fundamentals" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Fundamentals</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-fundamentals">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_326/index_326.html" rel="" target="">
+ <span class="dropdown-text">Introduction to Empirical Models (ECON 326)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/geog_374/index_374.html" rel="" target="">
+ <span class="dropdown-text">Geographic Computation (GEOG 374)</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-projects" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Projects</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-projects">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_490/index_490.html" rel="" target="">
+ <span class="dropdown-text">Overview of ECON 490</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_490/index_490_r.html" rel="" target="">
+ <span class="dropdown-text">R Modules</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_490/index_490_stata.html" rel="" target="">
+ <span class="dropdown-text">STATA Modules</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-advanced" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Advanced</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-advanced">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_adv/index_adv.html" rel="" target="">
+ <span class="dropdown-text">Advanced Topics</span></a>
+  </li>  
+    </ul>
+  </li>
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-launch-comet" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+      <i class="bi bi-play" role="img">
+</i> 
+ <span class="menu-text">Launch COMET</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-launch-comet">    
+        <li>
+    <a class="dropdown-item" href="https://open.jupyter.ubc.ca/jupyter/hub/user-redirect/git-pull?repo=https%3A%2F%2Fgithub.com%2Fubcecon%2Fcomet-project&amp;urlpath=lab%2Ftree%2Fcomet-project%2F&amp;branch=main" rel="" target=""><i class="bi bi-cloud-check" role="img">
+</i> 
+ <span class="dropdown-text">Launch on JupyterOpen</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://ubc.syzygy.ca/jupyter/hub/user-redirect/git-pull?repo=https%3A%2F%2Fgithub.com%2Fubcecon%2Fcomet-project&amp;urlpath=lab%2Ftree%2Fcomet-project%2F&amp;branch=main" rel="" target=""><i class="bi bi-gear" role="img">
+</i> 
+ <span class="dropdown-text">Launch on Syzygy</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://colab.research.google.com/github/ubcecon/comet-project/blob/main/" rel="" target=""><i class="bi bi-google" role="img">
+</i> 
+ <span class="dropdown-text">Launch on Collab</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://github.com/ubcecon/comet-project/archive/refs/heads/main.zip" rel="" target=""><i class="bi bi-cloud-download" role="img">
+</i> 
+ <span class="dropdown-text">Launch Locally</span></a>
+  </li>  
+        <li><hr class="dropdown-divider"></li>
+        <li>
+    <a class="dropdown-item" href="https://github.com/ubcecon/comet-project/archive/refs/heads/data-only.zip" rel="" target=""><i class="bi bi-clipboard-data" role="img">
+</i> 
+ <span class="dropdown-text">Project Datasets</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="../../../#" rel="" target="">
+ <span class="menu-text">|</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-about" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">About</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-about">    
+        <li>
+    <a class="dropdown-item" href="../../../pages/team.html" rel="" target="">
+ <span class="dropdown-text">COMET Team</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../pages/using_comet.html" rel="" target="">
+ <span class="dropdown-text">Teach With COMET</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../pages/copyright.html" rel="" target="">
+ <span class="dropdown-text">Copyright Information</span></a>
+  </li>  
+    </ul>
+  </li>
+</ul>
+            <div class="quarto-navbar-tools">
+</div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../docs/econ_325/index_325.html">Introduction to Econometrics</a></li><li class="breadcrumb-item"><a href="../../../docs/econ_325/09_regression/simple_regression.html">9 - Simple Regression</a></li></ol></nav>
+      <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+      </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation docked overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_intro/index_intro.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true">
+ <span class="menu-text">Preliminary Material</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_intro/intro_r/introduction_to_R.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">0 - Intro to R</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_intro/intro_to_data/intro_to_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1 - Intro to Data (Part 1)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_intro/intro_to_data/intro_to_data2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2 - Intro to Data (Part 2)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_intro/econ_prep/Introduction to Statistical Concepts.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3 - Review of Basic Statistics</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="px-0"><hr class="sidebar-divider hi "></li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true">
+ <span class="menu-text">Introduction to Econometrics</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/index_325.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">0 - Overview of ECON 325</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/08_distribution/distribution.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1 - Distribution</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/06_visualization_1/intro_to_visualization1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2 - Visualization I</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/07_visualization_2/intro_to_visualization2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3 - Visualization II</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/01_central_tendency/central_tendency.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4 - Central Tendency</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/02_dispersion_and_dependence/dispersion_and_dependence.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">5 - Dispersion and Dependence</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/10_sampling_distributions/Sampling_distributions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6 - Sampling Distributions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/03_confidence_intervals/confidence_intervals.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">7 - Confidence Intervals</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/04_hypothesis_testing/hypothesis_testing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">8 - Hypothesis Testing</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/09_regression/simple_regression.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">9 - Simple Regression</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#outline" id="toc-outline" class="nav-link active" data-scroll-target="#outline">Outline</a>
+  <ul class="collapse">
+  <li><a href="#prerequisites" id="toc-prerequisites" class="nav-link" data-scroll-target="#prerequisites">Prerequisites</a></li>
+  <li><a href="#outcomes" id="toc-outcomes" class="nav-link" data-scroll-target="#outcomes">Outcomes</a></li>
+  </ul></li>
+  <li><a href="#part-1-learning-about-regressions" id="toc-part-1-learning-about-regressions" class="nav-link" data-scroll-target="#part-1-learning-about-regressions">Part 1: Learning About Regressions</a>
+  <ul class="collapse">
+  <li><a href="#conditional-expectation" id="toc-conditional-expectation" class="nav-link" data-scroll-target="#conditional-expectation">Conditional Expectation:</a></li>
+  <li><a href="#regression-models" id="toc-regression-models" class="nav-link" data-scroll-target="#regression-models">Regression Models</a></li>
+  <li><a href="#example-manual-estimation" id="toc-example-manual-estimation" class="nav-link" data-scroll-target="#example-manual-estimation">Example: Manual Estimation</a></li>
+  <li><a href="#interactive-visualisation-of-ols" id="toc-interactive-visualisation-of-ols" class="nav-link" data-scroll-target="#interactive-visualisation-of-ols">Interactive Visualisation of OLS</a></li>
+  </ul></li>
+  <li><a href="#simple-regressions-in-r" id="toc-simple-regressions-in-r" class="nav-link" data-scroll-target="#simple-regressions-in-r">Simple Regressions in R</a></li>
+  <li><a href="#part-2-simple-regressions-and-t-tests" id="toc-part-2-simple-regressions-and-t-tests" class="nav-link" data-scroll-target="#part-2-simple-regressions-and-t-tests">Part 2: Simple Regressions and <span class="math inline">\(t\)</span>-Tests</a></li>
+  <li><a href="#part-3-exercises" id="toc-part-3-exercises" class="nav-link" data-scroll-target="#part-3-exercises">Part 3: Exercises</a>
+  <ul class="collapse">
+  <li><a href="#activity-1" id="toc-activity-1" class="nav-link" data-scroll-target="#activity-1">Activity 1</a></li>
+  <li><a href="#short-answer-1" id="toc-short-answer-1" class="nav-link" data-scroll-target="#short-answer-1">Short Answer 1</a></li>
+  <li><a href="#short-answer-2" id="toc-short-answer-2" class="nav-link" data-scroll-target="#short-answer-2">Short Answer 2</a></li>
+  <li><a href="#activity-2" id="toc-activity-2" class="nav-link" data-scroll-target="#activity-2">Activity 2</a></li>
+  <li><a href="#short-answer-3" id="toc-short-answer-3" class="nav-link" data-scroll-target="#short-answer-3">Short Answer 3</a></li>
+  <li><a href="#activity-3" id="toc-activity-3" class="nav-link" data-scroll-target="#activity-3">Activity 3</a></li>
+  <li><a href="#short-answer-4" id="toc-short-answer-4" class="nav-link" data-scroll-target="#short-answer-4">Short Answer 4</a></li>
+  <li><a href="#activity-4" id="toc-activity-4" class="nav-link" data-scroll-target="#activity-4">Activity 4</a></li>
+  <li><a href="#short-answer-5" id="toc-short-answer-5" class="nav-link" data-scroll-target="#short-answer-5">Short Answer 5</a></li>
+  <li><a href="#short-answer-6" id="toc-short-answer-6" class="nav-link" data-scroll-target="#short-answer-6">Short Answer 6</a></li>
+  </ul></li>
+  </ul>
+<div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/ubcecon/comet-project/issues/new" class="toc-action">Report an issue</a></p></div></div><div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="simple_regression.ipynb" download="simple_regression.ipynb"><i class="bi bi-journal-code"></i>Jupyter</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content column-body" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">09 - ECON 325: Simple Regression</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">econ 325</div>
+    <div class="quarto-category">regression</div>
+    <div class="quarto-category">simple regression</div>
+    <div class="quarto-category">residuals</div>
+    <div class="quarto-category">fitted values</div>
+    <div class="quarto-category">t-test</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    What is a regression model? This notebook introduces simple (i.e.&nbsp;one-variable) regression by comparing it to a comparison-of-means test. We also look at a few issues in regression, and the interpretation of a regression model.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>COMET Team <br> <em>Jonathan Graves, Jonah Heyl, Anneke Dresselhuis, Rathin Dharani, Devan Rawlings, Jasmine Arora</em> </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">11 July 2023</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+</header>
+
+<section id="outline" class="level2">
+<h2 class="anchored" data-anchor-id="outline">Outline</h2>
+<section id="prerequisites" class="level3">
+<h3 class="anchored" data-anchor-id="prerequisites">Prerequisites</h3>
+<ul>
+<li>Introduction to Jupyter</li>
+<li>Introduction to Data</li>
+<li>Introduction to R</li>
+<li>Hypothesis testing</li>
+</ul>
+</section>
+<section id="outcomes" class="level3">
+<h3 class="anchored" data-anchor-id="outcomes">Outcomes</h3>
+<ul>
+<li>Build a simple linear regression using R</li>
+<li>Create and interpret regression outputs in R including: coefficient estimates</li>
+<li>Examine the various elements of regression objects in R (including fitted values, residuals and coefficients)</li>
+<li>Explain the role of qualitative variables in regression analysis as dummy variables</li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(haven)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"tests_regression.r"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="part-1-learning-about-regressions" class="level1">
+<h1>Part 1: Learning About Regressions</h1>
+<p>What is a regression? What is the relationship of a regression to other statistical concepts? How do we use regressions to answer economic questions?</p>
+<p>In this notebook, we will explore these questions using our census data set and will learn more about the immigrant wage gap. If you remember from last lecture, we were interested in the relationship between <code>wages</code> and <code>immstat</code> - wages and immigration status. However, this is not the only way to measure economic income - another variable, <code>mrkinc</code> (market income), also measures income. Let’s get started with regressions by exploring the relationship between <code>wages</code> and <code>mrkinc</code> in this data set.</p>
+<p>Let’s start off with a visualization:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>census_data <span class="ot">&lt;-</span> <span class="fu">read_dta</span>(<span class="st">"../datasets/01_census2016.dta"</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>census_data <span class="ot">&lt;-</span> <span class="fu">as_factor</span>(census_data)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>census_data <span class="ot">&lt;-</span> <span class="fu">filter</span>(census_data, <span class="sc">!</span><span class="fu">is.na</span>(census_data<span class="sc">$</span>wages)) <span class="co">#Removing the rows in which wages = NA</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>census_data <span class="ot">&lt;-</span> <span class="fu">filter</span>(census_data, <span class="sc">!</span><span class="fu">is.na</span>(census_data<span class="sc">$</span>mrkinc)) <span class="co">#Removing the rows in which mrkinc = NA</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(census_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">repr.plot.width=</span><span class="dv">6</span>,<span class="at">repr.plot.height=</span><span class="dv">4</span>) <span class="co">#controls the image size</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>f <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="at">data =</span> census_data, <span class="fu">aes</span>(<span class="at">x =</span> wages, <span class="at">y =</span> mrkinc)) <span class="sc">+</span> <span class="fu">xlab</span>(<span class="st">"Wages"</span>) <span class="sc">+</span> <span class="fu">ylab</span>(<span class="st">"Market Income"</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>f <span class="sc">+</span> <span class="fu">geom_point</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<blockquote class="blockquote">
+<p><em>Think Deeper</em>: What do you see here? Is there anything about this relationship that sticks out to you? Why does it have the shape it does?</p>
+</blockquote>
+<p>You can probably tell that there is definitely some relationship between wages and market income - but it can be difficult to visualize using a scatterplot alone. There are far too many points, and too much going on.</p>
+<section id="conditional-expectation" class="level2">
+<h2 class="anchored" data-anchor-id="conditional-expectation">Conditional Expectation:</h2>
+<p>The expectation of <span class="math inline">\(X\)</span> is what outcome we expect <span class="math inline">\(X\)</span> to <em>typically</em> be after <em>a lot</em> of sampling. It is a way to find out the predicted value of a random variable like <span class="math inline">\(X\)</span>. We calculate it by multiplying the different values <span class="math inline">\(X\)</span> can take with the associated probabilities that <span class="math inline">\(X\)</span> takes that value. For instance, the expectation of a die throw is 3. Essentially, <span class="math display">\[
+E[X] =  \sum_{i=1}^n P(X_i=x) X_i
+\]</span></p>
+<p>You can think of conditional expectation as the expected value based on some condition. It is: <span class="math display">\[
+E[X|y_i=y] =  \sum_{i=1}^n P(X_i=x|y_i=y) X_i
+\]</span></p>
+<p>Essentially, the conditional expectation tells us the average value of a random variable over a subpopulation. It connects the variable that defines the subpopulation and the variable that defines the average. The shape of the conditional expectation function tells us about the relationship between the two variables we are interested in. For example, a the conditional expectation of a dice roll <em>given</em> that the number is even, is 4.</p>
+<p>Linear regression assumes a linear conditional expectation function which means that the conditional expectation function can be described by a straight line <span class="math inline">\(E[Y|X=x]= \beta_0 +\beta_1X\)</span>. This is what regression models are trying to approximate. Thus we can split a regression model into two parts: 1. the conditional expectation and 2. an error term.</p>
+<p>To be clear, let’s look at an example of this linear conditional expectation function, where our <span class="math inline">\(Y\)</span> (outcome variable) is wages and our <span class="math inline">\(X\)</span> (explanatory variable) is years of education. The conditional expectation function would be <span class="math inline">\(E[WAGES|YEARS=years_i] = \beta_0 +\beta_1X\)</span>. This means that the <em>given</em> a particular value of years of education (<span class="math inline">\(years_i\)</span>) for an individual <span class="math inline">\(i\)</span>, the wages of that individual will follow the linear regression form <span class="math inline">\(\beta_0 +\beta_1X\)</span>.</p>
+</section>
+<section id="regression-models" class="level2">
+<h2 class="anchored" data-anchor-id="regression-models">Regression Models</h2>
+<p>This is where a <em>regression model</em> comes in. A regression model specifies (the <em>specification</em>) the relationship between two variables. For example, a linear relationship would be:</p>
+<p><span class="math display">\[
+M_i = \beta_0 + \beta_1 W_i
+\]</span></p>
+<p>Where <span class="math inline">\(M_i\)</span> is the market income of individual <span class="math inline">\(i\)</span>, and <span class="math inline">\(W_i\)</span> is their wage. We normally (in econometrics) refer to <span class="math inline">\(M_i\)</span> as the <strong>outcome</strong> variable, and <span class="math inline">\(W_i\)</span> as the <strong>explanatory</strong> variable; you may have also heard the terms <em>dependent</em> and <em>independent</em>, but these aren’t actually very good descriptions of what these variables are in econometrics.</p>
+<p>A model like this is our description of what this relationship is - but it depends on two unknowns: <span class="math inline">\(\beta_0\)</span>, <span class="math inline">\(\beta_1\)</span>.</p>
+<ul>
+<li>The <span class="math inline">\(\beta_0\)</span> and <span class="math inline">\(\beta_1\)</span> are <strong>parameters</strong> of the model: they are numbers that determine the relationship (intercept and slope) between <span class="math inline">\(M_i\)</span> and <span class="math inline">\(W_i\)</span></li>
+<li>This is a linear relationship because the model we have specified is linear in the coefficients (but there are many other kinds of models). It is also linear in the variables, but that isn’t required (we will see more about this later).</li>
+</ul>
+<p>However, it is unlikely, if not impossible, for (<span class="math inline">\(M_i = \beta_0 + \beta_1 W_i\)</span>) to completely explain everything about our data. We need to include a term which captures everything which is <em>not</em> described by this relationship. This is called the <em>residual</em> term (meaning “leftover”).</p>
+<ul>
+<li>The <span class="math inline">\(\epsilon_i\)</span> is the residual: a component that corresponds to the part of the data which is <em>not</em> described by the model</li>
+<li>These residual terms will usually have certain assumed properties that allow us to estimate the model.</li>
+</ul>
+<p>Conceptually, we can think about a regression as two parts: the part of the relationship explained by our model (<span class="math inline">\(M_i = \beta_0 + \beta_1 W_i\)</span>) and the part which is not explained (<span class="math inline">\(\epsilon_i\)</span>). The process of “fitting” or estimating a regression model refers to the selection of values for <span class="math inline">\(\beta_0\)</span> and <span class="math inline">\(\beta_1\)</span> such that as little needs to be explained by the residual term as possible. We write the complete <em>regression equation</em> by combining the two parts of the model:</p>
+<p><span class="math display">\[
+M_i = \beta_0 + \beta_1 W_i + \epsilon_i
+\]</span></p>
+<p>The goal of regression analysis is to:</p>
+<ol type="1">
+<li>Estimate this equation (and especially the model parameters) as accurately as possible.</li>
+<li>Learn about the relationship between <span class="math inline">\(M_i\)</span> and <span class="math inline">\(W_i\)</span> from the results of that estimation.</li>
+</ol>
+<p>There are many ways to define “accurately as possible” and similarly there are many ways to “estimate” the equation. In this course, we use <em>ordinary least squares</em> (OLS) which basically says:</p>
+<p><span class="math display">\[
+(\hat{\beta_0},\hat{\beta_1}) = \arg \min_{b_0,b_1} \sum_{i=1}^{n} (M_i - b_0 - b_1 W_i)^2 = \sum_{i=1}^{n} (e_i)^2
+\]</span></p>
+<p>Okay, that looks complicated, but don’t fear. It is just the calculus way of writing “choose <span class="math inline">\(\beta_0\)</span> and <span class="math inline">\(\beta_1\)</span> (call them <span class="math inline">\(\hat{\beta_0},\hat{\beta_1}\)</span>) such that they minimize the sum of the squared residuals”.</p>
+<ul>
+<li>This should make sense; after all, the whole point of doing a regression is to explain as much as possible using the parameters (<span class="math inline">\(\beta_0, \beta_1\)</span>) and as little as possible using <span class="math inline">\(\epsilon_i\)</span>.</li>
+<li>This has transformed our statistical problem into a calculus problem, which you (well, a computer) can solve; for example, by taking derivatives.</li>
+</ul>
+<p>There are many, many ways to solve this estimation problem - most of which are built into R. You can also solve it analytically (using some math). But let’s start with an alternative. Essentially, if you remember drawing a best fit line through points from high school, this is what a linear regression does in R.</p>
+</section>
+<section id="example-manual-estimation" class="level2">
+<h2 class="anchored" data-anchor-id="example-manual-estimation">Example: Manual Estimation</h2>
+<p>A very <em>bad</em> way to solve this is the good-’ole eyeball method. That’s right - you look at the scatterplot, then guess some values and see how it performs.</p>
+<p>Try to get the best fit you can by playing around with the following example.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># set the value of B_0 and B_1 with these values</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>B_0 <span class="ot">=</span> <span class="dv">0</span>  <span class="co">#change me</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>B_1 <span class="ot">=</span> <span class="dv">1</span>  <span class="co">#change me</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co"># don't touch the rest of this code - but see if you can understand it!</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>SSE <span class="ot">=</span> <span class="fu">sum</span>((census_data<span class="sc">$</span>mrkinc <span class="sc">-</span> B_0 <span class="sc">-</span> B_1<span class="sc">*</span>census_data<span class="sc">$</span>wages)<span class="sc">^</span><span class="dv">2</span>)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co"># here is the SSE from your model</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(SSE<span class="sc">/</span><span class="dv">1000000</span>,<span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>What was the lowest value you got? Here is what your guess looks like in a graph:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># just run this cell to see your results</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co"># re-run it if you change the values</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">repr.plot.width=</span><span class="dv">6</span>,<span class="at">repr.plot.height=</span><span class="dv">4</span>) <span class="co">#controls the image size</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>fitted_line <span class="ot">=</span> <span class="fu">data.frame</span>(<span class="at">wages =</span> census_data<span class="sc">$</span>wages, <span class="at">mrkinc =</span> B_0 <span class="sc">+</span> B_1<span class="sc">*</span>census_data<span class="sc">$</span>wages)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>f <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="at">data =</span> census_data, <span class="fu">aes</span>(<span class="at">x =</span> wages, <span class="at">y =</span> mrkinc)) <span class="sc">+</span> <span class="fu">xlab</span>(<span class="st">"Wages"</span>) <span class="sc">+</span> <span class="fu">ylab</span>(<span class="st">"Market Income"</span>)</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>f <span class="ot">&lt;-</span> f <span class="sc">+</span> <span class="fu">geom_point</span>() <span class="sc">+</span> <span class="fu">geom_line</span>(<span class="at">color =</span> <span class="st">"red"</span>, <span class="at">data =</span> fitted_line)</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>f</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="interactive-visualisation-of-ols" class="level2">
+<h2 class="anchored" data-anchor-id="interactive-visualisation-of-ols">Interactive Visualisation of OLS</h2>
+<p>Understanding OLS is absolutely fundamental to understanding regressions and further topics in econometrics. Let’s try and understand the formula for OLS above through a more visual approach, just to cement our understanding.</p>
+<p><span class="math display">\[
+(\hat{\beta_0},\hat{\beta_1}) = \arg \min_{b_0,b_1} \sum_{i=1}^{n} (M_i - b_0 - b_1 W_i)^2 = \sum_{i=1}^{n} (e_i)^2
+\]</span></p>
+<p>To demonstrate this, we will use a small scatter plot with just 4 points. The straight line through the scatter plot is modelled by the simple regression formula <span class="math inline">\(B_0 + B_1X\)</span>. As we mentioned above, it’s nearly impossible for a regression to perfectly predict the relationship between two variables, there will almost always be an associated <strong>unobservable error</strong> with our regression estimation. So each of the points can be modelled by the equation <span class="math inline">\(Y_i = B_0 + B_1X + e_i\)</span> This can be seen as the vertical distance between the regression line and the actual data points. You may be wondering why we can’t just minimize the errors, what’s the need to minimize the squared errors? You can see below that some data points are above the regression line and some are below, hence the error terms will just cancel each other out and not yield much use for us trying to find the best regression line. Therefore, we take the squares of the errors, which are depicted as the red boxes in the diagram below. Our goal is to the find the regression line that minimizes those squares of errors, hence minimize the size of those red boxes.</p>
+<blockquote class="blockquote">
+<p>Try your own values for <code>beta_0</code> and <code>beta_1</code>. Make sure to try the values only roughly within the specified range. The actual value of <code>beta_0</code> and <code>beta_1</code> that minimize the residual sum of squares is 0.65 and 0.82 respectively. The code block below also displays the area of the red boxes. You should see that deviation from these optimal values will only make the area of the red boxes larger.</p>
+</blockquote>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>beta_0 <span class="ot">&lt;-</span> <span class="fl">0.65</span> <span class="co">#CHANGE THIS VALUE, TRY VALUES BETWEEN 0 - 1</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>beta_1 <span class="ot">&lt;-</span> <span class="fl">0.82</span> <span class="co">#CHANGE THIS VALUE, TRY VALUES BETWEEN 0.6 - 1.4</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">1.7</span>, <span class="fl">1.5</span>, <span class="dv">4</span>, <span class="fl">3.6</span>)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co"># don't worry about this code, just run it!</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>dta <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(x, y)</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>example_df_graph <span class="ot">&lt;-</span> dta <span class="sc">%&gt;%</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> y)) <span class="sc">+</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">geom_abline</span>(<span class="at">intercept =</span> beta_0, <span class="at">slope =</span> beta_1) <span class="sc">+</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">xlim</span>(<span class="dv">0</span>, <span class="dv">5</span>) <span class="sc">+</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">ylim</span>(<span class="dv">0</span>, <span class="dv">5</span>) <span class="sc">+</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">geom_rect</span>(<span class="fu">aes</span>(<span class="at">xmin =</span> (dta[<span class="dv">1</span>, <span class="st">"x"</span>] <span class="sc">+</span> (beta_0 <span class="sc">+</span> (beta_1 <span class="sc">*</span> dta[<span class="dv">1</span>, <span class="st">"x"</span>])) <span class="sc">-</span> dta[<span class="dv">1</span>, <span class="st">"y"</span>]), <span class="at">xmax =</span> dta[<span class="dv">1</span>, <span class="st">"x"</span>], </span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">ymin =</span> (beta_0 <span class="sc">+</span> (beta_1 <span class="sc">*</span> dta[<span class="dv">1</span>, <span class="st">"x"</span>])), <span class="at">ymax =</span> dta[<span class="dv">1</span>, <span class="st">"y"</span>]),</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>                            <span class="at">alpha =</span> <span class="fl">0.1</span>,</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>                            <span class="at">fill =</span> <span class="st">"red"</span>) <span class="sc">+</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">geom_rect</span>(<span class="fu">aes</span>(<span class="at">xmin =</span> dta[<span class="dv">2</span>, <span class="st">"x"</span>], <span class="at">xmax =</span> (dta[<span class="dv">2</span>, <span class="st">"x"</span>] <span class="sc">+</span> (beta_0 <span class="sc">+</span> (beta_1 <span class="sc">*</span> dta[<span class="dv">2</span>, <span class="st">"x"</span>])) <span class="sc">-</span> dta[<span class="dv">2</span>, <span class="st">"y"</span>]), </span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">ymin =</span> dta[<span class="dv">2</span>, <span class="st">"y"</span>], <span class="at">ymax =</span> (beta_0 <span class="sc">+</span> (beta_1 <span class="sc">*</span> dta[<span class="dv">2</span>, <span class="st">"x"</span>]))), </span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>                            <span class="at">alpha =</span> <span class="fl">0.1</span>, </span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>                            <span class="at">fill =</span> <span class="st">"red"</span>) <span class="sc">+</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">geom_rect</span>(<span class="fu">aes</span>(<span class="at">xmin =</span> (dta[<span class="dv">3</span>, <span class="st">"x"</span>] <span class="sc">+</span> (beta_0 <span class="sc">+</span> (beta_1 <span class="sc">*</span> dta[<span class="dv">3</span>, <span class="st">"x"</span>])) <span class="sc">-</span> dta[<span class="dv">3</span>, <span class="st">"y"</span>]), <span class="at">xmax =</span> dta[<span class="dv">3</span>, <span class="st">"x"</span>], </span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">ymin =</span> (beta_0 <span class="sc">+</span> (beta_1 <span class="sc">*</span> dta[<span class="dv">3</span>, <span class="st">"x"</span>])), <span class="at">ymax =</span> dta[<span class="dv">3</span>, <span class="st">"y"</span>]), </span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>                            <span class="at">alpha =</span> <span class="fl">0.1</span>, </span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>                            <span class="at">fill =</span> <span class="st">"red"</span>) <span class="sc">+</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">geom_rect</span>(<span class="fu">aes</span>(<span class="at">xmin =</span> dta[<span class="dv">4</span>, <span class="st">"x"</span>], <span class="at">xmax =</span> (dta[<span class="dv">4</span>, <span class="st">"x"</span>] <span class="sc">+</span> (beta_0 <span class="sc">+</span> (beta_1 <span class="sc">*</span> dta[<span class="dv">4</span>, <span class="st">"x"</span>])) <span class="sc">-</span> dta[<span class="dv">4</span>, <span class="st">"y"</span>]), </span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">ymin =</span> dta[<span class="dv">4</span>, <span class="st">"y"</span>], <span class="at">ymax =</span> (beta_0 <span class="sc">+</span> (beta_1 <span class="sc">*</span> dta[<span class="dv">4</span>, <span class="st">"x"</span>]))), </span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>                            <span class="at">alpha =</span> <span class="fl">0.1</span>, </span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>                            <span class="at">fill =</span> <span class="st">"red"</span>)</span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>example_df_graph</span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>area_1 <span class="ot">&lt;-</span> ((dta[<span class="dv">1</span>, <span class="st">"x"</span>] <span class="sc">-</span> (dta[<span class="dv">1</span>, <span class="st">"x"</span>] <span class="sc">+</span> (beta_0 <span class="sc">+</span> (beta_1 <span class="sc">*</span> dta[<span class="dv">1</span>, <span class="st">"x"</span>])) <span class="sc">-</span> dta[<span class="dv">1</span>, <span class="st">"y"</span>])) <span class="sc">*</span> </span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>        ((beta_0 <span class="sc">+</span> (beta_1 <span class="sc">*</span> dta[<span class="dv">2</span>, <span class="st">"x"</span>])) <span class="sc">-</span> dta[<span class="dv">2</span>, <span class="st">"y"</span>]))</span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>area_2 <span class="ot">&lt;-</span> ((dta[<span class="dv">2</span>, <span class="st">"x"</span>] <span class="sc">+</span> (beta_0 <span class="sc">+</span> (beta_1 <span class="sc">*</span> dta[<span class="dv">2</span>, <span class="st">"x"</span>])) <span class="sc">-</span> dta[<span class="dv">2</span>, <span class="st">"y"</span>]) <span class="sc">-</span> dta[<span class="dv">2</span>, <span class="st">"x"</span>]) <span class="sc">*</span> </span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>          ((beta_0 <span class="sc">+</span> (beta_1 <span class="sc">*</span> dta[<span class="dv">2</span>, <span class="st">"x"</span>])) <span class="sc">-</span> dta[<span class="dv">2</span>, <span class="st">"y"</span>])</span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>area_3 <span class="ot">&lt;-</span> (dta[<span class="dv">3</span>, <span class="st">"x"</span>] <span class="sc">-</span> (dta[<span class="dv">3</span>, <span class="st">"x"</span>] <span class="sc">+</span> (beta_0 <span class="sc">+</span> (beta_1 <span class="sc">*</span> dta[<span class="dv">3</span>, <span class="st">"x"</span>])) <span class="sc">-</span> dta[<span class="dv">3</span>, <span class="st">"y"</span>])) <span class="sc">*</span> </span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>          (dta[<span class="dv">3</span>, <span class="st">"y"</span>]) <span class="sc">-</span> (beta_0 <span class="sc">+</span> (beta_1 <span class="sc">*</span> dta[<span class="dv">3</span>, <span class="st">"x"</span>]))</span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>area_4 <span class="ot">&lt;-</span> ((dta[<span class="dv">4</span>, <span class="st">"x"</span>] <span class="sc">+</span> (beta_0 <span class="sc">+</span> (beta_1 <span class="sc">*</span> dta[<span class="dv">4</span>, <span class="st">"x"</span>])) <span class="sc">-</span> dta[<span class="dv">4</span>, <span class="st">"y"</span>]) <span class="sc">-</span> dta[<span class="dv">4</span>, <span class="st">"x"</span>]) <span class="sc">*</span> </span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a>          ((beta_0 <span class="sc">+</span> (beta_1 <span class="sc">*</span> dta[<span class="dv">4</span>, <span class="st">"x"</span>])) <span class="sc">-</span> dta[<span class="dv">4</span>, <span class="st">"y"</span>])</span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>area <span class="ot">&lt;-</span> area_1 <span class="sc">+</span> area_2 <span class="sc">+</span> area_3 <span class="sc">+</span> area_4</span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="st">"Area of red boxes is: "</span>)</span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>area</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="simple-regressions-in-r" class="level1">
+<h1>Simple Regressions in R</h1>
+<p>Now, let’s see how we could use a regression in R to do this. The main part of a regression model in R is the… model. Not very surprising! Regression models look like: <code>Y ~ X</code> (the <code>~</code> symbol is called “tilde” FYI). <code>Y ~ X</code> means that we have created a model where <code>Y</code> is regressed on <code>X</code>.</p>
+<p>We can ignore the residual terms and parameters when writing the model in R and just focus on the variables for now.</p>
+<p>So, for example, our regression model is</p>
+<p><span class="math display">\[
+M_i = \beta_0 + \beta_1 W_i + \epsilon_i
+\]</span></p>
+<p>Which can be written in R as</p>
+<p><code>mrkinc ~ wages</code></p>
+<p>Regressions are estimated in R using the <code>lm</code> function, which takes the data as an argument.</p>
+<ul>
+<li>This creates a <em>linear model</em> object, which can be used to calculate things (using prediction) or perform tests</li>
+<li>It also stores all of the information about the model, such as the coefficient and fit</li>
+<li>These models can also be printed and summarized to give important basic information about a regression</li>
+</ul>
+<p>For an example linear model called <code>my_model</code>, some of the most important elements are:</p>
+<ul>
+<li><code>my_model$coefficients</code>: the parameter coefficients</li>
+<li><code>my_model$residuals</code>: the residuals</li>
+<li><code>my_model$fitted.values</code>: the predicted values</li>
+</ul>
+<p>Enough talk! Let’s see our model in action here.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>regression1 <span class="ot">=</span> <span class="fu">lm</span>(mrkinc <span class="sc">~</span> wages, <span class="at">data =</span> census_data)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(regression1)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(regression1<span class="sc">$</span>coefficients)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Take a close look at the results. Identify the following elements:</p>
+<ul>
+<li>The values of the parameters</li>
+<li>The standard errors of the parameters</li>
+<li>The %-of the data explained by the model (R-sqaured)</li>
+</ul>
+<blockquote class="blockquote">
+<p><strong>Test Your Knowledge</strong>: What % of the data is explained by the model? Answer to 2 decimal places.</p>
+</blockquote>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Hint: Convert the Multiple-R squared value into a percentage </span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>ans1 <span class="ot">&lt;-</span> ...  <span class="co"># answer goes here</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="fu">test_1</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+<p>The underlying model and the parameters tell us about the relationship between the different values:</p>
+<p><span class="math display">\[
+M_i = -2455 + 1.61 W_i + \epsilon_i
+\]</span></p>
+<p>Notice, for example:</p>
+<p><span class="math display">\[
+\frac{\partial M_i}{\partial W_i} = \beta_1 = 1.61
+\]</span></p>
+<p>In other words, when wages go up by 1 dollar, we would expect that market income will rise by 1.61 dollars. This kind of analysis is key to <em>interpreting</em> what this model is telling us.</p>
+<p>Finally, let’s visualize our fitted model on the scatterplot from before. How does it compare to your original model?</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>fitted_line2 <span class="ot">=</span> <span class="fu">data.frame</span>(<span class="at">wages =</span> census_data<span class="sc">$</span>wages, <span class="at">mrkinc =</span> regression1<span class="sc">$</span>fitted.values)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>f <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="at">data =</span> census_data, <span class="fu">aes</span>(<span class="at">x =</span> wages, <span class="at">y =</span> mrkinc)) <span class="sc">+</span> <span class="fu">xlab</span>(<span class="st">"Wages"</span>) <span class="sc">+</span> <span class="fu">ylab</span>(<span class="st">"Market Income"</span>)</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>f <span class="ot">&lt;-</span> f <span class="sc">+</span> <span class="fu">geom_point</span>() <span class="sc">+</span> <span class="fu">geom_line</span>(<span class="at">color =</span> <span class="st">"red"</span>, <span class="at">data =</span> fitted_line) <span class="sc">+</span> <span class="fu">geom_line</span>(<span class="at">color =</span> <span class="st">"blue"</span>, <span class="at">data =</span> fitted_line2)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>f</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>As you can see - there’s a very close relationship between <code>mrkinc</code> and <code>wages</code>. This implies that we can focus our attention on wages in our analysis of the immigrant wage gap.</p>
+</section>
+<section id="part-2-simple-regressions-and-t-tests" class="level1">
+<h1>Part 2: Simple Regressions and <span class="math inline">\(t\)</span>-Tests</h1>
+<p>Previously, we looked at the relationship between market income and wages. However, these are both <em>quantitative</em> variables. However, what if we wanted to work with a <em>qualitative</em> variable like <code>immstat</code>?</p>
+<p>Regression models can still incorporate this kind of variable - which is good, because (as the Census makes clear) this is the most common type of variable in real-world data. How is this possible?</p>
+<p>Let’s start out with the simplest kind of qualitative variable: a <strong>dummy</strong> (0 or 1) variable. Consider the regression equation:</p>
+<p><span class="math display">\[
+W_i = \beta_0 + \beta_1 I_i + \epsilon_i
+\]</span></p>
+<p>The conditional expectation when I_i is 0 and when it is 1 is :</p>
+<p><span class="math display">\[
+E[W_i|I_i = 1] = \beta_0 + \beta_1 \cdot 1 + E[\epsilon_i|I_i = 1]
+\]</span></p>
+<p><span class="math display">\[
+E[W_i|I_i = 0] = \beta_0 + \beta_1 \cdot 0 + E[\epsilon_i|I_i = 0]
+\]</span></p>
+<p>Under Assumption 1, we have that <span class="math inline">\(E[\epsilon_i|I_i] = 0\)</span>, so:</p>
+<p><span class="math display">\[
+E[W_i|I_i = 1] = \beta_0 + \beta_1
+\]</span></p>
+<p><span class="math display">\[
+E[W_i|I_i = 0] = \beta_0
+\]</span></p>
+<p>Combining these two expressions:</p>
+<p><span class="math display">\[
+\beta_1 = E[W_i|I_i = 1] - E[W_i|I_i = 0]
+\]</span></p>
+<p>What this tells us:</p>
+<ol type="1">
+<li>You can include <strong>dummy</strong> variables in regressions</li>
+<li>The coefficients of the dummy variable have meaning in terms of the regression model</li>
+<li>They measure the (average) difference in the dependent variable between the two levels of the dummy variable</li>
+</ol>
+<p>Each of these facts reinforces the idea that dummy variables can be included in a regression model just like quantitative variables.</p>
+<p>Let’s look at this in terms of <code>immstat</code>. We can create our regression equation as:</p>
+<p><span class="math display">\[
+W_i = \beta_0 + \beta_1 I_i + \epsilon_i
+\]</span></p>
+<p>Then we can estimate this using R.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>regression2 <span class="ot">&lt;-</span> <span class="fu">lm</span>(wages <span class="sc">~</span> immstat, <span class="at">data =</span> census_data)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(regression2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>What do you see here?</p>
+<blockquote class="blockquote">
+<p><strong>Test Your Knowledge</strong>: What is the difference in average wage between immigrants and non-immigrants?</p>
+</blockquote>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># input the answer (to 1 decimal place)</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>answer2 <span class="ot">&lt;-</span> ...  </span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="fu">test_2</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+<p>The number about might seem familiar, if you remember what we learned about a <span class="math inline">\(t\)</span>-test from earlier. Remember this result?</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>t1 <span class="ot">&lt;-</span> <span class="fu">t.test</span>(<span class="at">x =</span> <span class="fu">filter</span>(census_data, immstat <span class="sc">==</span> <span class="st">"immigrants"</span>)<span class="sc">$</span>wages,</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="fu">filter</span>(census_data, immstat <span class="sc">==</span> <span class="st">"non-immigrants"</span>)<span class="sc">$</span>wages,</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>       <span class="at">alternative =</span> <span class="st">"two.sided"</span>,</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>       <span class="at">mu =</span> <span class="dv">0</span>,</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>       <span class="at">conf.level =</span> <span class="fl">0.95</span>)</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>t1</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>t1<span class="sc">$</span>estimate[<span class="dv">1</span>] <span class="sc">-</span> t1<span class="sc">$</span>estimate[<span class="dv">2</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Look closely at this result, and the result above. What do you see? What is the relationship here.</p>
+<p>This is a very important result: regression is an example of the comparison that a two sample comparison is making, when the explanatory variable is a dummy. Why is this? Recall:</p>
+<p><span class="math display">\[
+\beta_1 = E[W_i|I_i = 1] - E[W_i|I_i = 0]
+\]</span></p>
+<p>The regression coefficient of <span class="math inline">\(\beta_1\)</span> has the interpretation of being a comparison of two means. This is exactly the same as what the <span class="math inline">\(t\)</span>-test is doing! Comparing two means by different groups - groups which are specified by <span class="math inline">\(I_i = 0\)</span> or <span class="math inline">\(I_i = 1\)</span>.</p>
+<ul>
+<li>In other words, another way of thinking about a regression is like a form of ``super’’ comparison of means test.</li>
+<li>It can handle the same kind of analysis (i.e.&nbsp;with dummies), but can also include quantitative variables - which regular comparison of means tests cannot handle.</li>
+</ul>
+</section>
+<section id="part-3-exercises" class="level1">
+<h1>Part 3: Exercises</h1>
+<section id="activity-1" class="level2">
+<h2 class="anchored" data-anchor-id="activity-1">Activity 1</h2>
+<p>In this activity, we’ll explore how the immigrant wage gap could depend on sex (male vs.&nbsp;female). We can now examine this issue directly using regressions.</p>
+<p>Estimate the immigrant wage gap for males and for females using regressions.</p>
+<p><em>Tested objects:</em> <code>regm</code> (the regression for males), <code>regf</code> (the regression for females).</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Activity 1</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Regression for males</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>regm <span class="ot">&lt;-</span> <span class="fu">lm</span>(... <span class="sc">~</span> ..., <span class="at">data =</span> <span class="fu">filter</span>(census_data, ... <span class="sc">==</span> ...)) <span class="co">#what should replace the ...</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="co">#Hint: Don't forget the quotation marks when specifying the subset </span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Regression for females</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>regf <span class="ot">&lt;-</span>  ... <span class="co"># what should replace the ...</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(regm) <span class="co"># Allow us to view regm's coefficient estimates</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(regf) <span class="co"># Same as above, but for regf</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a><span class="fu">test_3</span>() <span class="co"># Quiz1</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="fu">test_4</span>() <span class="co"># Quiz2</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+</section>
+<section id="short-answer-1" class="level2">
+<h2 class="anchored" data-anchor-id="short-answer-1">Short Answer 1</h2>
+<p><strong>Prompt:</strong> How do we interpret the coefficient (Intercept) estimate on <code>immstat</code> in each of these regressions?</p>
+<p><strong>A</strong> The average wage of a non-immigrant<br>
+<strong>B</strong> The average wage of an immigrant<br>
+<strong>C</strong> The difference between the average wage of an immigrant and non-immigrant<br>
+<strong>D</strong> Nothing we should worry about</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Enter your answer below as "A", "B", "C", or "D"</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>answer20 <span class="ot">&lt;-</span> <span class="st">"..."</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="fu">test_20</span>(answer20)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+</section>
+<section id="short-answer-2" class="level2">
+<h2 class="anchored" data-anchor-id="short-answer-2">Short Answer 2</h2>
+<p><strong>Prompt:</strong> Compare the gaps. Is the immigrant wage gap larger for males or females? Why do you think that might that be?</p>
+<p><strong>A</strong> The immigrant pay gap for females is much greater than that of males<br>
+<strong>B</strong> The immigrant pay gap for males is much greater than that of females<br>
+<strong>C</strong> The immigrant pay gap is roughly the same</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Enter your answer below as "A", "B", or "C"</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>answer21 <span class="ot">&lt;-</span> <span class="st">""</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="fu">test_21</span>(answer21)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+</section>
+<section id="activity-2" class="level2">
+<h2 class="anchored" data-anchor-id="activity-2">Activity 2</h2>
+<p>Many studies have suggested that workers’ wages increase as they age. In this activity, we will explore how the immigrant wage gap varies by age. First, let’s see the factor levels of the <code>agegrp</code>:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">levels</span>(census_data<span class="sc">$</span>agegrp) <span class="co"># Run this!</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>As we can see, there are several age groups in this dataframe, including ones that would not be particularly informative (have you ever seen a 3-year-old doing salary work?). Let’s estimate the immigrant wage gap (with no controls) for five of these groups separately: * 20 to 24 years * 30 to 34 years * 40 to 44 years * 50 to 54 years * 60 to 64 years</p>
+<p><em>Tested objects:</em> <code>reg5_20</code> (20 to 24 years), <code>reg5_50</code> (50 to 54 years)</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>reg5_20 <span class="ot">&lt;-</span> <span class="fu">lm</span>(wages <span class="sc">~</span> immstat, <span class="at">data =</span> <span class="fu">filter</span>(census_data, agegrp <span class="sc">==</span> <span class="st">'20 to 24 years'</span>)) </span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>reg5_30 <span class="ot">&lt;-</span> ... <span class="co"># what should go here? Use the code above as a template</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>reg5_40 <span class="ot">&lt;-</span> ...</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>reg5_50 <span class="ot">&lt;-</span> ...</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>reg5_60 <span class="ot">&lt;-</span> ... </span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a><span class="co"># store the summaries (but don't show them!  too many!)</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>sum20 <span class="ot">&lt;-</span> <span class="fu">summary</span>(reg5_20)</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>sum30 <span class="ot">&lt;-</span> <span class="fu">summary</span>(reg5_30)</span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>sum40 <span class="ot">&lt;-</span> <span class="fu">summary</span>(reg5_40)</span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>sum50 <span class="ot">&lt;-</span> <span class="fu">summary</span>(reg5_50)</span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>sum60 <span class="ot">&lt;-</span> <span class="fu">summary</span>(reg5_60)</span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a><span class="fu">test_12</span>() <span class="co"># Quiz3</span></span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a><span class="fu">test_16</span>() <span class="co"># Quiz4</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+<p>The code below will tabulate a brief summary of each regression:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Just run me!  You don't need to edit this</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>Age_Group <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"20-24"</span>, <span class="st">"30-34"</span>, <span class="st">"40-44"</span>, <span class="st">"50-54"</span>, <span class="st">"60-64"</span>)</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>Wage_Gap <span class="ot">&lt;-</span> <span class="fu">c</span>(reg5_20<span class="sc">$</span>coefficients[<span class="dv">2</span>], reg5_30<span class="sc">$</span>coefficients[<span class="dv">2</span>], reg5_40<span class="sc">$</span>coefficients[<span class="dv">2</span>], reg5_50<span class="sc">$</span>coefficients[<span class="dv">2</span>], reg5_60<span class="sc">$</span>coefficients[<span class="dv">2</span>])</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>Std._Error <span class="ot">&lt;-</span> <span class="fu">c</span>(sum20<span class="sc">$</span>coefficients[<span class="dv">2</span>,<span class="dv">2</span>], sum30<span class="sc">$</span>coefficients[<span class="dv">2</span>,<span class="dv">2</span>], sum40<span class="sc">$</span>coefficients[<span class="dv">2</span>,<span class="dv">2</span>], sum50<span class="sc">$</span>coefficients[<span class="dv">2</span>,<span class="dv">2</span>], sum60<span class="sc">$</span>coefficients[<span class="dv">2</span>,<span class="dv">2</span>])</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>t_Value <span class="ot">&lt;-</span> <span class="fu">c</span>(sum20<span class="sc">$</span>coefficients[<span class="dv">2</span>,<span class="dv">3</span>], sum30<span class="sc">$</span>coefficients[<span class="dv">2</span>,<span class="dv">3</span>], sum40<span class="sc">$</span>coefficients[<span class="dv">2</span>,<span class="dv">3</span>], sum50<span class="sc">$</span>coefficients[<span class="dv">2</span>,<span class="dv">3</span>], sum60<span class="sc">$</span>coefficients[<span class="dv">2</span>,<span class="dv">3</span>])</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>p_Value <span class="ot">&lt;-</span> <span class="fu">c</span>(sum20<span class="sc">$</span>coefficients[<span class="dv">2</span>,<span class="dv">4</span>], sum30<span class="sc">$</span>coefficients[<span class="dv">2</span>,<span class="dv">4</span>], sum40<span class="sc">$</span>coefficients[<span class="dv">2</span>,<span class="dv">4</span>], sum50<span class="sc">$</span>coefficients[<span class="dv">2</span>,<span class="dv">4</span>], sum60<span class="sc">$</span>coefficients[<span class="dv">2</span>,<span class="dv">4</span>])</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="fu">tibble</span>(Age_Group, Wage_Gap, Std._Error, t_Value, p_Value) <span class="co"># it's like a table but a tibble</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="short-answer-3" class="level2">
+<h2 class="anchored" data-anchor-id="short-answer-3">Short Answer 3</h2>
+<p><strong>Prompt</strong>: What happens to the immigrant wage gap as we move across age groups? What do you think might explain these changes?</p>
+<p><strong>A</strong> Wage gap declines as age group decreases<br>
+<strong>B</strong> Wage gap increases as age group increases<br>
+<strong>C</strong> Wage gap is the highest at the “40 to 44 years” age group</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Enter your answer below as "A", "B", or "C"</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>answer22 <span class="ot">&lt;-</span> <span class="st">""</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="fu">test_22</span>(answer22)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+</section>
+<section id="activity-3" class="level2">
+<h2 class="anchored" data-anchor-id="activity-3">Activity 3</h2>
+<p>As we observed in last week’s worksheet, the immigrant wage gap could differ by education level. As there are many education categories, it may be tedious to run a regression for each individual education level.</p>
+<p>Instead, we could run a single regression and add education level as a second regressor, <span class="math inline">\(E_i\)</span>:</p>
+<p><span class="math display">\[
+W_i = \beta_0 + \beta_1 I_i + \beta_2 E_i + \epsilon_i
+\]</span></p>
+<p>This is actually a <strong>multiple regression</strong>, which we will learn about later - but from the point of the this lesson, the idea is that it is “run” in R essentially in the same way as a simple regression. Estimate the regression model above without <span class="math inline">\(E_i\)</span>, then re-estimate the model with <span class="math inline">\(E_i\)</span> added.</p>
+<p><em>Tested objects:</em> <code>reg2A</code> (regression without controls), <code>reg2B</code> (regression with controls).</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Naive regression (just immstat)</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>reg2A <span class="ot">&lt;-</span> <span class="fu">lm</span>(... <span class="sc">~</span> ..., <span class="at">data =</span> census_data) <span class="co">#this one works already</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Regression with controls</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>reg2B <span class="ot">&lt;-</span>  <span class="fu">lm</span>(... <span class="sc">~</span> immstat <span class="sc">+</span> ..., <span class="at">data =</span> census_data) <span class="co"># what should replace the ... think about the model</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="co"># This will look ugly; try to look carefully at the output</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(reg2A)<span class="sc">$</span>coefficients</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(reg2B)<span class="sc">$</span>coefficients</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a><span class="fu">test_7</span>()</span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a><span class="fu">test_8</span>() <span class="co"># Quiz 5</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+</section>
+<section id="short-answer-4" class="level2">
+<h2 class="anchored" data-anchor-id="short-answer-4">Short Answer 4</h2>
+<p><strong>Prompt</strong>: compare the estimated immigrant wage gap with and without <span class="math inline">\(E_i\)</span> in the regression. What happens to the gap when we add <span class="math inline">\(E_i\)</span>? How do we interpret this?</p>
+<p><strong>A</strong> The estimated immigrant wage gap has increased after adding controls<br>
+<strong>B</strong> The estimated immigrant wage gap has decreased after adding controls<br>
+<strong>C</strong> The estimated immigrant wage gap has not changed after adding controls</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Enter your answer below as "A", "B", or "C"</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>answer23 <span class="ot">&lt;-</span> <span class="st">"..."</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="fu">test_23</span>(answer23)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+</section>
+<section id="activity-4" class="level2">
+<h2 class="anchored" data-anchor-id="activity-4">Activity 4</h2>
+<p>Another topic of interest for labor economists that is related to the immigrant wage gap is racial wage discrimination - the issue of workers of similar productivity being paid different wages on average because of their race. Consequently, we can also use regressions to estimate the racial wage gap.</p>
+<p>Let’s suppose that we want to estimate this racial wage gap. Run a regression (without controls) that does this.</p>
+<p><em>Test objects:</em> <code>reg_race</code>.</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Do not modify this line (sets "not a visible minority" as the reference level):</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>census_data<span class="sc">$</span>vismin <span class="ot">&lt;-</span> <span class="fu">relevel</span>(census_data<span class="sc">$</span>vismin, <span class="at">ref =</span> <span class="st">"not a visible minority"</span>)</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="co"># this is also how you set a different base level for a factor (handy!)</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Racial Wage Gap Regression</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>reg_race <span class="ot">&lt;-</span> <span class="fu">lm</span>(wages <span class="sc">~</span> ..., <span class="at">data =</span> census_data) <span class="co"># what model should we use here?</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(reg_race)</span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a><span class="fu">test_10</span>() <span class="co">#Quiz6</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+</section>
+<section id="short-answer-5" class="level2">
+<h2 class="anchored" data-anchor-id="short-answer-5">Short Answer 5</h2>
+<p><strong>Prompt</strong>: How should we interpret the regression estimate for <code>visminblack</code>?</p>
+<p><strong>A</strong> People from the Black community make on average about 14,795 dollars less as compared to an average white person.<br>
+<strong>B</strong> Black immigrants make 14,795 dollars less than Black non-immigrants on average<br>
+<strong>C</strong> On average, a person from the Black community makes 14,795 dollars less than an average white person, holding all other variables constant</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Enter your answer below as "A", "B", or "C"</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>answer24 <span class="ot">&lt;-</span> <span class="st">"..."</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="fu">test_24</span>(answer24)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+</section>
+<section id="short-answer-6" class="level2">
+<h2 class="anchored" data-anchor-id="short-answer-6">Short Answer 6</h2>
+<p><strong>Prompt</strong>: With this racial wage gap in mind, let’s return to the immigrant wage gap. Should we add explanatory variables for race to our regression from activity 2 and 3? Why or why not?</p>
+<p><strong>A</strong> No we should not<br>
+<strong>B</strong> Yes, we should because there could be other factors explaining the wage gap<br>
+<strong>C</strong> Yes, we should control for education only.<br>
+<strong>D</strong> Yes, we should control for immigrant status only.</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Enter your answer below as "A", "B", or "C"</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>answer25 <span class="ot">&lt;-</span> <span class="st">"..."</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="fu">test_25</span>(answer25)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="aswer">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Enter your answer below as "A", "B", or "C"</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>answer25 <span class="ot">&lt;-</span> <span class="st">"B"</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="fu">test_25</span>(answer25)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, function() {
+      let href = xref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children.length > 2) {
+          for (let i = 0; i < 2; i++) {
+            container.appendChild(note.children[i].cloneNode(true));
+          }
+          return container.innerHTML
+        } else {
+          return note.innerHTML;
+        }
+      } else {
+        return note.innerHTML;
+      }
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+          // target, if specified
+          link.setAttribute("target", "_blank");
+      }
+    }
+});
+</script>
+<nav class="page-navigation column-body">
+  <div class="nav-page nav-page-previous">
+      <a href="../../../docs/econ_325/04_hypothesis_testing/hypothesis_testing.html" class="pagination-link">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">8 - Hypothesis Testing</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item">
+ <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/80x15.png"></a>.  <a rel="license" href="https://comet.arts.ubc.ca/pages/copyright.html">See details.</a>
+  </li>  
+</ul>
+    </div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item">
+ The COMET Project and the UBC Vancouver School of Economics are located on the traditional, ancestral and unceded territory of the xʷməθkʷəy̓əm (Musqueam) and Sḵwx̱wú7mesh (Squamish) peoples.
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+</body></html>

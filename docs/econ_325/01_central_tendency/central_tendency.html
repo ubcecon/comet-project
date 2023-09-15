@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-GB" xml:lang="en-GB"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.36">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="COMET Team   Colby Chambers, Oliver (Junye) Xu, Anneke Dresselhuis, Jonathan Graves, Sarthak Kwatra">
+<meta name="dcterms.date" content="2023-06-04">
+<meta name="keywords" content="economics, econometrics, R, data, machine learning, UBC, COMET, geog 374, econ 325, econ 326, learning, teaching, learn r, r help, help, tutorial, r tutorial for beginners,learning statistics with r, learn r programming, learn statistics, linear regression, r machine learning, learn machine learning, university of british columbia, british columbia, r programming for beginners, r language tutorial, r tutorial for beginners, economic data, econometrics tutoring, economics help for students, economics homework help, oer resources for teachers, open educational resources for teachers, educational resource, oer project, oer materials, oer resources, learn economics online, learn econometrics, teach yourself economics, teach yourself econometrics, econometrics basics for beginners">
+<meta name="description" content="This notebook is an introduction to basic statistics using Jupyter and R, and some fundamental data analysis.">
+
+<title>COMET - 01 - ECON 325: Central Tendency</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<link href="../../../docs/econ_325/02_dispersion_and_dependence/dispersion_and_dependence.html" rel="next">
+<link href="../../../docs/econ_325/07_visualization_2/intro_to_visualization2.html" rel="prev">
+<link href="../../../media/comet_favicon.png" rel="icon" type="image/png">
+<script src="../../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<link rel="stylesheet" href="../../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a href="../../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../../media/logo_no_tiny_text.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">COMET</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../index.html" rel="" target=""><i class="bi bi-house-door" role="img">
+</i> 
+ <span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-get-started" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Get Started</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-get-started">    
+        <li>
+    <a class="dropdown-item" href="../../../pages/quickstart.html" rel="" target="">
+ <span class="dropdown-text">Quickstart Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../pages/installing_locally.html" rel="" target="">
+ <span class="dropdown-text">Install and Use COMET</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/intro_jupyter/intro_to_jupyter.html" rel="" target="">
+ <span class="dropdown-text">Learn about Jupyter</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/intro_r/introduction_to_R.html" rel="" target="">
+ <span class="dropdown-text">Learn about R</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/econ_prep/Introduction to Statistical Concepts.html" rel="" target="">
+ <span class="dropdown-text">Review High School Statistics</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-basics" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Basics</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-basics">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/index_intro.html" rel="" target="">
+ <span class="dropdown-text">Preliminary Material</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_325/index_325.html" rel="" target="">
+ <span class="dropdown-text">Introduction to Econometrics (ECON 325)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/econ_prep/Introduction to Statistical Concepts.html" rel="" target="">
+ <span class="dropdown-text">Review of Statistics</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-fundamentals" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Fundamentals</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-fundamentals">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_326/index_326.html" rel="" target="">
+ <span class="dropdown-text">Introduction to Empirical Models (ECON 326)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/geog_374/index_374.html" rel="" target="">
+ <span class="dropdown-text">Geographic Computation (GEOG 374)</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-projects" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Projects</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-projects">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_490/index_490.html" rel="" target="">
+ <span class="dropdown-text">Overview of ECON 490</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_490/index_490_r.html" rel="" target="">
+ <span class="dropdown-text">R Modules</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_490/index_490_stata.html" rel="" target="">
+ <span class="dropdown-text">STATA Modules</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-advanced" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Advanced</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-advanced">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_adv/index_adv.html" rel="" target="">
+ <span class="dropdown-text">Advanced Topics</span></a>
+  </li>  
+    </ul>
+  </li>
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-launch-comet" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+      <i class="bi bi-play" role="img">
+</i> 
+ <span class="menu-text">Launch COMET</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-launch-comet">    
+        <li>
+    <a class="dropdown-item" href="https://open.jupyter.ubc.ca/jupyter/hub/user-redirect/git-pull?repo=https%3A%2F%2Fgithub.com%2Fubcecon%2Fcomet-project&amp;urlpath=lab%2Ftree%2Fcomet-project%2F&amp;branch=main" rel="" target=""><i class="bi bi-cloud-check" role="img">
+</i> 
+ <span class="dropdown-text">Launch on JupyterOpen</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://ubc.syzygy.ca/jupyter/hub/user-redirect/git-pull?repo=https%3A%2F%2Fgithub.com%2Fubcecon%2Fcomet-project&amp;urlpath=lab%2Ftree%2Fcomet-project%2F&amp;branch=main" rel="" target=""><i class="bi bi-gear" role="img">
+</i> 
+ <span class="dropdown-text">Launch on Syzygy</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://colab.research.google.com/github/ubcecon/comet-project/blob/main/" rel="" target=""><i class="bi bi-google" role="img">
+</i> 
+ <span class="dropdown-text">Launch on Collab</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://github.com/ubcecon/comet-project/archive/refs/heads/main.zip" rel="" target=""><i class="bi bi-cloud-download" role="img">
+</i> 
+ <span class="dropdown-text">Launch Locally</span></a>
+  </li>  
+        <li><hr class="dropdown-divider"></li>
+        <li>
+    <a class="dropdown-item" href="https://github.com/ubcecon/comet-project/archive/refs/heads/data-only.zip" rel="" target=""><i class="bi bi-clipboard-data" role="img">
+</i> 
+ <span class="dropdown-text">Project Datasets</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="../../../#" rel="" target="">
+ <span class="menu-text">|</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-about" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">About</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-about">    
+        <li>
+    <a class="dropdown-item" href="../../../pages/team.html" rel="" target="">
+ <span class="dropdown-text">COMET Team</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../pages/using_comet.html" rel="" target="">
+ <span class="dropdown-text">Teach With COMET</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../pages/copyright.html" rel="" target="">
+ <span class="dropdown-text">Copyright Information</span></a>
+  </li>  
+    </ul>
+  </li>
+</ul>
+            <div class="quarto-navbar-tools">
+</div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../docs/econ_325/index_325.html">Introduction to Econometrics</a></li><li class="breadcrumb-item"><a href="../../../docs/econ_325/01_central_tendency/central_tendency.html">4 - Central Tendency</a></li></ol></nav>
+      <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+      </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation docked overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_intro/index_intro.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true">
+ <span class="menu-text">Preliminary Material</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_intro/intro_r/introduction_to_R.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">0 - Intro to R</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_intro/intro_to_data/intro_to_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1 - Intro to Data (Part 1)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_intro/intro_to_data/intro_to_data2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2 - Intro to Data (Part 2)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_intro/econ_prep/Introduction to Statistical Concepts.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3 - Review of Basic Statistics</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="px-0"><hr class="sidebar-divider hi "></li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true">
+ <span class="menu-text">Introduction to Econometrics</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/index_325.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">0 - Overview of ECON 325</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/08_distribution/distribution.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1 - Distribution</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/06_visualization_1/intro_to_visualization1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2 - Visualization I</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/07_visualization_2/intro_to_visualization2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3 - Visualization II</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/01_central_tendency/central_tendency.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">4 - Central Tendency</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/02_dispersion_and_dependence/dispersion_and_dependence.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">5 - Dispersion and Dependence</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/10_sampling_distributions/Sampling_distributions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6 - Sampling Distributions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/03_confidence_intervals/confidence_intervals.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">7 - Confidence Intervals</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/04_hypothesis_testing/hypothesis_testing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">8 - Hypothesis Testing</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_325/09_regression/simple_regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">9 - Simple Regression</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#outline" id="toc-outline" class="nav-link active" data-scroll-target="#outline">Outline</a>
+  <ul class="collapse">
+  <li><a href="#prerequisites" id="toc-prerequisites" class="nav-link" data-scroll-target="#prerequisites">Prerequisites</a></li>
+  <li><a href="#outcomes" id="toc-outcomes" class="nav-link" data-scroll-target="#outcomes">Outcomes</a></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
+  </ul></li>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a>
+  <ul class="collapse">
+  <li><a href="#part-1-key-concepts" id="toc-part-1-key-concepts" class="nav-link" data-scroll-target="#part-1-key-concepts">Part 1: Key Concepts</a>
+  <ul class="collapse">
+  <li><a href="#mean" id="toc-mean" class="nav-link" data-scroll-target="#mean">Mean</a></li>
+  <li><a href="#median" id="toc-median" class="nav-link" data-scroll-target="#median">Median</a></li>
+  <li><a href="#percentiles" id="toc-percentiles" class="nav-link" data-scroll-target="#percentiles">Percentiles</a></li>
+  <li><a href="#boxplots" id="toc-boxplots" class="nav-link" data-scroll-target="#boxplots">Boxplots</a></li>
+  </ul></li>
+  <li><a href="#mode" id="toc-mode" class="nav-link" data-scroll-target="#mode">Mode</a></li>
+  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary">Summary</a>
+  <ul class="collapse">
+  <li><a href="#exercise---1-2" id="toc-exercise---1-2" class="nav-link" data-scroll-target="#exercise---1-2">Exercise - 1 &amp; 2</a></li>
+  <li><a href="#exercise---3" id="toc-exercise---3" class="nav-link" data-scroll-target="#exercise---3">Exercise - 3</a></li>
+  <li><a href="#exercise---4" id="toc-exercise---4" class="nav-link" data-scroll-target="#exercise---4">Exercise - 4</a></li>
+  </ul></li>
+  <li><a href="#part-2-applications-and-further-points" id="toc-part-2-applications-and-further-points" class="nav-link" data-scroll-target="#part-2-applications-and-further-points">Part 2: Applications and Further Points</a>
+  <ul class="collapse">
+  <li><a href="#distributions" id="toc-distributions" class="nav-link" data-scroll-target="#distributions">Distributions</a></li>
+  </ul></li>
+  <li><a href="#skewness" id="toc-skewness" class="nav-link" data-scroll-target="#skewness">Skewness</a></li>
+  <li><a href="#interpretation-of-measures-of-central-tendency-for-different-variables" id="toc-interpretation-of-measures-of-central-tendency-for-different-variables" class="nav-link" data-scroll-target="#interpretation-of-measures-of-central-tendency-for-different-variables">Interpretation of Measures of Central Tendency for Different Variables</a></li>
+  <li><a href="#dummy-variables" id="toc-dummy-variables" class="nav-link" data-scroll-target="#dummy-variables">Dummy Variables</a>
+  <ul class="collapse">
+  <li><a href="#exercise-4" id="toc-exercise-4" class="nav-link" data-scroll-target="#exercise-4">Exercise 4</a></li>
+  <li><a href="#exercise-5" id="toc-exercise-5" class="nav-link" data-scroll-target="#exercise-5">Exercise 5</a></li>
+  <li><a href="#exercise-6" id="toc-exercise-6" class="nav-link" data-scroll-target="#exercise-6">Exercise 6</a></li>
+  </ul></li>
+  </ul></li>
+  </ul>
+<div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/ubcecon/comet-project/issues/new" class="toc-action">Report an issue</a></p></div></div><div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="central_tendency.ipynb" download="central_tendency.ipynb"><i class="bi bi-journal-code"></i>Jupyter</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content column-body" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">01 - ECON 325: Central Tendency</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">introduction</div>
+    <div class="quarto-category">econ 325</div>
+    <div class="quarto-category">central tendency</div>
+    <div class="quarto-category">descriptive statistics</div>
+    <div class="quarto-category">mean</div>
+    <div class="quarto-category">percentile</div>
+    <div class="quarto-category">distribution</div>
+    <div class="quarto-category">skewness</div>
+    <div class="quarto-category">mode</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    This notebook is an introduction to basic statistics using Jupyter and R, and some fundamental data analysis.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>COMET Team <br> <em>Colby Chambers, Oliver (Junye) Xu, Anneke Dresselhuis, Jonathan Graves, Sarthak Kwatra</em> </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">4 June 2023</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+</header>
+
+<section id="outline" class="level2">
+<h2 class="anchored" data-anchor-id="outline">Outline</h2>
+<section id="prerequisites" class="level3">
+<h3 class="anchored" data-anchor-id="prerequisites">Prerequisites</h3>
+<ul>
+<li>Introduction to Jupyter</li>
+<li>Introduction to R</li>
+<li>Introduction to Visualization</li>
+</ul>
+</section>
+<section id="outcomes" class="level3">
+<h3 class="anchored" data-anchor-id="outcomes">Outcomes</h3>
+<p>After completing this notebook, you will be able to:</p>
+<ul>
+<li>Define the following terms: mean, median, percentiles, and mode.</li>
+<li>Calculate mean, median, and mode in R.</li>
+<li>Create boxplots to visualize ranges of data.</li>
+<li>Interpret and work with these statistics under various applications.</li>
+</ul>
+</section>
+<section id="references" class="level3">
+<h3 class="anchored" data-anchor-id="references">References</h3>
+<ul>
+<li><a href="https://stackoverflow.com/questions/2547402/how-to-find-the-statistical-mode">Finding the Statistical Mode in R</a></li>
+</ul>
+</section>
+</section>
+<section id="introduction" class="level1">
+<h1>Introduction</h1>
+<p>In this notebook, we will introduce the idea of <strong>central tendency</strong>. In statistics, central tendency refers to the idea of how different interpretations of the term “middle” can be used to describe a probability distribution or dataset. In this notebook, we’ll think about central tendency in terms of numerical values which describe a given subset of dataset. This concept is important because we often deal with incredibly large datasets that are too big to describe in their entirety. In this light, it’s crucial to have summary statistics that we can use to describe the general behavior of variables. Before we continue, let’s import our familiar Canadian census dataset using the tools we’ve learned already.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># install.packages("tidyverse") only run these three commands if you have not already installed these packages</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># install.packages("haven")</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># install.packages("ggplot2")</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(haven)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"testing_central_tendency.r"</span>) <span class="co"># self-testing materials</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>census_data <span class="ot">&lt;-</span> <span class="fu">read_dta</span>(<span class="st">"../datasets/01_census2016.dta"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="part-1-key-concepts" class="level2">
+<h2 class="anchored" data-anchor-id="part-1-key-concepts">Part 1: Key Concepts</h2>
+<section id="mean" class="level3">
+<h3 class="anchored" data-anchor-id="mean">Mean</h3>
+<p>The first, and most commonly referenced measure of central tendency is the <strong>sample mean</strong> (also referred to as the <strong>arithmetic mean</strong>). The mean of a variable is the average value of that variable, which can be found by summing together all values that a variable takes on in a set of observations and dividing by the total number of observations used. This is an intuitive measure of central tendency that many of us think of when we are trying to describe data. The formula for the sample mean is below.</p>
+<p><span class="math display">\[
+\overline{x} = \frac{1}{n}\sum_{i=0}^{n} x_i =  \frac{Sum~of~All~Data~Points}{Total~Number~of~Data~Points}
+\]</span></p>
+<p>For large datasets, using the formula above to find the mean by hand is impossibly inconvenient. Luckily, we can quickly calculate the mean of a variable in R as below.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># find the mean of market income (mrkinc)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(census_data<span class="sc">$</span>mrkinc)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Interesting! We see that the above code outputs <code>NA</code>. Why is this happening? Essentially, any time we try to perform operations to find statistics of central tendency for a variable that includes <code>NA</code> values, R will produce <code>NA</code> as the output. This is the case even if the data set only includes one observation recorded as <code>NA</code> for that variable. To account for this, we can simply filter our data set to remove these missing observations. We must do this when calculating <em>any</em> of the statistics introduced in this section, not just the mean. We do this below.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># remove missing values (NA values) in order to find the mean of mrkinc</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>census_data <span class="ot">&lt;-</span> <span class="fu">filter</span>(census_data, <span class="sc">!</span><span class="fu">is.na</span>(census_data<span class="sc">$</span>mrkinc))</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(census_data<span class="sc">$</span>mrkinc)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Looking at the code above, the filter function takes in a dataframe and an argument. It then keeps all observations which return a value of <code>TRUE</code> for that argument. Here, we had to specify that <code>is.na()</code> be <code>FALSE</code> (i.e.&nbsp;<code>!=TRUE</code>) to keep observations for which there was no <code>NA</code> recorded on the <code>mrkinc</code> variable. This now gives us an actual answer for our mean: the average market income is about 59230.</p>
+<blockquote class="blockquote">
+<p><strong>Question</strong>: Notice that the mean only makes sense when we can add and divide the values of a variable. What kind of variable type is this appropriate for?</p>
+</blockquote>
+</section>
+<section id="median" class="level3">
+<h3 class="anchored" data-anchor-id="median">Median</h3>
+<p>Another common measure of central tendency is the <strong>median</strong>. The median is the value which exactly splits the observations for a variable in our data set in half when ordered in increasing (or decreasing) order. For instance, if we had observations for <code>mrkinc</code> of 60000, 45000, and 72000, our median value for <code>mrkinc</code> would be 60000 because there is exactly one observation above (70000) and one observation below (45000) this value. To find the median of a variable, we order all of our observations in ascending (or descending) order, then find the value in the middle of this ordered list. This works great when we have an odd number of numbers to list (i.e.&nbsp;9 observations). However, for a list which is of even length (i.e.&nbsp;has 10 observations), we must take the middle <em>two</em> observations and take their arithmetic mean (sound familiar!). A formula for finding the median in each of these two cases is below.</p>
+<p>Arrange data in ascending (or descending) order. Let <span class="math inline">\(n\)</span> be the number of data points. If <span class="math inline">\(n\)</span> is odd, then:</p>
+<p><span class="math display">\[
+Median = \frac{n+1}{2}th ~~ {data~point}
+\]</span></p>
+<p>Otherwise,</p>
+<p><span class="math display">\[
+Median = \frac{1}{2} * [\frac{n}{2}th ~~ {data~point} + (\frac{n}{2} + 1)th ~~ {data~point}]
+\]</span></p>
+<p>For large datasets, ordering all the values is basically impossible. We instead invoke the <code>median()</code> function to help us find our median quickly in R.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># find the median of mrkinc</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">median</span>(census_data<span class="sc">$</span>mrkinc)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>As we can see, the mean and median of market income in this census are not the same. This is quite common, and we will return to this idea of the mean and median being different a bit later on.</p>
+<blockquote class="blockquote">
+<p><strong>Question</strong>: What kind of variable is the median appropriate for? Why?</p>
+</blockquote>
+</section>
+<section id="percentiles" class="level3">
+<h3 class="anchored" data-anchor-id="percentiles">Percentiles</h3>
+<p>As we learned, the median splits our dataset in half. In this way, 50% of our observations lie below the median, while the other 50% lie above. This brings us to <strong>percentiles</strong>: a percentile is a value on a scale of 0-100 (cent- coming from the Latin “centum”, meaning “hundred”) that indicates the percentage of a distribution that is at or below that value. Put another way, the <span class="math inline">\(n\)</span>-th percentile of a variable is the number at which <span class="math inline">\(n\)</span> percent of the recorded values lie to the left when all observations have been put in ascending order.</p>
+<p>The median is necessarily the 50th percentile of any given variable. This is because 50% of the recorded observations for that variable lie below the median. However, we can describe data with many more percentiles than just the 50th percentile. For example, we commonly refer to <strong>quantiles</strong> when describing data. Quantiles are equally divided sections of a distribution of values which together capture the full distribution of these values. They are thus a collection of percentiles which together must add up to 100. Below are some common examples of quantiles. - Quartiles: the 0th percentile, 25th percentile, 50th percentile, 75th percentile, and 100th percentile - Quintiles: the 0th percentile, 20th percentile, 40th percentile, 60th percentile, 80th percentile, and 100th percentile</p>
+<p>For instance, we may want to know what the 25th percentile of market income is in this dataset. That is, what is the value of market income for which 25% of the recorded observations for market income are less than this value. We can use the <code>quantile()</code> function in R to find this.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># find the 25th percentile of market income</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">quantile</span>(census_data<span class="sc">$</span>mrkinc)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>From our output, we can see that our 25th percentile is 22,000. That is, 25% of the people in this dataset have a recorded market income less than 22,000. Further, we can see that this general <code>quantile()</code> function outputs all of the quartiles of the <code>mrkinc</code> variable (including the 0th percentile, which we can interpret as the minimum value, and the 100th percentile, which we can interpret as the maximum value). This is the default format of the <code>quantile()</code> function. If we want to find <em>specific</em> percentiles, we can specify an additional argument to the function. For example, we may want to find the 33rd percentile of market income.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># find the 33rd percentile of market income</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">quantile</span>(census_data<span class="sc">$</span>mrkinc, <span class="fl">0.33</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We may even want to find a series of percentiles. We can pass a vector to the <code>quantile()</code> function to achieve this.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># find the 40th and 80th percentiles of market income</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">quantile</span>(census_data<span class="sc">$</span>mrkinc, <span class="fu">c</span>(<span class="fl">0.4</span>, <span class="fl">0.8</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The picture below helps to visualize percentiles more clearly. It includes quartiles and a series of other details, including the <strong>interquartile range</strong>, which is the difference between the 75th and 25th percentiles.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/iqr_diagram.png" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">Interquartile range diagram showing minimum, 25th percentile, median, 75 percentile and maximum</figcaption>
+</figure>
+</div>
+<p>One incredibly helpful tool is Tukey’s <strong>five number summary</strong>; it includes the minimum, 25th percentile, median, 75th percentile, and maximum. To find this, we can call the <code>fivenum()</code> function, which takes in a set of data and returns the five statistics listed above. Try it below.</p>
+<blockquote class="blockquote">
+<p><strong>Question</strong>: Does the output look familiar? How?</p>
+</blockquote>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fivenum</span>(census_data<span class="sc">$</span>mrkinc)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="boxplots" class="level3">
+<h3 class="anchored" data-anchor-id="boxplots">Boxplots</h3>
+<p>Sometimes, we might want to visualize this summary in a diagram. We can use a visualization called a <strong>boxplot</strong> to graphically represent the central tendency, spread and skewness of numerical data. There are a variety of different variations of the boxplot, but in R the default to create a diagram where:</p>
+<ul>
+<li>The box represents the interquartile ranges; i.e.&nbsp;the 25th and 75th percentile.</li>
+<li>The bold line inside the box represents the median</li>
+<li>The lines outside the box (called the “whiskers”) are the either the min and max, or 1.5 times the interquartile. Values which exceed this distance are drawn as points, and are described as “outliers”.</li>
+<li>You can change this behaviour by setting <code>range = 0</code>; in this case, the whiskers extend to the min and max, and the boxplot depicts the five number summary. The default is <code>range = 1.5</code>.</li>
+</ul>
+<p>To make this plot, we simply invoke the <code>boxplot()</code> function. This outputs a box which captures the interquartile range, with the median value marked as a bold line inside the box. In this way, the boxplot represents the quartiles of a dataset and how the data is distributed more generally.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Just to make the boxplot look visually appealing, we have removed income values</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co"># above 120k and below 0. </span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>census_data2 <span class="ot">&lt;-</span> census_data <span class="sc">%&gt;%</span> </span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>                <span class="fu">filter</span>(mrkinc <span class="sc">&lt;</span> <span class="dv">120000</span>, mrkinc <span class="sc">&gt;</span> <span class="dv">0</span>)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="fu">boxplot</span>(census_data2<span class="sc">$</span>mrkinc)</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="fu">fivenum</span>(census_data2<span class="sc">$</span>mrkinc)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="mode" class="level2">
+<h2 class="anchored" data-anchor-id="mode">Mode</h2>
+<p>The last common measure of central tendency is the <strong>mode</strong>. The mode is the most common value a variable takes on in a dataset. For example, if a variable takes on values of 1, 6, 2, 3, 2, and 4, the mode of this variable is 2. If two different values are <em>equally</em> represented as the most common value, there will be multiple modes. In this way, it is possible that the mode can be described as <em>more</em> than one value.</p>
+<p>Let’s try the <code>mode()</code> function in R to see if we can find this statistic in our <code>mrkinc</code> variable.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># find the mode of mrkinc</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mode</span>(census_data<span class="sc">$</span>mrkinc)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We see that <code>mode()</code> doesn’t return a value for the mode, but instead returns the data type of the mode itself, which in this case is numeric. Unfortunately, R does not have a simple mode function like it does for the previous statistics. We must instead resort to either defining our own functions to find the mode, or even installing and importing new packages to help us. One possible method of finding the mode is seen below.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># create a function which finds the mode</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>findmode <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    ux <span class="ot">&lt;-</span> <span class="fu">unique</span>(x)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    ux[<span class="fu">which.max</span>(<span class="fu">tabulate</span>(<span class="fu">match</span>(x, ux)))]</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="co"># call this function to find the mode of mrkinc</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="fu">findmode</span>(census_data<span class="sc">$</span>mrkinc)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="summary" class="level2">
+<h2 class="anchored" data-anchor-id="summary">Summary</h2>
+<p>The <strong>mean</strong> is a stand-by measure of central tendency which tells us our average value for a variable. The <strong>median</strong> tells us what value splits our dataset in half for a given variable, while <strong>percentiles</strong> allow us to hone in on dissecting the distribution of values for a variable in our dataset in more detail.</p>
+<p>It is perhaps unsurprising that R does not have an easy built-in function for finding the <strong>mode</strong>, given that the mode is generally much less useful than our other statistics. One way that the mode can be a deceiving statistic is in instances of <strong>top coding</strong>. This is where any values above a given threshold are reported as simply at that threshold.</p>
+<blockquote class="blockquote">
+<p>For example, suppose the survey used to collect our <code>mrkinc</code> variable offered a range of incomes for participants to select - but only up to 110,000 - after which, anyone with a market income higher than 110,000 was described as having an income of 110,000. This could make $110,000 by far the most commonly reported value for <code>mrkinc</code>. In this case, these wealthy people in the population would skew the mode, rendering this measure of central tendency to be misleading since it prompts us to interpret the survey threshold as a very common value of <code>mrkinc</code> in the data. If you take ECON 326, you will see how top coding is dealt with, including by redefining these observations or dropping them altogether.</p>
+</blockquote>
+<p>For these reasons, we will stick to the mean, median and percentiles as we move forward with applications and further elaboration. While it is important to understand what the mode is, it is not particularly important for our general analysis of central tendency.</p>
+<section id="exercise---1-2" class="level3">
+<h3 class="anchored" data-anchor-id="exercise---1-2">Exercise - 1 &amp; 2</h3>
+<p>Find the mean and median values of <code>wages</code>, to 2 decimal places if necessary. Be sure to remove missing observations first.</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># your code here</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>answer_1 <span class="ot">&lt;-</span> <span class="co"># your answer for the mean here</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>answer_2 <span class="ot">&lt;-</span> <span class="co"># your answer for the median here</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="fu">test_1</span>()</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="fu">test_2</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+</section>
+<section id="exercise---3" class="level3">
+<h3 class="anchored" data-anchor-id="exercise---3">Exercise - 3</h3>
+<p>Using what we’ve learned so far, graph the distribution of values of the <code>wages</code> variable. Use this graph to help you answer the following question: <em>Which of the following measures of central tendency is most apt to report for the central tendency of this variable?</em></p>
+<ul>
+<li>A: mean</li>
+<li>B: median</li>
+<li>C: mode</li>
+</ul>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>answer_3 <span class="ot">&lt;-</span> <span class="st">"X"</span> <span class="co"># replace X with your answer of A, B, or C here</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_3</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+<p><span style="color: red;">Explain your reasoning here:</span></p>
+</section>
+<section id="exercise---4" class="level3">
+<h3 class="anchored" data-anchor-id="exercise---4">Exercise - 4</h3>
+<p>What is the interquartile range of the <code>wages</code> variable?</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># your code here</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>answer_4 <span class="ot">&lt;-</span> <span class="co"># your answer here</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="fu">test_4</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+</section>
+</section>
+<section id="part-2-applications-and-further-points" class="level2">
+<h2 class="anchored" data-anchor-id="part-2-applications-and-further-points">Part 2: Applications and Further Points</h2>
+<p>Now that we have a basic understanding of the main measures of central tendency, let’s look at their practicalities, both from a data analysis and R standpoint.</p>
+<section id="distributions" class="level3">
+<h3 class="anchored" data-anchor-id="distributions">Distributions</h3>
+<p>As was alluded to earlier, the mean and median are usually not the same value. A clear case where they are the same, however, is when our data follows a perfectly symmetric distribution. This means that the probability of seeing any one value for a variable decreases in a near identical fashion outward from the 50th percentile (the median). As a result, the average value of the dataset is equal to this median value, meaning that the mean and median are the same. One common example of this is the standard normal distribution, a classic symmetric distribution. We will delve further into different types of distributions in the upcoming Variation notebook. For now, you can run the code cell below to see an example of a standard normal distribution that we have randomly created using functions in R.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Don't worry about the specifics of this cell, just run the code.</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">124</span>)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">4</span>, <span class="fl">0.1</span>)</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(x, <span class="fu">dnorm</span>(x, <span class="dv">2</span>, <span class="fl">0.5</span>), <span class="at">type =</span> <span class="st">"l"</span>, <span class="at">xlab=</span><span class="st">""</span>, <span class="at">ylab=</span><span class="st">""</span>)</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="co"># This does not plot standard normal distribution</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The above distribution is normally distributed and symmetric. We can see that the probability of seeing an observation with a specific value is largest at 2. Since the probability of seeing observations above and below it falls outward in a completely symmetric fashion, we should expect 50% of our observations to be above and below this point. We should also expect it to then be the average value. Thus, 2 is both the mean and median of the data. <strong><em>However, in the real world, many variables do not follow such a nicely symmetric distribution.</em></strong> Let’s look at our market income variable for an example.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># plot the histogram of mrkinc</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="co"># There are two ways of doing this! If you want to try both ways, swap the "#" in the statements below</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="co"># hist(census_data$mrkinc, breaks=100, freq=TRUE, col="purple", xlab="Market Income", ylab="Number of Observations", main="")</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(census_data, <span class="fu">aes</span>(<span class="at">x=</span>mrkinc)) <span class="sc">+</span> </span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>       <span class="fu">geom_histogram</span>(<span class="at">bins=</span><span class="dv">100</span>) <span class="sc">+</span> </span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>       <span class="fu">xlab</span>(<span class="st">"Market Income"</span>) <span class="sc">+</span> </span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>       <span class="fu">ylab</span>(<span class="st">"Number of Observations"</span>) <span class="sc">+</span> </span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>       <span class="fu">ggtitle</span>(<span class="st">"Histogram of Market Incomes"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>This is a <strong>histogram</strong>. It shows us the number of observations with values in different market income groupings. From the output above, we can see that the data here for market income does not follow a nicely symmetric pattern. Instead, it appears that there are many more observations toward the lower end of market income (taller bars for each grouping), and then many much smaller groups extending far outward to the right end of high market incomes.</p>
+</section>
+</section>
+<section id="skewness" class="level2">
+<h2 class="anchored" data-anchor-id="skewness">Skewness</h2>
+<p>The graph above is an example of a <strong>right-skewed distribution</strong>. A right-skewed distribution is an asymmetric distribution which has a long right tail for its histogram. Typically, a right-skewed distribution has a mean larger than its median. We can understand why this is the case by looking at the histogram above. There are many observations for small levels of market income (exemplified by the tall bar groupings on the left-hand side of the diagram). This means that many people have low market incomes. As a result, when moving leftward from small to large values of <code>mrkinc</code>, the median appears quite quickly, representing the 50th percentile being at quite a low level of market income. The mean will be much larger, as it is an averaging of <code>mrkinc</code> values and is such is being skewed upward by the few incredibly values. This aligns with the calculations for the mean and median we did earlier, wherein the mean was about $16,000 more than the median.</p>
+<p>Unfortunately, we do not have any variables in this dataset which exhibit a <strong>left-skewed distribution</strong>, an asymmetric distribution which has a long left tail for its histogram. However, you can imagine exactly the opposite logic applying in this case. A long tail on the left-hand side of the histogram signifies many observations with high values recorded for a given variable. Thus, in this case, the median is much higher than the mean, indicative of the large value at which we finally reach the 50th percentile.</p>
+<p>At this point, you may be wondering: if the mean and median are so often different, are they both useful measures of central tendency? The answer to this question depends on the situation. From the example with <code>mrkinc</code> above, we noticed that a large majority of individuals in the data set had a market income falling among the lower collection of values. Meanwhile, the mean was being artificially raised by the incredibly high market incomes of a few individuals in the outer right regions of our histogram. In this case, it makes more sense to report the median as a measure of central tendency, since it more accurately captures the income distribution of the vast majority of the population. This is why we often hear median household income reported as opposed to mean.</p>
+<p>More specifically, we prefer to report the median here because a few values for <code>mrkinc</code> were <strong>outliers</strong> in our data set, extreme observations which are either much larger or much smaller than the other observations present. Outliers skew our calculation of the mean and pull it closer to the extremes, yet do much less damage to our calculation of the median, so we prefer to report the median when many outliers are present. Conversely, we can also simply remove the outliers from our data and then report the mean for our newly “untainted” distribution. This should be done carefully and only with justification. We can see how our histogram for <code>mrkinc</code> changes when this is done below.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># remove outliers from mrkinc (mrkinc &gt; 150000) and plot a histogram of the results</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>census_data <span class="ot">&lt;-</span> <span class="fu">filter</span>(census_data, census_data<span class="sc">$</span>mrkinc <span class="sc">&gt;</span> <span class="dv">0</span> <span class="sc">&amp;</span> census_data<span class="sc">$</span>mrkinc <span class="sc">&lt;</span> <span class="dv">200000</span>)</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="co"># hist(census_data$mrkinc, freq=TRUE, col="purple", xlab="Market Income", ylab="Number of Observations", main="")</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(census_data, <span class="fu">aes</span>(<span class="at">x=</span>mrkinc)) <span class="sc">+</span> <span class="fu">geom_histogram</span>()  <span class="sc">+</span> <span class="fu">xlab</span>(<span class="st">"Market Income"</span>) <span class="sc">+</span> <span class="fu">ylab</span>(<span class="st">"Number of Observations"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>In all cases, a good rule of thumb is the following: <em>if your data is symmetrically distributed and there aren’t any outliers, the mean is generally the best measure of central tendency. If your data is skewed (i.e.&nbsp;right or left skewed) or has many outliers, reporting the median is generally preferable.</em> No matter what, we should always keep in mind our economic intuition of the variable and context when making the decision of how to report central tendency. We may even decide it is best to just report both, as well as the most commonly reported quantiles (typically quartiles).</p>
+<p>Beyond the normal and skewed distributions we have generated above, there is one special distribution which, like the standard normal distribution, has an equal mean and median: the <strong>uniform distribution</strong>. A uniform distribution is a distribution in which every possible value for a variable appears with the same frequency, meaning, every value the variable can take on is equally likely to occur. This case is nice, since we don’t have to worry about choosing whether to report the mean or median when measuring central tendency: they are the same. Run the code cell below to see an example of roughly how a uniform distribution looks.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># plot the histogram of ppsort</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="co">#hist(census_data$ppsort, breaks=100, freq=TRUE, col="purple", xlab="ppsort", ylab="Number of Observations", main="")</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(census_data, <span class="fu">aes</span>(<span class="at">x=</span>ppsort)) <span class="sc">+</span> <span class="fu">geom_histogram</span>(<span class="at">bins=</span><span class="dv">100</span>)  <span class="sc">+</span> <span class="fu">xlab</span>(<span class="st">"ppsort"</span>) <span class="sc">+</span> <span class="fu">ylab</span>(<span class="st">"Number of Observations"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The above uniform distribution is for the variable <code>ppsort</code>, a unique ID for each observation in our dataset. Since every bar grouping of <code>ppsort</code> has a roughly equal number of observations to match, we can see that the mean of this variable should be at about the halfway point of the distribution, which is also the 50th percentile (the median). Thus, our mean and median are roughly identical. <em>However, the mean and median of <code>ppsort</code> are not economically useful</em>. This variable is simply an identifier. It was chosen solely for visual purposes, since it is the only variable in the dataset which exhibits a roughly uniform distribution. Its mean and median do not inherently tell us anything important about this census dataset. This brings us to one final point: interpretation of measures of central tendency for different variables.</p>
+</section>
+<section id="interpretation-of-measures-of-central-tendency-for-different-variables" class="level2">
+<h2 class="anchored" data-anchor-id="interpretation-of-measures-of-central-tendency-for-different-variables">Interpretation of Measures of Central Tendency for Different Variables</h2>
+<p>One common type of variable we come across is <strong>categorical variables</strong>. These variables take on one of a discrete number of values, each of which represent specific “categories” or information for that variable. We cannot typically report the mean or median for these variables. This is because these variables do not take on a continuous range of numerical values. They instead take on either a discrete number of numerical values (oftentimes in no meaningful order and not evenly spaced), or they are hard-coded as characters on which no mathematical operations can be done. In these cases, our most meaningful measure of central tendency is to report the mode; if the number of categories is small enough, we may also simply choose to report the frequency (number of observations) for each category. In either case, plotting a graph such as a bar chart is a convenient way to both show the mode to us immediately (it will be the category with the most observations) and how many observations take on each categorical value. An example is below.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># plot a bar chart of pr (province of residence of respondents) using visualization tools learned previously</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(census_data, <span class="fu">aes</span>(<span class="at">x=</span><span class="fu">factor</span>(pr))) <span class="sc">+</span> </span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="fu">geom_bar</span>(<span class="at">fill=</span><span class="st">"purple"</span>) <span class="sc">+</span> </span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="fu">xlab</span>(<span class="st">"Province of Residence"</span>) <span class="sc">+</span> </span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">90</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The graph above plots the frequency of each type of <code>pr</code> value, where the <code>pr</code> variable corresponds to province of residence. From this graph, we could see that the “mode” value of <code>pr</code> is Ontario. This makes sense because Ontario is the most populous province in Canada. If we were to try to “calculate” a mean or median for this variable, it would not mean much. Thus, for many categorical variables, we can present charts such as these to help determine the mode observation and also represent central tendency.</p>
+</section>
+<section id="dummy-variables" class="level2">
+<h2 class="anchored" data-anchor-id="dummy-variables">Dummy Variables</h2>
+<p>There is one special type of categorical variable called a <strong>dummy variable</strong>. These are variables that take on one of 2 (usually arbitrary) values. Typically, they are the response to a binary question and represent an answer of “Yes” or “No” to that question. One example is the <code>pkids</code> variable. This variable takes on values of 1 and 0, which correspond to answers to the question “Does this individual belong to a household with any children?”. The value 1 represents the answer “Yes”, while 0 represents the answer “No”. To investigate this dummy variable more carefully, let’s remove missing observations as we have done before. In this case, using the <code>glimpse()</code> function, we can see that <code>NA</code> has been coded with the value 9, so let’s remove observations with this value. If you take ECON 326, you’ll get to work more with dummy variables!</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># glimpse the function to see how missing observations are stored</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(census_data<span class="sc">$</span>pkids)</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="co"># filter out missing observations for pkids</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>census_data <span class="ot">&lt;-</span> <span class="fu">filter</span>(census_data, census_data<span class="sc">$</span>pkids <span class="sc">!=</span> <span class="dv">9</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Now we have a variable which only takes on values of 1 or 0, the most common format for dummy variables. For these variables, the mean is quite interesting. Let’s find it below.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># calculate the mean of pkids</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(census_data<span class="sc">$</span>pkids)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We can see that the mean of <code>pkids</code> is about 0.7. Let’s think about this. The mean is found by summing up all observations for a variable and then dividing by the total number of observations. In this case, we are summing up individual values of 0 and 1, then dividing by the total number of observations we have in the data set. Since values of 0 will not factor into this addition, our final sum will capture the sum of all the 1s in the data set. This number is thus a representation of the number of people who responded “Yes” to the question “Do you belong to a household with any children?”. Since we always divide this sum by the total number of observations to get our mean, this mean represents the ratio or percentage of the data set who belong to a household with some children. In this case, about 70% of respondents in the data set belong to a household with some children. For dummy variables, the median is not very helpful, since it simply represents a value at which 50% of observations record a lower value. In this case, observations can only take on one of two values, so the median does not provide us much intuitive information. The mean is much more useful in this case.</p>
+<section id="exercise-4" class="level3">
+<h3 class="anchored" data-anchor-id="exercise-4">Exercise 4</h3>
+<p>Use the <code>glimpse()</code> function to inspect the newly created <code>bilingual</code> dummy variable, then use that variable to answer this question: what percentage of people in the dataset are bilingual? Answer to <strong>1</strong> decimal place.</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># your code here</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>census_data <span class="ot">&lt;-</span> census_data <span class="sc">%&gt;%</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>                <span class="fu">mutate</span>(<span class="at">bilingual =</span> <span class="fu">case_when</span>(</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>                        fol <span class="sc">==</span> <span class="dv">1</span> <span class="sc">~</span> <span class="dv">0</span>,</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>                        fol <span class="sc">==</span> <span class="dv">2</span> <span class="sc">~</span> <span class="dv">0</span>,</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>                        fol <span class="sc">==</span> <span class="dv">3</span> <span class="sc">~</span> <span class="dv">1</span>,</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>                        fol <span class="sc">==</span> <span class="dv">4</span> <span class="sc">~</span> <span class="dv">0</span>))</span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(census_data<span class="sc">$</span>bilingual)</span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(census_data<span class="sc">$</span>bilingual)</span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a><span class="co"># your code here</span></span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>answer_5 <span class="ot">&lt;-</span> <span class="co"># your answer here</span></span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a><span class="fu">test_5</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+</section>
+<section id="exercise-5" class="level3">
+<h3 class="anchored" data-anchor-id="exercise-5">Exercise 5</h3>
+<p>With the help of the variable <code>agegrp</code>, use a graph to answer the following question: what is the most common age group of participants recorded in the dataset? Use the <code>unique()</code> function to help you see how each <code>agegrp</code> category is coded.</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># KEY</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="co">#1 0 to 4 years</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="co">#2 5 to 6 years</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="co">#3 7 to 9 years</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="co">#4 10 to 11 years</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a><span class="co">#5 12 to 14 years</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a><span class="co">#6 15 to 17 years</span></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a><span class="co">#7 18 to 19 years</span></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a><span class="co">#8 20 to 24 years</span></span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a><span class="co">#9 25 to 29 years</span></span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a><span class="co">#10 30 to 34 years</span></span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a><span class="co">#11 35 to 39 years</span></span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a><span class="co">#12 40 to 44 years</span></span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a><span class="co">#13 45 to 49 years</span></span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a><span class="co">#14 50 to 54 years</span></span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a><span class="co">#15 55 to 59 years</span></span>
+<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a><span class="co">#16 60 to 64 years</span></span>
+<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a><span class="co">#17 65 to 69 years</span></span>
+<span id="cb23-19"><a href="#cb23-19" aria-hidden="true" tabindex="-1"></a><span class="co">#18 70 to 74 years</span></span>
+<span id="cb23-20"><a href="#cb23-20" aria-hidden="true" tabindex="-1"></a><span class="co">#19 75 to 79 years</span></span>
+<span id="cb23-21"><a href="#cb23-21" aria-hidden="true" tabindex="-1"></a><span class="co">#20 80 to 84 years</span></span>
+<span id="cb23-22"><a href="#cb23-22" aria-hidden="true" tabindex="-1"></a><span class="co">#21 85 years and over</span></span>
+<span id="cb23-23"><a href="#cb23-23" aria-hidden="true" tabindex="-1"></a><span class="co">#88 Not available</span></span>
+<span id="cb23-24"><a href="#cb23-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-25"><a href="#cb23-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-26"><a href="#cb23-26" aria-hidden="true" tabindex="-1"></a><span class="co"># your code here</span></span>
+<span id="cb23-27"><a href="#cb23-27" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(census_data, <span class="fu">aes</span>(<span class="at">x=</span><span class="fu">factor</span>(agegrp))) <span class="sc">+</span> </span>
+<span id="cb23-28"><a href="#cb23-28" aria-hidden="true" tabindex="-1"></a><span class="fu">geom_bar</span>(<span class="at">fill=</span><span class="st">"purple"</span>) <span class="sc">+</span> </span>
+<span id="cb23-29"><a href="#cb23-29" aria-hidden="true" tabindex="-1"></a><span class="fu">xlab</span>(<span class="st">"age group"</span>) <span class="sc">+</span> </span>
+<span id="cb23-30"><a href="#cb23-30" aria-hidden="true" tabindex="-1"></a><span class="fu">ggtitle</span>(<span class="st">"Age Group Histogram"</span>)</span>
+<span id="cb23-31"><a href="#cb23-31" aria-hidden="true" tabindex="-1"></a><span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">90</span>))</span>
+<span id="cb23-32"><a href="#cb23-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-33"><a href="#cb23-33" aria-hidden="true" tabindex="-1"></a><span class="co"># unique(census_data$agegrp)</span></span>
+<span id="cb23-34"><a href="#cb23-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-35"><a href="#cb23-35" aria-hidden="true" tabindex="-1"></a>answer_6 <span class="ot">&lt;-</span> <span class="st">"X to Y years"</span> <span class="co"># replace X and Y for your answer to the age group ranging from X to Y here</span></span>
+<span id="cb23-36"><a href="#cb23-36" aria-hidden="true" tabindex="-1"></a><span class="fu">digest</span>(answer_6)</span>
+<span id="cb23-37"><a href="#cb23-37" aria-hidden="true" tabindex="-1"></a><span class="co">#test_6()</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+<p><span style="color: red;">What is the statistical name for this figure? Would other common measures of central tendency be appropriate to report for this question? Answer here:</span></p>
+</section>
+<section id="exercise-6" class="level3">
+<h3 class="anchored" data-anchor-id="exercise-6">Exercise 6</h3>
+<p>Given the following potential variables that have been hypothetically measured,<br>
+which measure of central tendency would best suit the following variables.</p>
+<ol type="1">
+<li>An <code>veteran</code> variable wherein 1 indicates that the individual is a veteran and 0 otherwise<br>
+</li>
+<li>A <code>education</code> variable where there are distinct categories (i.e.&nbsp;High School Education, Bachelor’s Degree, Master’s Degree, etc…)<br>
+</li>
+<li>A <code>height</code> variable indicating the height of each individual<br>
+</li>
+<li>A <code>wealth</code> variable indicating the net worth of an individual</li>
+</ol>
+<p>A. mean<br>
+B. median<br>
+C. mode</p>
+<p>Answer with a sequence of letters corresponding the best measure of central tendency that would fit each of the aforementioned variables. Example: “AAAA”</p>
+<div class="cell" data-tags="question">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>answer_7 <span class="ot">&lt;-</span> <span class="st">""</span> <span class="co">#your answer here</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_7</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-tags="answer">
+
+</div>
+
+
+</section>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, function() {
+      let href = xref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children.length > 2) {
+          for (let i = 0; i < 2; i++) {
+            container.appendChild(note.children[i].cloneNode(true));
+          }
+          return container.innerHTML
+        } else {
+          return note.innerHTML;
+        }
+      } else {
+        return note.innerHTML;
+      }
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+          // target, if specified
+          link.setAttribute("target", "_blank");
+      }
+    }
+});
+</script>
+<nav class="page-navigation column-body">
+  <div class="nav-page nav-page-previous">
+      <a href="../../../docs/econ_325/07_visualization_2/intro_to_visualization2.html" class="pagination-link">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">3 - Visualization II</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../../../docs/econ_325/02_dispersion_and_dependence/dispersion_and_dependence.html" class="pagination-link">
+        <span class="nav-page-text">5 - Dispersion and Dependence</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item">
+ <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/80x15.png"></a>.  <a rel="license" href="https://comet.arts.ubc.ca/pages/copyright.html">See details.</a>
+  </li>  
+</ul>
+    </div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item">
+ The COMET Project and the UBC Vancouver School of Economics are located on the traditional, ancestral and unceded territory of the xʷməθkʷəy̓əm (Musqueam) and Sḵwx̱wú7mesh (Squamish) peoples.
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+</body></html>

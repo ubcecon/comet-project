@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-GB" xml:lang="en-GB"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.36">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="keywords" content="economics, econometrics, R, data, machine learning, UBC, COMET, geog 374, econ 325, econ 326, learning, teaching, learn r, r help, help, tutorial, r tutorial for beginners,learning statistics with r, learn r programming, learn statistics, linear regression, r machine learning, learn machine learning, university of british columbia, british columbia, r programming for beginners, r language tutorial, r tutorial for beginners, economic data, econometrics tutoring, economics help for students, economics homework help, oer resources for teachers, open educational resources for teachers, educational resource, oer project, oer materials, oer resources, learn economics online, learn econometrics, teach yourself economics, teach yourself econometrics, econometrics basics for beginners">
+
+<title>COMET - GEOG 374: ANOVA - Nesting Tree Characteristics of the Northern Spotted Owl</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<link href="../../../docs/geog_374/Lab_06_Ttest/Lab_06_Ttest.html" rel="next">
+<link href="../../../docs/geog_374/index_374.html" rel="prev">
+<link href="../../../media/comet_favicon.png" rel="icon" type="image/png">
+<script src="../../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<link rel="stylesheet" href="../../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a href="../../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../../media/logo_no_tiny_text.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">COMET</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../index.html" rel="" target=""><i class="bi bi-house-door" role="img">
+</i> 
+ <span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-get-started" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Get Started</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-get-started">    
+        <li>
+    <a class="dropdown-item" href="../../../pages/quickstart.html" rel="" target="">
+ <span class="dropdown-text">Quickstart Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../pages/installing_locally.html" rel="" target="">
+ <span class="dropdown-text">Install and Use COMET</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/intro_jupyter/intro_to_jupyter.html" rel="" target="">
+ <span class="dropdown-text">Learn about Jupyter</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/intro_r/introduction_to_R.html" rel="" target="">
+ <span class="dropdown-text">Learn about R</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/econ_prep/Introduction to Statistical Concepts.html" rel="" target="">
+ <span class="dropdown-text">Review High School Statistics</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-basics" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Basics</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-basics">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/index_intro.html" rel="" target="">
+ <span class="dropdown-text">Preliminary Material</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_325/index_325.html" rel="" target="">
+ <span class="dropdown-text">Introduction to Econometrics (ECON 325)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_intro/econ_prep/Introduction to Statistical Concepts.html" rel="" target="">
+ <span class="dropdown-text">Review of Statistics</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-fundamentals" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Fundamentals</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-fundamentals">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_326/index_326.html" rel="" target="">
+ <span class="dropdown-text">Introduction to Empirical Models (ECON 326)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/geog_374/index_374.html" rel="" target="">
+ <span class="dropdown-text">Geographic Computation (GEOG 374)</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-projects" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Projects</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-projects">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_490/index_490.html" rel="" target="">
+ <span class="dropdown-text">Overview of ECON 490</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_490/index_490_r.html" rel="" target="">
+ <span class="dropdown-text">R Modules</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_490/index_490_stata.html" rel="" target="">
+ <span class="dropdown-text">STATA Modules</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-advanced" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Advanced</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-advanced">    
+        <li>
+    <a class="dropdown-item" href="../../../docs/econ_adv/index_adv.html" rel="" target="">
+ <span class="dropdown-text">Advanced Topics</span></a>
+  </li>  
+    </ul>
+  </li>
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-launch-comet" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+      <i class="bi bi-play" role="img">
+</i> 
+ <span class="menu-text">Launch COMET</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-launch-comet">    
+        <li>
+    <a class="dropdown-item" href="https://open.jupyter.ubc.ca/jupyter/hub/user-redirect/git-pull?repo=https%3A%2F%2Fgithub.com%2Fubcecon%2Fcomet-project&amp;urlpath=lab%2Ftree%2Fcomet-project%2F&amp;branch=main" rel="" target=""><i class="bi bi-cloud-check" role="img">
+</i> 
+ <span class="dropdown-text">Launch on JupyterOpen</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://ubc.syzygy.ca/jupyter/hub/user-redirect/git-pull?repo=https%3A%2F%2Fgithub.com%2Fubcecon%2Fcomet-project&amp;urlpath=lab%2Ftree%2Fcomet-project%2F&amp;branch=main" rel="" target=""><i class="bi bi-gear" role="img">
+</i> 
+ <span class="dropdown-text">Launch on Syzygy</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://colab.research.google.com/github/ubcecon/comet-project/blob/main/" rel="" target=""><i class="bi bi-google" role="img">
+</i> 
+ <span class="dropdown-text">Launch on Collab</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://github.com/ubcecon/comet-project/archive/refs/heads/main.zip" rel="" target=""><i class="bi bi-cloud-download" role="img">
+</i> 
+ <span class="dropdown-text">Launch Locally</span></a>
+  </li>  
+        <li><hr class="dropdown-divider"></li>
+        <li>
+    <a class="dropdown-item" href="https://github.com/ubcecon/comet-project/archive/refs/heads/data-only.zip" rel="" target=""><i class="bi bi-clipboard-data" role="img">
+</i> 
+ <span class="dropdown-text">Project Datasets</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="../../../#" rel="" target="">
+ <span class="menu-text">|</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-about" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">About</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-about">    
+        <li>
+    <a class="dropdown-item" href="../../../pages/team.html" rel="" target="">
+ <span class="dropdown-text">COMET Team</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../pages/using_comet.html" rel="" target="">
+ <span class="dropdown-text">Teach With COMET</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../pages/copyright.html" rel="" target="">
+ <span class="dropdown-text">Copyright Information</span></a>
+  </li>  
+    </ul>
+  </li>
+</ul>
+            <div class="quarto-navbar-tools">
+</div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../docs/geog_374/index_374.html">Geographic Computation</a></li><li class="breadcrumb-item"><a href="../../../docs/geog_374/Lab_02_ANOVA/Lab_02_ANOVA.html">ANOVA Methods</a></li></ol></nav>
+      <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+      </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation docked overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_326/index_326.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Methods Of Empirical Research In Economics (ECON 326)</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true">
+ <span class="menu-text">Method Modules</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_326/review/review_of_basic_stats.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Review of Econometrics</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_326/simple_regression/simple_regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Simple Regression</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_326/multiple_regression/multiple_regression1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Multiple Regression</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_326/issues_in_regression/issues_in_regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Issues in Regression</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_326/interactions/interactions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Interactions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/econ_326/project/project_1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Example Project</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="px-0"><hr class="sidebar-divider hi "></li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true">
+ <span class="menu-text">Geographic Computation</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/geog_374/index_374.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Geographic Computation (GEOG 374)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/geog_374/Lab_02_ANOVA/Lab_02_ANOVA.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">ANOVA Methods</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/geog_374/Lab_06_Ttest/Lab_06_Ttest.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="math inline">\(t\)</span>-test Methods</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/geog_374/Lab_05_Chisquare/Lab_05_Chisquare.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Chi-squared Tests</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../docs/geog_374/Lab_03_Regression/Lab_03_Regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Regression Methods</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#outline" id="toc-outline" class="nav-link active" data-scroll-target="#outline">Outline</a>
+  <ul class="collapse">
+  <li><a href="#prerequisites" id="toc-prerequisites" class="nav-link" data-scroll-target="#prerequisites">Prerequisites</a></li>
+  <li><a href="#outcomes" id="toc-outcomes" class="nav-link" data-scroll-target="#outcomes">Outcomes</a></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
+  </ul></li>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#data" id="toc-data" class="nav-link" data-scroll-target="#data">Data</a></li>
+  <li><a href="#part-1-key-concepts" id="toc-part-1-key-concepts" class="nav-link" data-scroll-target="#part-1-key-concepts">Part 1: Key Concepts</a>
+  <ul class="collapse">
+  <li><a href="#one-way-analysis-of-variance-anova" id="toc-one-way-analysis-of-variance-anova" class="nav-link" data-scroll-target="#one-way-analysis-of-variance-anova">One-Way Analysis of Variance (ANOVA)</a></li>
+  <li><a href="#post-hoc-tukey-test" id="toc-post-hoc-tukey-test" class="nav-link" data-scroll-target="#post-hoc-tukey-test">Post-hoc Tukey Test</a></li>
+  </ul></li>
+  <li><a href="#part-2-lab-exercises" id="toc-part-2-lab-exercises" class="nav-link" data-scroll-target="#part-2-lab-exercises">Part 2: Lab Exercises</a>
+  <ul class="collapse">
+  <li><a href="#exercise-1-descriptive-statistics" id="toc-exercise-1-descriptive-statistics" class="nav-link" data-scroll-target="#exercise-1-descriptive-statistics">Exercise 1: Descriptive Statistics</a></li>
+  <li><a href="#exercise-2-analysis-of-variance-anova" id="toc-exercise-2-analysis-of-variance-anova" class="nav-link" data-scroll-target="#exercise-2-analysis-of-variance-anova">Exercise 2: Analysis of Variance (ANOVA)</a></li>
+  </ul></li>
+  </ul>
+<div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/ubcecon/comet-project/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
+    </div>
+<!-- main -->
+<main class="content column-body" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">GEOG 374: ANOVA - Nesting Tree Characteristics of the Northern Spotted Owl</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<ul>
+<li><strong>Authors</strong>: Hewitt Lab (Kevin Pierce, Nina Hewitt and Micheal Jerowsky) <span class="math inline">\(\times\)</span> COMET Team (Charlotte White, and Jonathan Graves)</li>
+<li><strong>Last Update</strong>: 9 September 2023</li>
+</ul>
+<p>This module has a suggested citation of:</p>
+<blockquote class="blockquote">
+<p>Pierce, K., Hewitt, N., Jerowsky, M., 2023. <em>Interactive Notebooks for Statistics and Computation in Geography: Nesting Tree Characteristics of the Northern Spotted Owl</em>. In Adshade et al.&nbsp;2023. <em>The COMET Project: Creating Online Materials for Econometrics Teaching</em>. https://comet.arts.ubc.ca/.</p>
+</blockquote>
+<section id="outline" class="level2">
+<h2 class="anchored" data-anchor-id="outline">Outline</h2>
+<section id="prerequisites" class="level3">
+<h3 class="anchored" data-anchor-id="prerequisites">Prerequisites</h3>
+<ul>
+<li>Introduction to Jupyter</li>
+<li>Introduction to R</li>
+<li>Introduction to Data</li>
+</ul>
+</section>
+<section id="outcomes" class="level3">
+<h3 class="anchored" data-anchor-id="outcomes">Outcomes</h3>
+<p>After completing this notebook, you will be able to: * Explore data to gain a better understanding of its content and structure. * Determine unique values of data, common values, and calculate the coefficient of variation. * Visualize data using a boxplot. * Conduct an analysis of variance (ANOVA) and post-hoc Tukey test.</p>
+</section>
+<section id="references" class="level3">
+<h3 class="anchored" data-anchor-id="references">References</h3>
+<ul>
+<li><a href="https://openstax.org/books/introductory-statistics/pages/13-introduction">Illowsky and Dean - Chapter 13: ANOVA</a></li>
+<li><a href="https://onlinestatbook.com/2/transformations/log.html">Lane - Chapter 16: Log Transformations</a></li>
+</ul>
+</section>
+</section>
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>In this lab, we will apply descriptive statistics, analysis of variance (ANOVA), and the Tukey post-hoc test to determine the types of trees that northern spotted owls prefer for nesting.</p>
+<p>The northern spotted owl is under extreme pressure in British Columbia due to forestry activities and competition from the barred owl, which only recently migrated to the area. Only <a href="https://www.cbc.ca/news/canada/british-columbia/spotted-owl-protections-bc-new-chick-breeding-program-1.5131548">six wild owls</a> have been confirmed to remain in BC, located exclusively within old growth forest in the lower Fraser Basin. This is thought to represent a decline of around 99% from their precolonial numbers. The BC government is attempting to protect remaining owl habitat and increase owl numbers through a <a href="https://www2.gov.bc.ca/gov/content/environment/plants-animals-ecosystems/species-ecosystems-at-risk/implementation/conservation-projects-partnerships/northern-spotted-owl">captive breeding and release program</a>.</p>
+<p>The image below shows northern spotted owls (2 adults and 3 juveniles) in two different types of nests. The left panel is a “top cavity” nest, while the right panel is a “platform” nest.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/nest.png" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">Spotted Owl with juveniles in a top cavity nest (Credit Jared Hobbs)</figcaption>
+</figure>
+</div>
+<p>The number of owls in Washington, Oregon, and California is much higher than in BC. In these regions, the owls are considered threatened (as the population is low and decreasing), but not endangered. To identify potential northern spotted owl habitat for protection from harvesting or barred owl colonization, it is necessary to characterize the features of ideal nesting trees for northern spotted owls.</p>
+</section>
+<section id="data" class="level2">
+<h2 class="anchored" data-anchor-id="data">Data</h2>
+<p>We will use a dataset that includes characteristics of nearly 2000 spotted owl nesting trees in Oregon, Washington, and California.</p>
+<p>To begin, let’s import our data and save it as a variable called <code>df</code>.</p>
+<div id="1c6a36ff-9947-469a-abf0-27752ccb2680" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"lab_02_tests.r"</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>df <span class="ot">=</span> <span class="fu">read.csv</span>(<span class="st">'../datasets/Lab_02_nestingTrees.csv'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>These data contain values for: * <strong>Site</strong>: The location where the nest was observed. “Olympic” – Olympic Peninsula, “Interior” – within the rain shadow of the Cascade mountain range, “CoastN” – Northern coast of Wa. and Northern Or., and “Coast S” – Southern coast of Southern Or. and Northern Ca.</p>
+<ul>
+<li><p><strong>Nest</strong>: The type of nest. “TopCavity” – a nest within the hollowed out cavity at the top of a broken tree, “SideCavity” – a nest within a cavity on the side of a tree, and “Platform” – a nest perched on the limbs of a tree.</p></li>
+<li><p><strong>DBH</strong>: The diameter at breast height of the nesting tree in <em>centimeters</em>.</p></li>
+<li><p><strong>Ht</strong>: The height of the nesting tree in <em>meters</em>.</p></li>
+<li><p><strong>Stage</strong>: The life stage of a tree on a scale between 1 and 7. Values of 1-2 represent living trees while 3-7 represent dead trees in progressive decay. The image below indicates the meaning of <code>Stage</code>. For Douglas-fir and western red cedar trees, stage 2 often represents trees of order of 500-1000 years old.</p></li>
+</ul>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/treedecay.png" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">Decay stages of trees (Credit Plos ONE)</figcaption>
+</figure>
+</div>
+</section>
+<section id="part-1-key-concepts" class="level2">
+<h2 class="anchored" data-anchor-id="part-1-key-concepts">Part 1: Key Concepts</h2>
+<section id="one-way-analysis-of-variance-anova" class="level3">
+<h3 class="anchored" data-anchor-id="one-way-analysis-of-variance-anova">One-Way Analysis of Variance (ANOVA)</h3>
+<p>A <strong>one-way ANOVA</strong> is used to determine if there is a statistically significant difference between three or more groups. This statistical test looks at the overall variability of data values in order to compare the equality of means. However, there are some basic assumptions that must be fulfilled before using this hypothesis test: * The populations from which the sample groups are taken are assumed to be normal. * Samples are randomly selected and independent. * The populations are assumed to have equal standard deviations (or variances).</p>
+<blockquote class="blockquote">
+<p><strong>Example:</strong> A researcher is interested in different approaches to weight loss and would like to determine if there is a difference between three different diets (ketogenic, low-carb and paleo). In order to test this, they randomly assign a group of 60 people to the three diets of interest and track their overall weight loss over a six-month period. The dependent variable is weight loss in this study, and the independent variable is diet type. The null hypothesis is that there is no difference between means of the three diet groups, and the alternative hypothesis is that there is a difference between at least two groups in the study. So long as the three fundamental assumptions listed above are met, a one-way ANOVA would be appropriate to use in this case.</p>
+</blockquote>
+<p>ANOVA is used to test general, rather than specific differences between means. That is, it tests if a difference exists between groups, but cannot tell us <em>which</em> pairs of groups have differences between them. As such, the null hypothesis is: <span class="math inline">\(Ho: \mu_1 = \mu_2 = \mu_3\)</span>. Meanwhile, the alternative hypothesis is: <span class="math inline">\(Ha: \mu_i \neq \mu_j\)</span> for some <span class="math inline">\(i \neq j\)</span>.</p>
+<p>The test is conducted by computing an F-statistic and comparing it against a critical value determined using the F-distribution. The F-statistic is a ratio of the mean square variance between groups and within groups:</p>
+<p><span class="math inline">\(F = \frac{MS_{between}}{MS_{within}}\)</span></p>
+<p>If there is no difference between the groups being tested, then the between-group variance and the within-group variance will be roughly equal and thus a value close to 1 would be expected. For an explanation of how to compute this test statistic by hand, please consult <a href="https://openstax.org/books/introductory-statistics/pages/13-2-the-f-distribution-and-the-f-ratio">this resource by openstax</a>.</p>
+<p>The F-distribution is a family of curves based on the degrees of freedom (df) of the variance of the numerator, and the df of the denominator:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/f_dist.png" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">F-Distribution (Credit openstax</figcaption>
+</figure>
+</div>
+<p>The distribution has some key properties: * The curve is skewed to the right. * There is a different curve for each set of dfs. * The F-statistic is always greater than or equal to zero. * As the degrees of freedom for the numerator and for the denominator get larger, the curve approximates the normal.</p>
+<p>If your computed F-statistic is greater than the F-critical value determined from the F-distribution table, then you have found a statistically significant result and at least one group differs significantly from another group based on your chosen alpha level. We will be conducting ANOVA using r and the F-statistic will be calculated along with a p-value associated with it. In the case of conducting an ANOVA in r, if the p-value is below an assumed <span class="math inline">\(\alpha\)</span> of .05, you can reject your null hypothesis. However, if you are conducting a one-way ANOVA by hand, please consult an <a href="https://www.itl.nist.gov/div898/handbook/eda/section3/eda3673.htm">F-distribution table</a> to determine your critical value.</p>
+<p>In r, the function for ANOVA is <code>aov(y~x,data=dataset)</code> where * <code>y</code>=independent variable * <code>x</code>=dependent variable * <code>dataset</code>should be replaced with the name of the variable storing your data.</p>
+<p>Store your ANOVA as a variable, and summarize it using the <code>summary()</code> function.</p>
+</section>
+<section id="post-hoc-tukey-test" class="level3">
+<h3 class="anchored" data-anchor-id="post-hoc-tukey-test">Post-hoc Tukey Test</h3>
+<p><strong>Tukey’s Honest Significant Difference</strong> (HSD) test is a post-hoc test that is commonly used to determine differences between pairs of group means following an ANOVA. As discussed, ANOVA does not determine which groups a significant difference exists between. The Tukey test is used to determine this through pairwise comparisons.</p>
+<p>In r, you can conduct a post-hoc Tukey test using the <code>TukeyHSD()</code> function, referencing the variable you saved your ANOVA as.</p>
+<p>To analyze its output, assume an <span class="math inline">\(\alpha\)</span> of .05. If the p-value associated with each pairwise comparison is below .05, a statistically significant difference exists between those two groups.</p>
+</section>
+</section>
+<section id="part-2-lab-exercises" class="level2">
+<h2 class="anchored" data-anchor-id="part-2-lab-exercises">Part 2: Lab Exercises</h2>
+<section id="exercise-1-descriptive-statistics" class="level3">
+<h3 class="anchored" data-anchor-id="exercise-1-descriptive-statistics">Exercise 1: Descriptive Statistics</h3>
+<p>First we will compute descriptive statistics to determine which species of tree northern spotted owls prefer to nest in.</p>
+<p><strong>A)</strong> Investigate the dataframe using <code>head</code> and <code>tail</code> to view its structure, headings, and the total number of records.</p>
+<div id="851b46a3-b376-4d64-8cb4-f6d61ee3981a" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(df)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">tail</span>(df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>Question 1:</strong> How many records are in this data set?</p>
+<div id="cbab0eb7-ce3c-41b7-95ba-d684513fa33b" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>answer_1 <span class="ot">&lt;-</span> <span class="co"># your answer here</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_1</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>B)</strong> You can find the unique tree species using the function <code>unique</code> after selecting the <code>Tree</code> column from <code>df</code>.</p>
+<div id="70b9df47-1878-4ab5-8543-45c752a319aa" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>species <span class="ot">=</span> <span class="fu">unique</span>(df<span class="sc">$</span>Tree)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>species</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>Question 2:</strong> How many unique species of trees are there?</p>
+<div id="60964422-00ca-4209-a171-9ff97af304fb" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>answer_2 <span class="ot">&lt;-</span> <span class="co"># your answer here</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_2</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>C)</strong> Determine the most common tree species for owls to nest in. Assign this species to a variable called <code>commonTree</code>, and then calculate the percentage of all nests that are in this tree species. Assign this percentage to a variable called <code>percentTree</code>. You can apply the function <code>table(x)</code> to count unique occurrences in a vector <code>x</code>. You can drop the <code>name</code> attribute from a table <code>T</code> with <code>unname(T)</code>.</p>
+<div id="6c9d5094-0d4c-45e2-8556-b7b6964a96f9" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>x <span class="ot">=</span> <span class="fu">table</span>(df<span class="sc">$</span>Tree)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>x</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="311ca8a3" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>commonTree <span class="ot">=</span> <span class="st">'DouglasFir'</span> <span class="co">#assign the species 'DouglasFir' to the variable 'commonTree'</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>percentTree <span class="ot">=</span> <span class="fu">unname</span>(x[<span class="dv">1</span>]<span class="sc">/</span><span class="fu">sum</span>(x)<span class="sc">*</span><span class="dv">100</span>) <span class="co"># calculate the percentage and drop the name. Here,'x[1]' indicates the first value in table 'x'</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>percentTree</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>Question 3:</strong> What percentage of all nests are in the most common tree species? Please round your answer to 2 decimal places.</p>
+<div id="c432d222-6036-4a42-a2ec-4fbcf09c9fd7" class="cell" data-tags="[]" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>answer_3 <span class="ot">&lt;-</span> <span class="co"># your answer here</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_3</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>D)</strong> Select the rows within <code>df</code> that correspond to the most common tree species for owl nesting and include these in a new dataframe <code>df1</code>. Using <code>df1</code>, calculate the mean diameter at breast height (<code>DBH</code>) and its standard deviation. Assign these values to variables <code>meanDBH</code> and <code>sdDBH</code> respectively. Similarly obtain the mean tree height (<code>Ht</code>) and its standard deviation, and assign these values to <code>meanHt</code> and <code>sdHt</code>.</p>
+<div id="81d15f61-5320-47ce-b6b1-5a616c97aec1" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>mask <span class="ot">=</span> df<span class="sc">$</span>Tree<span class="sc">==</span>commonTree</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>df1 <span class="ot">=</span> <span class="fu">subset</span>(df,mask)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>meanDBH <span class="ot">=</span> <span class="fu">mean</span>(df1<span class="sc">$</span>DBH)</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>sdDBH <span class="ot">=</span> <span class="fu">sd</span>(df1<span class="sc">$</span>DBH)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>meanHt <span class="ot">=</span> <span class="fu">mean</span>(df1<span class="sc">$</span>Ht)</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>sdHt <span class="ot">=</span> <span class="fu">sd</span>(df1<span class="sc">$</span>Ht)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>Question 4:</strong> (1) What is the mean DBH of the common tree? (2) What is the standard deviation for the height of the common tree? Please round your answers to 2 decimal places.</p>
+<div id="fc11af85-6f66-46b7-9bab-82c8d999740b" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>answer_4<span class="fl">.1</span> <span class="ot">&lt;-</span> <span class="co"># your answer here for DBH</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>answer_4<span class="fl">.2</span> <span class="ot">&lt;-</span> <span class="co"># your answer here for tree height</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="fu">test_4.1</span>()</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="fu">test_4.2</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>E)</strong> Calculate the coefficient of variation for both tree height and diameter for the most common tree species. Assign these to variables <code>cvHt</code> and <code>cvDBH</code> respectively. Don’t forget to call the objects to view their values.</p>
+<div id="b816d302-848b-4bd6-8ad1-7dbc189ea93b" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>cvDBH <span class="ot">=</span> meanDBH<span class="sc">/</span>sdDBH</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>cvHt <span class="ot">=</span> meanHt<span class="sc">/</span>sdHt</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>Question 5:</strong> Are tree diameters more variable than tree heights (‘yes’ or ‘no’)? Please do not capitalize your answers.</p>
+<div id="ab27976d-cd3d-4990-9c62-07418eb573f8" class="cell" data-tags="[]" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>answer_5 <span class="ot">&lt;-</span> <span class="st">''</span> <span class="co"># your answer here ('yes' or 'no') </span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_5</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>F)</strong> Determine the most common stage of decay among trees which owls build nests in. Assign this answer (as an integer between 1 and 7) to the variable <code>commonStage</code>. Determine the percentage of common trees in this stage of decay.</p>
+<div id="a975b22f-982b-41c2-a855-20753bd89399" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>x <span class="ot">=</span> <span class="fu">table</span>(df<span class="sc">$</span>Stage)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="e1c673a5-2753-4c3b-9b2b-e4f1549745e7" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>commonStage <span class="ot">=</span> <span class="dv">2</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>percentStage <span class="ot">=</span> <span class="fu">unname</span>(x[<span class="dv">2</span>]<span class="sc">/</span><span class="fu">sum</span>(x)<span class="sc">*</span><span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>Question 6:</strong> What percentage of common trees are in this stage of decay? Please round your answer to 2 decimal places.</p>
+<div id="8624255f-089a-4b2a-a9fd-afe973ba1198" class="cell" data-tags="[]" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>answer_6 <span class="ot">&lt;-</span> <span class="co"># your answer here </span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_6</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>G)</strong> Determine the most common nest type. Assign the most common nest type to a variable called <code>commonNest</code>. Determine what percentage of all nests in the dataset are this nest type and name this to a variable called <code>percentNest</code>.</p>
+<div id="2e0d5f1d-c4d6-4303-9feb-dc0b97de2ba3" class="cell" data-tags="[]" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>x <span class="ot">=</span> <span class="fu">table</span>(df<span class="sc">$</span>Nest)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="f6c2e7f7-41d7-4ab9-95ff-004c3e05d83b" class="cell" data-tags="[]" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>commonNest <span class="ot">=</span> <span class="st">'TopCavity'</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>percentNest <span class="ot">=</span> <span class="fu">unname</span>((x[<span class="dv">3</span>])<span class="sc">/</span><span class="fu">sum</span>(x)<span class="sc">*</span><span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>Question 7:</strong> What percentage of all nests in the dataset are of the most common type? Please round your answer to 2 decimal places.</p>
+<div id="d29beeca-206e-4dcd-8ac7-c9538eb822c2" class="cell" data-tags="[]" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>answer_7 <span class="ot">&lt;-</span> <span class="co"># your answer here</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_7</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>H)</strong> Summarize your results. What species of trees do northern spotted owls prefer to nest in? What life stage are their preferred trees in? What types of nests do owls most commonly build in these trees?</p>
+<p><font color="red">Write your answer here</font></p>
+</section>
+<section id="exercise-2-analysis-of-variance-anova" class="level3">
+<h3 class="anchored" data-anchor-id="exercise-2-analysis-of-variance-anova">Exercise 2: Analysis of Variance (ANOVA)</h3>
+<p>Now we will investigate whether the diameter and height of nesting trees affect the types of nests owls make in them using <strong>analysis of variance (ANOVA)</strong>.</p>
+<p><strong>A)</strong> For the most common nesting tree species (<code>Tree</code>) and life stage (<code>Stage</code>), form a boxplot showing the tree diameter on the y-axis versus the nest type on the x-axis. Label your axes with units as appropriate. Add a plot title. You can extract the appropriate data from <code>df</code> with the <code>subset</code> function using <code>mask = (df$Stage==commonStage) &amp; (df$Tree==commonTree)</code>. You can use <code>boxplot(y ~ x, data=yourDataFrame, main='a title for your plot', xlab='your x-axis label', ylab='your y-axis label', col 'lightblue')</code> with appropriate substitutions to visualize your data.</p>
+<div id="bed37261-52c1-4dd3-92e3-ef0941203e6b" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>mask <span class="ot">=</span> (df<span class="sc">$</span>Stage<span class="sc">==</span>commonStage) <span class="sc">&amp;</span> (df<span class="sc">$</span>Tree<span class="sc">==</span>commonTree)</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>df2 <span class="ot">=</span> <span class="fu">subset</span>(df, mask)</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="fu">boxplot</span>(DBH<span class="sc">~</span>Nest,</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>        <span class="at">data=</span>df2,</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>        <span class="at">main=</span><span class="st">'Tree diameter versus nest type: Douglas firs in life stage 2'</span>,</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>        <span class="at">xlab=</span><span class="st">'Nest Type'</span>,</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>        <span class="at">ylab=</span><span class="st">'Tree DBH [cm]'</span>,</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>        <span class="at">col=</span><span class="st">'lightblue'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>Question 8:</strong> Upon visualizing the data using boxplots, does the data meet the requirements of an ANOVA (‘yes’ or ‘no’)?</p>
+<div id="49614569-eae6-4408-9cf4-97c9fe529428" class="cell" data-tags="[]" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>answer_8 <span class="ot">&lt;-</span> <span class="st">''</span> <span class="co"># your answer here ('yes' or 'no')</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_8</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>B)</strong> Determine the null and alternative hypotheses for our test using what we have learned so far.</p>
+<p><strong>Question 9:</strong> Which of the following corresponds to the correct null and alternative hypotheses?</p>
+<ol type="A">
+<li><p><span class="math inline">\(Ho: \mu_1 = \mu_2 = \mu_3\)</span>; <span class="math inline">\(Ha: \mu_1 \neq \mu_2 \neq \mu_3\)</span></p></li>
+<li><p><span class="math inline">\(Ho: \mu_1 \neq \mu_2 \neq \mu_3\)</span>; <span class="math inline">\(Ha: \mu_1 = \mu_2 = \mu_3\)</span></p></li>
+<li><p><span class="math inline">\(Ho: \mu_1 = \mu_2 = \mu_3\)</span>; Ha: <span class="math inline">\(\mu_i \neq \mu_j\)</span> for some <span class="math inline">\(\mu_i \neq \mu_j\)</span>.</p></li>
+<li><p><span class="math inline">\(Ho: \mu_i = \mu_j\)</span>; <span class="math inline">\(Ha: \mu_i \neq \mu_j\)</span>.</p></li>
+</ol>
+<div id="0e1e721a-7d84-4bba-8dba-7491e989951c" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>answer_9 <span class="ot">&lt;-</span> <span class="st">''</span> <span class="co"># your answer here ('A', 'B', 'C', or 'D')</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_9</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>C)</strong> Conduct an ANOVA on the data visualized in your boxplot. The function for ANOVA is <code>aov</code>. It operates as <code>A = aov(y~x,data=dataset)</code> with appropriate subsitutions. As written here, the ANOVA results are stored in <code>A</code>. You can summarize the results with <code>summary(A)</code>.</p>
+<div id="7e10b496-85d3-4b19-a6fc-27ff3ba9945c" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>A <span class="ot">=</span> <span class="fu">aov</span>(DBH<span class="sc">~</span>Nest,<span class="at">data=</span>df2) <span class="co">#perform an ANOVA and name it 'A'</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(A)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>Question 10:</strong> (1) What is the p-value associated with your ANOVA? Please round to 2 decimal places. (2) Should you reject your null hypothesis (‘yes’ or ‘no’)? Please do not capitalize your answers.</p>
+<div id="399bdc0f-72e6-412f-ac23-7db7d074cdb2" class="cell" data-tags="[]" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>answer_10<span class="fl">.1</span> <span class="ot">&lt;-</span> <span class="co"># your answer here</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>answer_10<span class="fl">.2</span> <span class="ot">&lt;-</span> <span class="st">''</span> <span class="co"># your answer here ('yes' or 'no')</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="fu">test_10.1</span>()</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="fu">test_10.2</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>D)</strong> Summarize the results of your ANOVA using several sentences. Think about what this statistical test is actually implying about tree diameters and the type of nests that these owls construct.</p>
+<p><font color="red">Write your answer here</font></p>
+<p><strong>E)</strong> Conduct a post-hoc Tukey test on the ANOVA output using the <code>TukeyHSD()</code> function. Each row of the Tukey output compares tree diameters between a pair of nest types. If <code>p adj</code> &lt; 0.05 for this row, the tree diameters are different for this pair of nest types.</p>
+<div id="44d100bb-1a4e-4b3c-ba5a-7be801fbff30" class="cell" data-tags="[]" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">TukeyHSD</span>(A)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>Question 11:</strong> How many pairwise comparisons were statistically significant?</p>
+<div id="a1eed462-1e0d-4f02-9697-944bb3cd88f3" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>answer_11 <span class="ot">&lt;-</span> <span class="co"># your answer here </span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="fu">test_11</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>F)</strong> Perform an ANOVA to determine if nest type (<code>Nest</code>) is related to tree height (<code>Ht</code>) for the most common nesting tree species and life stage (the <code>df2</code> dataframe). Summarize your results as in the previous ANOVA.</p>
+<div id="c91e95ac-357b-4bb4-92f1-b923e17bcd81" class="cell" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>B <span class="ot">=</span> <span class="fu">aov</span>(Ht<span class="sc">~</span>Nest,<span class="at">data=</span>df2) <span class="co">#perform and ANOVA and name it 'B'</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>Question 12:</strong> (1) What is the p-value associated with your ANOVA? Please round to 2 decimal places. (2) Should you reject your null hypothesis (‘yes’ or ‘no’)?</p>
+<div id="ebed756b-2846-44fb-8191-b5d28ad896e3" class="cell" data-tags="[]" data-vscode="{&quot;languageId&quot;:&quot;r&quot;}">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>answer_12<span class="fl">.1</span> <span class="ot">&lt;-</span> <span class="co"># your answer here</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>answer_12<span class="fl">.2</span> <span class="ot">&lt;-</span> <span class="st">''</span> <span class="co"># your answer here ('yes' or 'no')</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="fu">test_12.1</span>()</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="fu">test_12.2</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>Question 13:</strong> In 2-3 sentences, summarize your findings with regard to (i) the characteristics of trees that northern spotted owls select for nesting, (ii) the types of nests these owls most commonly build in these trees, and (iii) how ANOVA informs the control of tree height and diameter on the types of nests owls construct.</p>
+<p><font color="red">Write your answer here</font></p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, function() {
+      let href = xref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children.length > 2) {
+          for (let i = 0; i < 2; i++) {
+            container.appendChild(note.children[i].cloneNode(true));
+          }
+          return container.innerHTML
+        } else {
+          return note.innerHTML;
+        }
+      } else {
+        return note.innerHTML;
+      }
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+          // target, if specified
+          link.setAttribute("target", "_blank");
+      }
+    }
+});
+</script>
+<nav class="page-navigation column-body">
+  <div class="nav-page nav-page-previous">
+      <a href="../../../docs/geog_374/index_374.html" class="pagination-link">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Geographic Computation (GEOG 374)</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../../../docs/geog_374/Lab_06_Ttest/Lab_06_Ttest.html" class="pagination-link">
+        <span class="nav-page-text"><span class="math inline">\(t\)</span>-test Methods</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item">
+ <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/80x15.png"></a>.  <a rel="license" href="https://comet.arts.ubc.ca/pages/copyright.html">See details.</a>
+  </li>  
+</ul>
+    </div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item">
+ The COMET Project and the UBC Vancouver School of Economics are located on the traditional, ancestral and unceded territory of the xʷməθkʷəy̓əm (Musqueam) and Sḵwx̱wú7mesh (Squamish) peoples.
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+</body></html>
