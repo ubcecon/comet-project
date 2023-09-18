@@ -3,14 +3,14 @@ library(digest)
 
 test_1 <- function() {
   test_that("Solution is incorrect", {
-    expect_equal(digest(answer1), "8ae1ac7bdf62dca7c19b427a9153445c")
+    expect_equal(digest(answer1), "709a7faa72cb6f3be79d683e234ccb25")
   })
   print("Success!")
 }
 
 test_2 <- function() {
   test_that("Solution is incorrect", {
-    expect_equal(digest(answer2), "11946e7a3ed5e1776e81c0f0ecd383d0")
+    expect_equal(digest(answer2), "e5b57f323c7b3719bbaaf9f96b260d39")
   })
   print("Success!")
 }
