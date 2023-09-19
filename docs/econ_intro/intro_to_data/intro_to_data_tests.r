@@ -10,14 +10,14 @@ test_0 <- function() {
 
 test_1 <- function() {
   test_that("Solution is incorrect", {
-    expect_equal(digest(answer1), "d9f8dc6a54f2efa025ee2f86aea6ebbf")
+    expect_equal(digest(class(answer1$has_kids)), "317be6c8c60403220d0f4f9fa663a873")
   })
   print("Success!")
 }
 
 test_2 <- function() {
   test_that("Solution is incorrect", {
-    expect_equal(digest(answer2), "6122c71dd5581d67a0b738596a1ab8c4")
+    expect_equal(digest(answer2$knows_english), "292b8d7e3f0f8819ba70ae7e22ec95e2")
   })
   print("Success!")
 }
