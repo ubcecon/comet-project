@@ -1,0 +1,426 @@
+---
+title: '11 - Conducting Regression Analysis'
+author: Marina Adshade, Paul Corcuera, Giulia Lo Forte, Jane Platt
+date: 2024-05-29
+description: This notebook goes over the theory surrounding linear regressions, as well as how to implement univariate and multivariate regressions in Stata. We dig into coefficient interpretation, and we touch upon control variable selection. 
+categories: [econ 490, stata, regression, univariate regression, multiple regression, estimates, coefficients, controls, interpretation]
+format: 
+  html: default
+  ipynb:
+      syntax-definitions: 
+      - stata.xml
+      kernelspec: 
+        display_name: Stata
+        language: Stata
+        name: stata
+---
+
+## Prerequisites 
+
+1. Econometric approaches to linear regression taught in ECON326 or other introductory econometrics courses.
+2. Importing data into Stata.
+3. Creating new variables using `generate`.
+
+## Learning Outcomes
+
+1. Implement the econometric theory for linear regressions learned in ECON326 or other introductory econometrics courses.
+2. Run simple univariate and multivariate regressions using the command `regress`.
+3. Understand the interpretation of the coefficients in linear regression output.
+4. Consider the quality of control variables in a proposed model.
+
+## 11.1 A Word of Caution Before We Begin
+
+Before conducting a regression analysis, a great deal of work must go into understanding the data and investigating the theoretical relationships between variables. The biggest mistake that students make at this stage is not how they run the regression analysis. It is failing to spend enough time preparing data for analysis. 
+
+Here are some common challenges that students run into. Please pay attention to this when conducting your own research project.
+
+- A variable that is qualitative and not ranked cannot be used in an OLS regression without first being transformed into a dummy variable (or a series of dummy variables). Examples of variables that must always be included as dummy variables are sex, race, religiosity, immigration status, and marital status. Examples of variables that are sometimes included as dummy variables are education, income and age. 
+- You will want to take a good look to see how your variables are coded before you begin running regressions and interpreting the results. Make sure that missing values are coded as "." and not some value (such as "99"). Also, check that qualitative ranked variables are coded in the way you expect (e.g. higher education is coded with a larger number). If you do not do this, you could misinterpret your results.
+- Some samples are not proper representations of the population and must be weighted accordingly (we will deal with this in depth later).
+- You should always think about the theoretical relationship between your variables before you start your regression analysis: Does economic theory predict a linear relationship, independence between explanatory terms, or is there possibly an interaction at play?
+
+## 11.2 Linear Regression Models 
+
+Understanding how to run a well structured OLS regression and how to interpret the results of that regression are the most important skills for undertaking empirical economic analysis. You have acquired a solid understanding of the theory behind the OLS regression in earlier econometrics courses; keep this in mind throughout your analysis. Here, we will cover the practical side of running regressions and, perhaps more importantly, how to interpret the results. 
+
+An econometric model describes an equation (or set of equations) that impose some structure on how the data was generated. The most natural way to describe statistical information is the mean. Therefore, we typically model the mean of a (dependent) variable and how it can depend on different factors (independent variables or covariates). The easiest way to describe a relationship between a dependent variable, y, and one or more independent variables, x is linearly. 
+
+Suppose we want to know what variables are needed to understand how and why earnings vary between each person in the world. What would be the measures needed to predict everyone's earnings?  
+
+Some explanatory variables might be:
+
+- Age 
+- Year (e.g. macroeconomic shocks in that particular year)
+- Region (local determinants on earnings)
+- Hours worked
+- Education 
+- Labor Market Experience
+- Industry / Occupation 
+- Number of children
+- Level of productivity
+- Passion for their job
+- etc., there are so many factors which can be included!
+
+For simplicity, let's assume we want to predict earnings but we only have access to data sets with information regarding people's age and earnings. If we want to generate a model which predicts the relationship between these two variables, we could create a linear model where the dependent variable (y) is annual earnings, the independent variable (x) is age, the slope (m) is how much an extra year of age affects earnings, and the y-intercept (b) is earnings when age is equal to 0. We would write this relationship as:
+
+$$
+y = b +mx.
+$$
+
+We only have access to annual earnings and age, so we are unable to observe the rest of the variables (independent variables or covariates $X_{i}$) that might determine earnings. Even if we do not observe these variables, they still affect earnings. In other words, age does not perfectly predict earnings, so our model above would have some error: the true values for earnings would diverge from what is predicted by the linear model. 
+
+Where $\beta_0$ is the y-intercept, $\beta_1$ is the slope, and $i$ indicates the worker observation in the data, we have: 
+
+$$
+logearnings_{i} =\beta_0 + \beta_1 age_{i}  + u_{i}. \tag{1}
+$$
+
+It's important to understand what $\beta_0$ and $\beta_1$ stand for in the linear model. We said above that we typically model the mean of a (dependent) variable and how it can depend on different factors (independent variables or covariates). Therefore, we are in fact modeling the expected value of *logearnings*, conditional on the value of *age*. This is called the conditional expectation function, or **CEF**. We assume that it takes the form of: 
+
+$$
+E[logearnings_{i}|age_{i}] =\beta_0 + \beta_1 age_i \tag{2}
+$$
+
+How do equations (1) and (2) relate? If we take the expectation given age on equation (1), we can see that 
+$$
+E[age_{i}|age_{i}]=age_{i},
+$$ 
+and this will leave us with
+$$
+E[u_{i}|age_{i}]=0.
+$$
+If $age=0$, then $\beta_1 \times age=0$ and 
+$$
+E[logearnings_{i}|age_{i}=0]=\beta_0
+$$
+If $age=1$, then $\beta_1 \times age=\beta_1$ and 
+$$
+E[logearnings_{i}|age_{i}=1]=\beta_0+ \beta_1
+$$
+
+Differencing the two equations above gives us the solution,
+
+$$
+E[logearnings_{i}|age_{i}=1]- E[logearnings_{i}|age_{i}=0]= \beta_1,
+$$ 
+
+where $β_1$ is the difference in the expected value of *logearnings* when there is a one unit increase in *age*. If we choose any two values that differ by 1 unit we will also get $\beta_1$ as the solution (try it yourself!).
+
+If we know those ${\beta_1}s$, we can know a lot of information about the mean earnings for different set of workers. For instance, we can compute the mean log-earnings of 18 year old workers: 
+
+$$
+E[logearnings_{i} \mid  age_{i}=18] = \beta_0 + \beta_1 \times 18
+$$
+
+This is the intuition that we should follow to interpret the coefficients! 
+
+Consider a slightly more complicated example. 
+    
+Let's assume there are only two regions in this world: region **A** and region **B**. In this world, we'll make it such that workers in region B earn $\beta_1$ percentage points more than workers in region A on average. We are going to create a dummy variable called _region_ that takes the value of 1 if the worker's region is B and a value of 0 if the worker's region is A.
+
+Furthermore, an extra year of age increases earnings by $\beta_2$ on average. We take the same approach with every explanatory variable on the list above. The empirical economist (us!) only observes a subset of all these variables, which we call the observables or covariates $X_{it}$. Let's suppose that the empirical economist only observes the region and age of the workers.
+
+We could generate log-earnings of worker $i$ as follows.
+
+\begin{align}
+logearnings_{i} &=  \beta_1 \{region_{i}=1\} + \beta_2 age_{i} + \underbrace{ \beta_3 education_{i} + \beta_4 hours_{i} + \dots }_{\text{Unobservable, so we'll call this }u_{i}^*} \\
+&= E[logearnings_{i} \mid region_{i}=0, age_{i}=0] + \beta_1 \{region_{i}=1\} + \beta_2 age_{i} + u_{i}^* - E[logearnings_{i} \mid region_{i}=0, age_{i}=0] \\\\
+&= \beta_0 + \beta_1 \{region_{i}=1\} + \beta_2 age_{i}  + u_{i}
+\end{align}
+
+In the second line we did one of the most powerful tricks in all of mathematics: add and subtract the same term! Specifically, we add and subtract the mean earnings for workers who are in region A and have _age_ equal to zero. This term is the interpretation of the constant in our linear model. The re-defined unobservable term $u_i$ is a deviation from such mean, which we expect to be zero on average. 
+
+Be mindful of the interpretation of the coefficients in this new equation. As we have just seen, the constant $\beta_0$ is interpreted as the average earnings of workers living in region A and with _age_ equal to zero: if $age=0$ and ${region}_{i}=0$ then $\beta_1 \times \{{region}_{i}=0\} = 0$ and $\beta_2 \times age=0$. All that remains is $\beta_0$:
+$$
+E[logearnings_{i}|age_{i}=0 \; \text{and} \; {region}_{i}=0]=\beta_0
+$$
+
+But what are the expected earnings of a worker living in region B and with age equal to zero?
+
+If $age=0$ and ${region}_{i}=1$, then $\beta_1 \times \{{region}_{i}=1\} = \beta_1$ and $\beta_2 \times age=0$. As a result, we obtain
+$$
+E[logearnings_{i}|age_{i}=0 \; \text{and} \; {region}_{i}=1]=\beta_0 + \beta_1
+$$
+
+Therefore, $\beta_1$ is interpreted as the difference in average earnings of workers living in region B compared to workers living in region A.
+
+Lastly, $\beta_2$ is interpreted as the extra average earnings obtained by individuals with one additional year of age compared to other individuals **living in the same region**. That 'living in the same region' portion of the sentence is key. Consider an individual living in region A and with _age_ equal to 1. The expected earnings in that case are
+$$
+E[logearnings_{i}|age_{i}=1 \; \text{and} \; {region}_{i}=0]=\beta_0 + \beta_2
+$$
+
+Therefore, $\beta_2$ is equal to the extra average earnings obtained by workers of region A for each one additional year of _age_:
+$$
+\beta_2 = E[logearnings_{i}|age_{i}=1 \; \text{and} \; {region}_{i}=0] - E[logearnings_{i}|age_{i}=0 \; \text{and} \; {region}_{i}=0] 
+$$
+
+Using the equations above, try computing the following difference in expected earnings for workers with different age and different region, and check that it is not equal to $\beta_2$:
+$$
+E[logearnings_{i}|age_{i}=1 \; \text{and} \; {region}_{i}=0] - E[logearnings_{i}|age_{i}=0 \; \text{and} \; {region}_{i}=1] 
+$$
+
+So far, we have made an assumption at the population level. Remember that to know the CEF, we need to know the true ${\beta}s$, which in turn depend on the joint distribution of the outcome ($Y_i$) and covariates ($X_i$). However, in practice, we typically work with a random sample where we compute averages instead of expectations and empirical distributions instead of the true distributions. Fortunately, we can use these in a formula (also known as an estimator!) to obtain a reasonable guess of the true ${\beta}s$. For a given sample, the numbers that are output by the estimator or formula are known as estimates. One of the most powerful estimators out there is the Ordinary Least Squares Estimator (OLS).
+ 
+## 11.3 Ordinary Least Squares
+
+If we are given some data set and we have to find the unknown ${\beta}s$, the most common and powerful tool is known as OLS. Continuing with the example above, let all the observations be indexed by $j=1,2,\dots, n$. Let 
+$$
+\hat{β_0}, \hat{β_1},\hat{β_2}
+$$ 
+be the estimators of 
+$$
+β_0, β_1, β_2.
+$$ 
+
+The formula for the estimators will return some values that will give rise to a sample version of the population model: 
+
+$$
+logearnings_{j} = b_0 + b_1\{region_{j}=1\} + b_2 age_{j}  + \hat{u_{j}},
+$$
+
+where $u_j$ is the true error in the population, and $\hat{u_{j}}$ is called a residual (the sample version of the error given the current estimates). OLS finds the values of ${\hat{β}}s$ that minimize the sum of squared residuals. This is given by the following minimization problem:
+$$
+\min_{b} \frac{1}{n} \sum_{j}^n \hat{u}_{j}^2
+$$
+
+This expression can also be written as
+
+$$
+\min_{b} \frac{1}{n} \sum_{j}^n (logearnings_{j} - b_0 - b_1 \{region_{j}=1\} - b_2age_{j} )^2
+$$
+
+OLS is minimizing the squared residuals (the sample version of the error term) given our data. This minimization problem can be solved using calculus, specifically the derivative chain rule. The first order conditions are given by : 
+
+\begin{align}
+\frac{1}{n} \sum_{j}^n 1 \times \hat{u}_{j} &= 0  \\
+\frac{1}{n} \sum_{j}^n age_i \times \hat{u}_{j} &= 0  \\
+\frac{1}{n} \sum_{j}^n \{region_i = B\} \times \hat{u}_{j} &= 0 
+\end{align}
+
+From these first order conditions, we construct the most important restrictions for OLS: 
+
+$$
+\frac{1}{n} \sum_{j}^n \hat{u}_j = \frac{1}{n} \sum_{j}^n \hat{u}_j \times  age_j=\frac{1}{n} \sum_{j}^n \hat{u}_j\times\{region_j = 1\}=0
+$$
+
+In other words, by construction, the sample version of our error term will be uncorrelated with all the covariates. The constant term works the same way as including a variable equal to 1 in the regression (try it yourself!).
+
+Notice that the formula for $β_0, β_1, β_2$ (the true values!) is using these conditions, but we replaced expectations with sample averages. This is obviously an infeasible approach since we argued before that we need to know the true joint distribution of the variables to compute such expectations. As a matter of fact, many useful estimators rely on this approach: replace an expectation by a sample average. This is called the sample analogue approach.
+
+<div class="alert alert-info">
+
+**Note:** Because this is an optimization problem, all of our variables must be numeric. If a variable is categorical, we must re-code it into a numerical variable. You will understand more about this after completing our next module. </div>
+
+## 11.4 Ordinary Least Squares Regressions with Stata 
+
+For this module, we will be using the fake data set. Recall that this data is simulating information for workers in the years 1982-2012 in a fake country where a training program was introduced in 2003 to boost their earnings. 
+
+```{stata}
+clear *
+*cd ""
+use "fake_data.dta", clear
+```
+
+### 11.4.1 Univariate Regressions
+
+To run a linear regression using OLS in Stata, we use the command `regress`. The basic syntax of the command is:
+
+```stata
+regress dep_varname indep_varname
+```
+Feel free to look at the help file to see the different options that this command provides!
+
+Let's start by creating a new variable that is the natural log of earnings and then run our regression. We are using the log of earnings since earnings has a highly skewed distribution, and applying a log transformation allows us to more normally distribute our earnings variable. This will be helpful for a variety of analytical pursuits.
+
+```{stata}
+gen logearn = log(earnings)
+regress logearn age 
+```
+
+By default, Stata includes a constant (which is usually what we want, since this will set residuals to 0 on average). The estimated coefficients are $\hat{\beta}_0 = 10$ and $\hat{\beta}_1 = 0.014$.  Notice that we only included one covariate here. This is known as a univariate (linear) regression. 
+
+The interpretation of coefficients in a univariate regression is fairly simple. $\hat{\beta}_1$ says that having one extra year of _age_ increases _logearnings_ by $0.014$ on average. In other words, one extra year in age returns 1.4 percentage points higher earnings. Meanwhile, $\hat{\beta}_0$ says that the average log earnings of individuals with a recorded age of 0 is about $10$. This intercept is not particularly meaningful given that no one in the data set has an age of 0. It is important to note that this often occurs: the $\hat{\beta}_0$ intercept is often not economically meaningful. After all, $\hat{\beta}_0$ is simply an OLS estimate resulting from minimizing the sum of squared residuals.
+
+Sometimes, we find that our coefficient is negative. This is not a concern. If it was the case that $\hat{\beta}_1 = -0.014$, this would instead mean that one extra year of _age_ is associated with a $0.014$ decrease in _logearnings_, or $1.4$ percentage point lower earnings. When interpreting coefficients, the sign is also important. We will look at how to interpret coefficients in a series of cases later.
+
+### 11.4.2 Multivariate Regressions
+
+The command `regress` also allows us to list multiple covariates. When we want to carry out a multivariate regression, we write:
+
+```stata
+regress dep_varname indep_varname1 indep_varname2
+```
+and so on.
+
+```{stata}
+reg logearn age treated
+```
+
+How would we interpret the coefficient corresponding to being treated? Consider the following two comparisons: 
+
+- Mean _logearnings_ of 18 year old treated workers minus the mean _logearnings_ of 18 year old untreated workers = $\beta_2$. 
+- Mean _logearnings_ of 20 year old treated workers minus the mean _logearnings_ of 20 year old untreated workers = $\beta_2$. 
+
+Therefore, the coefficient gives the increase in _logearnings_ between treated and untreated workers **holding all other characteristics equal**. We economists usually refer to this as $\textit{ceteris paribus}$.
+
+The second column shows the standard errors. Using those, we can compute the third column, which tests whether a given $\beta$ coefficient is equal to zero. To test this, we set up the hypothesis that a coefficient $\beta$ equals 0, and thus has a mean of 0, then standardize it using the standard error provided:
+
+$$
+t = \frac{ \hat{\beta} - 0 }{StdErr}
+$$
+
+If the t-statistic is roughly greater than 2 in absolute value, we reject the null hypothesis that there is no effect of the independent variable in question on earnings ($\hat{\beta} = 0$). This would mean that the data supports the hypothesis that the variable in question has some effect on earnings at a confidence level of 95%. 
+
+An alternative test can be performed using the p-value statistic: if the p-value is less than 0.05, we reject the null hypothesis at 95% confidence level. In either case, when we reject the null hypothesis, we say that the coefficient is statistically significant.
+
+No matter which of the two approaches we choose, Stata luckily provides us with the t-statistic and p-value for a coefficient immediately, allowing us to reject or fail to reject the null hypothesis that our coefficient is statistically significantly different from 0 immediately.
+
+<div class="alert alert-info">
+
+**Note:** Without statistical significance, we cannot reject the null hypothesis and have no choice but to conclude that the coefficient is zero, meaning that the independent variable of interest has no effect on the dependent variable. </div>
+
+Thus, when working with either univariate or multivariate regressions, we must pay attention to two key features of our coefficient estimates:
+
+1. the sign of the coefficient (positive or negative), and
+2. the p-value or t-statistic of the coefficient (checking for statistical significance).
+
+A subtler but also important point is to always inspect the magnitude of the coefficient. We could find $\hat{\beta}_1 = 0.00005$ in our regression and determine that it is statistically significant. However, this would not change the fact that an extra year of age increases your log earnings by 0.005, which is a very weak effect. Magnitude is always important when seeing whether a relationship is actually large in size, even if it is statistically significant and thus we can be quite sure it's not 0. Understanding whether the magnitude of a coefficient is economically meaningful typically requires a firm understanding of the economic literature in that area.
+
+### 11.4.3 Interpreting Coefficients
+
+While we have explored univariate and multivariate regressions of a log dependent variable and non-log independent variables (known as a log-linear model), the variables in linear regressions can take on many other forms. Each of these forms, whether a transformation of variables or not, influences how we can interpret these $\beta$ coefficient estimates.
+
+For instance, look at the following regression:
+
+```{stata}
+regress earnings age
+```
+
+This is a classic single variable regression with no transformations (e.g. log) applied to the variables. In this regression, a one-unit change in the independent variable leads to a $\beta$ unit change in the dependent variable. As such, we can interpret our coefficients in the following way: an extra year of _age_ increases _earnings_ by 1046.49 on average. The average earnings of individuals with age equal to 0 is 35484, which we have already discussed is not economically meaningful. The incredibly low p-value for the coefficient on age also indicates that this is a statistically significant effect.
+
+Next, let's look at the following regression, where a log transformation has now been applied to the independent variable and not the dependent variable:
+
+```{stata}
+generate logage = log(age)
+
+regress earnings logage
+```
+
+This is known as a linear-log regression, since only the independent variable has been transformed. It is a mirror image of the log-linear model we first looked at when we took the log of earnings. In this regression, we can say that a 1 unit increase in _logage_ leads to a 37482 increase in _earnings_, or that a 1% increase in age leads to an increase in earnings of 374.82. To express this more neatly, a 10% increase in age leads to an increase in earnings of about 3750, or a 100% increase in age (doubling of age) leads to an increase in earnings of about 37500.
+
+We can even have a log-log regression, wherein both the dependent and independent variables in question have been transformed into log format.
+
+```{stata}
+regress logearn logage
+```
+
+When interpreting the coefficients in this regression, we can say that a 1 unit increase in _logage_ leads to a 0.52 unit increase in _logearn_, or that a 1% increase in age leads to a 0.52% increase in earnings. To express this more neatly, we can also say that a 10% increase in age leads to a 5.2% increase in earnings, or that a 100% increase in age (doubling of age) leads to a 52% increase in earnings.
+
+Additionally, while we have been looking at log transformations, we can apply other transformations to our variables. Suppose that we believe that age is not linearly related to earnings. Instead, we believe that age may have a quadratic relationship with earnings. We can define another variable for this term and then include it in our regression to create a multivariate regression as follows.
+
+```{stata}
+generate agesqr = age^2
+
+regress earnings age agesqr
+```
+
+In this regression, we get coefficients on both _age_ and _agesqr_. Since the age variable appears in two places, neither coefficient can individually tell us the effect of age on earnings. Instead, we must take the partial derivative of earnings with respect to age. If our population regression model is
+
+$$
+earnings_i = \beta_0 + \beta_1age_i + \beta_2age^2_i + \mu_i,
+$$
+
+then the effect of age on earnings is $\beta_1 + 2\beta_2$, meaning that a one year increase in age leads to a 3109.1 + 2(-27.7) = 3053.7 unit increase in earnings. There are many other types of transformations we can apply to variables in our regression models. This is just one example.
+
+In all of these examples, our $\beta_0$ intercept coefficient gives us the expected value of our dependent variable when our independent variable equals 0. We can inspect the output of these regressions further, looking at their p-values or t-statistics, to determine whether the coefficients we receive as output are statistically significant.
+
+Some regressions involve dummy variables and interaction terms. It is critical to understand how to interpret these coefficients, since these terms are quite common. The coefficient on a dummy variable effectively states the difference in the dependent variable between two groups, *ceteris paribus*, with one of the groups being the base level group left out of the regression entirely. The coefficient on interaction terms, conversely, emphasizes how the relationship between a dependent and independent variable differs between groups, or differs as another variable changes. We'll look at both dummy variables and interaction terms in regressions in much more depth in [Module 13](https://comet.arts.ubc.ca/docs/Research/econ490-stata/13_Dummy.html).
+
+### 11.4.4 Sample weights
+
+The data that is provided to us is often not statistically representative of the population as a whole. This is because the agencies that collect data (like Statistics Canada) often decide to over-sample some segments of the population. They do this to ensure that there is a large enough sample size of subgroups of the population to conduct meaningful statistical analysis of those sub-populations. For example, the population of Indigenous identity in Canada accounts for approximately 5% of the total population. If we took a representative sample of 10,000 Canadians, there would only be 500 people who identified as Indigenous in the sample. 
+
+This creates two problems. The first is that this is not a large enough sample to undertake any meaningful analysis of characteristics of the Indigenous population in Canada. The second is that when the sample is this small, it might be possible for researchers to identify individuals in data. This would be extremely unethical, and Stats Canada works hard to make sure that data remains anonymized. 
+
+To resolve this issue, Statistics Canada over-samples people of Indigenous identity when they collect data. For example, they might survey 1000 people of Indigenous identity so that those people now account for 10% of observations in the sample. This would allow researchers who want to specifically look at the experiences of Indigenous people to conduct reliable research, and maintain the anonymity of the individuals represented by the data. 
+
+When we use this whole sample of 10,000, however, the data is no longer nationally representative since it overstates the share of the population of Indigenous identity - 10% instead of 5%. This sounds like a complex problem to resolve, but the solution is provided by the statistical agency that created the data in the form of "sample weights" that can be used to recreate data that is nationally representative.
+
+There are four ways to weight in Stata. We can include frequency weights (`fw`), analytic weights (`aw`), probability or sampling weights (`pw`), and importance weights (`iw`). All of these are used for different purposes. For example, `pw` is most frequently used with survey data, to indicate the probability that an observation was selected into the sample. You can find more information about this by typing `help weight` in the Command Window.
+
+<div class="alert alert-info">
+
+**Note**: Before applying any weights in our regression, it is important that we read the user guide that comes with the data to see how weights should be applied. There are several options for weights and we should never apply weights without first understanding the intentions of the authors of the data. </div>
+    
+Our sample weights will be commonly coded as an additional variable in our data set such as *weight_pct*, however sometimes this is not the case, and we will need to select the variable ourselves. Please reach out to an instructor, TA, or supervisor if you think this is the case. To include probability weights in regression analysis, we can simply include the following command immediately after our independent variable(s):
+
+```stata
+    regress y x [pw = weight_pct]   
+```
+
+We can do that with the variable *sample_weight* which is provided to us in the "fake_data" data set, re-running the regression of *logearnings* on *age* and *treated* from above.
+
+```{stata}
+regress logearn age treated [pw = sample_weight]
+```
+
+Often, after weighting our sample, the coefficients from our regression will change in magnitude. In these cases, there was some subsample of the population that was over-represented in the data and skewed the results of the unweighted regression.
+
+Finally, while this section described the use of weighted regressions, it is important to know that there are many times we might want to apply weights to our sample that have nothing to do with running regressions. For example, if we wanted to calculate the mean of a variable using data from a skewed sample, we would want to make sure to use the weighted mean. While `summarize` is used in Stata to calculate means, we can use `collapse` to create summary statistics with sample weights factored into the calculations (see [Module 7](https://comet.arts.ubc.ca/docs/Research/econ490-stata/07_Within_Group.html)).
+
+## 11.5 What can we do with OLS? 
+
+Notice that OLS gives us a linear approximation to the conditional mean of some dependent variable, given some observables. We can use this information for prediction: if we had different observables, how would the expected mean differ?We can do this in Stata by using the `predict` function. All we need to do is run `predict varname` after we run our regression. `varname` represents a new variable that will hold the predicted values of our dependent variable. We can do this with different regressions that have different observables (one might include _age_ as an explanatory variable, while another might include _education_), and we can compare the predicted values. 
+
+Another thing we can do with OLS is discuss causality: how does manipulating one variable impact a dependent variable on average? To give a causal interpretation to our OLS estimates, we require that, in the population, it holds that $\mathbf{E}[X_i u_i] = 0$. This is the same as saying that the unobservables are uncorrelated with the independent variables of the equation (remember, this is not testable because we cannot compute the expectations in practice!). If these unobservables are correlated with an independent variable, this means the independent variable can be causing a change in the dependent variable because of a change in an unobservable rather than a change in the independent variable itself. This inhibits our ability to interpret our coefficients with causality and is known as the endogeneity problem. 
+
+We might be tempted to think that we can test this using the sample version $\frac{1}{n} \sum_{j}^n  X_i u_i = 0$, but notice from the first order conditions that this is true by construction! It is by design a circular argument; we are assuming that it holds true when we compute the solution to OLS.
+
+For instance, looking at the previous regression, if we want to say that the causal effect of being treated is equal to -0.81, it must be the case that treatment is not correlated (in the population sense) with the error term (our unobservables). However, it could be the case that treated workers are the ones that usually perform worse at their job, which would contradict a causal interpretation of our OLS estimates. This brings us to a short discussion of what distinguishes good and bad controls in a regression model:
+
+- Good Controls: To think about good controls, we need to consider which **unobserved** determinants of the outcome are possibly correlated with our variable of interest.
+- Bad Controls: It is bad practice to include variables that are themselves outcomes. For instance, consider studying the causal effect of college on earnings. If we include a covariate of working at a high paying job, then we're blocking part of the causal channel between college and earnings (i.e. you are more likely to have a nice job if you study more years!)
+
+## 11.6 Wrap Up 
+
+In this module we discussed the following concepts: 
+
+- Linear Model: an equation that describes how the outcome is generated, and depends on some coefficients $\beta$. 
+- Ordinary Least Squares: a method to obtain a good approximation of the true $\beta$ of a linear model from a given sample. 
+
+Notice that there is no such thing as an OLS model. More specifically, notice that we could apply a different method (estimator) to a linear model. For example, consider minimizing the sum of all error terms 
+$$
+\min_{b} \frac{1}{n} \sum_{i}^n | \hat{u}_j |
+$$ 
+
+This model is linear but the solution to this problem is not an OLS estimate.
+
+We also learned how to interpret coefficients in any linear model. $\beta_0$ is the y-intercept of the line in a typical linear regression model. Therefore, it is equal to: 
+
+$$
+E[y_{i}|x_{i}=0]=\beta_0.
+$$ 
+
+It is the expected value of y when x = 0. More precisely, because we have a sample approximation for this true value, it would be the sample mean of y when x = 0.
+
+In the case of any other beta, $\beta_1$ or $\beta_2$ or $\beta_3$, 
+
+$$
+E[y_{i}|x_{i}=1]- E[y_{i}|x_{i}=0]= \beta
+$$ 
+
+is going to be the difference between the expected value of y due to a change in x. Therefore, each $\beta$ value tells us the effect that a particular covariate has on y, $ceteris$ $paribus$. Transformations can also be applied to the variables in question, scaling the interpretation of this $\beta$ coefficient. Overall, these coefficient estimates are values of great importance when we are developing our research!
+
+## 11.7 Wrap-up Table
+
+|Command| Function|
+|-------|---------|
+|`regress dep_varname indep_varname1 indep_varname2 ... [pw= weight_pct]`| It estimates a model using OLS including probability weights.|
+|`predict varname`| It creates a variable holding the predicted values for our dependent variable. 
+
+## References
+
+[Simple linear regression in Stata](https://www.youtube.com/watchv=HafqFSB9x70&list=PLN5IskQdgXWnnIVeA_Y0OBGmnw21fvcmU&index=21) <br>
+[(Non StataCorp) Summary of Interpreting a Regression Output from Stata](https://www.youtube.com/watch?v=-kr1BaEqlxg)
+[(Non StataCorp) Weighting in Stata](https://stats.oarc.ucla.edu/other/mult-pkg/faq/what-types-of-weights-do-sas-stata-and-spss-support/#:~:text=You%20need%20to%20read%20the,while%20another%20assumes%20probability%20weights.)
+[How to use the predict function in Stata](https://www.stata.com/manuals/rpredict.pdf)

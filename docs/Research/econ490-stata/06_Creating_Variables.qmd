@@ -1,0 +1,219 @@
+---
+title: '06 - Generating Variables'
+author: Marina Adshade, Paul Corcuera, Giulia Lo Forte, Jane Platt
+date: 2024-05-29
+description: In this notebook, we go over how to create variables. We look into how creating dummy variables works, as well as how to create variables using mathematical expressions. 
+categories: [econ 490, stata, generating variables, dummy variables, tabulate, expressions, naming]
+format: 
+  html: default
+  ipynb:
+      syntax-definitions: 
+      - stata.xml
+      kernelspec: 
+        display_name: Stata
+        language: Stata
+        name: stata
+---
+
+## Prerequisites
+
+1.  Be able to effectively use Stata do-files and generate-log files.
+2.  Be able to change your directory so that Stata can find your files.
+3.  Import data sets in .csv and .dta format.
+4.  Save data files.
+
+## Learning Outcomes
+
+1.  Explore your data set with commands like `describe`, `browse`,`tabulate`, `codebook` and `lookfor`.
+2.  Generate dummy (or indicator) variables using the command `generate` or `tabulate`.
+3.  Create new variables in Stata using `generate` and `replace`.
+4.  Rename and label variables.
+
+## 6.1 Getting Started
+
+We'll continue working with the fake data set introduced in the previous lecture. Recall that this data set is simulating information of workers in the years 1982-2012 in a fake country where a training program was introduced in 2003 to boost their earnings.
+
+Last lecture we introduced a three step process to import data into Stata:
+
+1.  Clear the workspace.
+2.  Change the directory to the space where the data files we will use are located.
+3.  Import the data using commands specific to the file type.
+
+Let's run these commands now so we are all ready to do our analysis.
+
+```{stata}
+* Below you will need to include the path on your own computer to where the data is stored between the quotation marks.
+
+clear *
+* cd " "
+import delimited using "fake_data.csv", clear
+```
+
+## 6.2 Generating Variables
+
+### 6.2.1 Generating Variables using `generate`
+
+Generating variables is very simple in Stata. The syntax of the `generate` command is relatively straightforward: we first tell Stata we want to `generate` a variable, we provide Stata with a name for this new variable, and we indicate the condition for Stata to follow in generating this variable. All in all, our line of come will look like this:
+
+```{stata}
+generate name_of_variable insert_condition
+```
+
+In a future sub-section, we will look in more detail at how to do this for the particular case of dummy variables. First, let's review what dummy variables are!
+
+### 6.2.2 Dummy Variables
+
+Dummy variables are variables that can only take on two values: 0 and 1. It is useful to think of a dummy variable as the answer to a "yes" or "no" question. With a dummy variable, the answer yes is coded as "1" and no is coded as "0".
+
+Examples of question that are used to create dummy variables include:
+
+1.  Is the person female? Females are coded "1" and everyone else is coded "0".
+2.  Does the person have a university degree? People with a degree are coded "1" and everyone else is coded "0".
+3.  Is the person married? Married people are coded "1" and everyone else is coded "0".
+4.  Is the person a millennial? People born between 1980 and 1996 are coded "1" and those born in other years are coded "0".
+
+As you have probably already figured out, dummy variables are used primarily for data that is qualitative and cannot be ranked in any way. For example, being married is qualitative and "married" is neither higher nor lower than "single". But they are sometimes also used for variables that are qualitative and ranked, such as level of education. Further, dummy variables are sometimes used for variables that are quantitative, such as age groupings.
+
+It is important to remember that dummy variables must always be used when we want to include categorical (qualitative) variables in our analysis. These are variables such as sex, gender, race, marital status, religiosity, immigration status etc. We can’t use these variables without creating a dummy variable because the results found would in no way be meaningful, as we are working with variables which have been numerically scaled in an arbitrary way. This is especially true for interpreting the coefficients outputted from regression.
+
+### 6.2.3 Creating dummy variables using `generate`
+
+As an example, let's create a dummy variable which indicates if the observation is identified as female. To do this, we are going to use the command `generate` which generates a completely new variable.
+
+```{stata}
+generate female = 1 if sex == "F"
+```
+
+What Stata does here is that it defines our dummy variable as 1 whenever the condition `sex == "F"` holds. However, we didn't tell Stata what to do if the condition `sex == "M"` does not hold! Let's do that below.
+
+```{stata}
+generate female = 0 if sex == "M"
+```
+
+Whoops! We got an error. This says that our variable is already defined. Stata does this because it doesn't want us to accidentally overwrite an existing variable. Whenever we want to replace an existing variable, we have to use the command `replace`.
+
+```{stata}
+replace female = 0 if sex == "M"
+```
+
+There is another, simpler way to  create a dummy variable, which is shown below. 
+
+```{stata}
+
+replace female = ( sex == "F") 
+```
+
+What Stata does here is that it defines our dummy variable as 1 whenever the condition `sex == "F" ` holds. Otherwise, it directly makes the variable take the value of zero. Depending on what we're doing, we may want it to be the case that our dummy takes on the value of 0 when _sex_ is missing. We could do that as we did above, using the `replace` command. 
+
+We could have also used the command `capture drop female` before we used `generate`. The `capture` command tells Stata to ignore any error in the command that immediately follows. In this example, this would do the following:
+
+-   If the variable that is being dropped (here, _female_) didn't exist, the `drop female` command would automatically create an error. The `capture` command tells Stata to ignore that problem.
+-   If the variable (_female_) did exist already, the `drop female` command would work just fine, so that line will proceed as normal.
+
+### 6.2.4 Creating Multiple Dummy Variables using `tabulate`
+
+We already talked about how to create dummy variables with `generate` and `replace`. Let’s see how this can be done for a whole set of dummy variables. For our example, we will create one dummy for each region identified in the data set.
+
+```{stata}
+tabulate region, generate(reg)
+```
+
+This command generated five new dummy variables, one for each region category. We asked Stata to call these variables "reg", and so these five new variables are called _reg1_, _reg2_, _reg3_, _reg4_, and _reg5_. We can run the command `describe` alongside each of these variables, or we can simply run `describe reg*`, which provides information for all variables starting with "reg". Stata has helpfully labeled these variables with data labels from the region variable. Sometimes, we might want to change the names for our own project to something that is more meaningful to us.
+
+```{stata}
+describe reg*
+```
+
+## 6.3 Generating Variables Based on Expressions
+
+Sometimes we want to generate variables after some transformations (e.g. squaring, taking logs, combining different variables). We can do that by simply writing the expression for the desired transformation. For example, let's create a new variable that is simply the natural log of earnings.
+
+```{stata}
+generate log_earnings = log(earnings)
+```
+
+```{stata}
+summarize earnings log_earnings
+```
+
+Let's try a second example. Let's create a new variable that is the number of years since the year the individual started working.
+
+```{stata}
+generate experience_proxy = year - start_year
+```
+
+```{stata}
+summarize experience_proxy
+```
+
+Try this out for yourself! Can you create a variable that indicates the number of years until/since the training program?
+
+```{stata}
+*try here!
+```
+
+## 6.4 Following Good Naming Conventions
+
+Choosing good names for our variables is more important, and harder, than we might think! Some of the variables in an original data set may have very unrecognizable names, which can be confusing when conducting research. In these cases, changing them early on is preferable. We will also be creating our own variables, such as dummy variables for qualitative measures, and we will want to be careful about giving them good names. This will become even more pertinent once we start generating tables, since we will want all of our variables to have high-quality names that will easily carry over to a paper for ease of comprehension on the reader's part.
+
+Luckily, we can always rename our variables with the command `rename`. Let's try to rename one of the dummy variables we just created above. Maybe we know that if region = 3 then the region is in the west.
+
+```{stata}
+rename reg3 west
+describe west
+```
+
+Importantly, we don't need to include every piece of information in our variable name. Most of the important information is included in the variable label (more on that in a moment). We should always avoid variable names that include unnecessary pieces of information and can only be interpreted by the researcher.
+
+<div class="alert alert-info">
+
+**Pro tip:** Stata is case sensitive, so put all of your variables in lower case to avoid errors. </div>
+
+## 6.5 Creating Variable Labels
+
+It is important that anyone using our data set knows what each variable measures. We can add a new label, or change a variable label, at any time by using the `label variable` command. Continuing the example from above, if we create a new dummy variable indicating whether people are female, we will want to add a label to this new variable. To do this, the appropriate command would be:
+
+```{stata}
+label variable female "Female Dummy"
+```
+
+When we describe the data, we will see this extra information in the variable label column. See for yourself!
+
+```{stata}
+describe female
+```
+
+## 6.6 Encoding and Stringing Variables 
+
+Sometimes, we might want to transform the type of variable we are using. For example, we might want to transform a string variable into a numeric one. We went over variable types in [Module 3](https://comet.arts.ubc.ca/docs/Research/econ490-stata/03_Stata_Essentials.html). 
+
+Stata luckily has commands that can help us do this! Let's say we have a quantitative variable from a data set we found online, but Stata is interpreting this variable as a string. This will pose some issues later in our analysis, for example if we want to use it in regressions, so it is best to encode this variable. There are many ways to do this, but one of the simplest will be to generate a numeric variable by making a `real` transformation of the string one. The syntax is the following:
+
+```stata
+generate new_numeric_var = real(old_string_var)
+```
+
+We can do the exact same thing to transform a numeric variable into a string by making a `string` transformation. See below:
+
+```stata
+generate new_string_var = string(old_numeric_var)
+```
+
+Try this out yourself!
+
+## 6.7 Wrap Up
+
+When we are doing our own research, we **always** have to spend some time working with the data before beginning our analysis. In this module, we have learned some important tools for manipulating data to get it ready for that analysis. Like everything else that we do in Stata, these manipulations should be done in a do-file, so that we always know exactly what we have done with our data. Losing track of those changes can cause some very serious mistakes when we start to do our research! In the [next module](https://comet.arts.ubc.ca/docs/Research/econ490-stata/07_Within_Group.html), we will look at how to do analysis on the sub-groups of variables in our data set.
+
+## 6.8 Wrap-up Table
+
+|Command| Function|
+|----|----|
+|`tabulate`| It provides a list of the different values of a variable.|
+|`summarize`| It provides the summary statistics of a variable.|
+|`generate`| It generates a new variable. |
+|`replace`| It replaces specific values of a variable.|
+
+## References
+
+[How to create a date variable from a date stored as a string](https://www.youtube.com/watch?v=M3XVgPJuFzU) <br> [How to create a categorical variable from a continuous variable](https://www.youtube.com/watch?v=XWVaXN2KwmA) <br> [How to create a new variable that is calculated from other (multiple) variables](https://www.youtube.com/watch?v=E_wCh0rf4p8)

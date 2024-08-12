@@ -1,0 +1,236 @@
+---
+title: '04 - Working with Locals and Globals'
+authors: Marina Adshade, Paul Corcuera, Giulia Lo Forte, Jane Platt
+date: 2024-05-29
+description: This notebook explains how to create and use locals and globals.
+categories: [econ 490, stata, locals, globals, loops, forvalues, foreach, help]
+format: 
+  html: default
+  ipynb:
+      syntax-definitions: 
+      - stata.xml
+      kernelspec: 
+        display_name: Stata
+        language: Stata
+        name: stata
+---
+
+## Prerequisites
+
+1.  View the characteristics of any dataset using the command `describe`.
+2.  Use `help` to learn how to run new commands and understand their options.
+3.  Understand the Stata command syntax.
+4.  Create loops using the commands `for`, `while`, `forvalues` and `foreach`.
+
+## Learning Outcomes
+
+1.  Recognize the difference between data set variables and Stata variables.
+2.  Recognize the difference between local and global Stata variables.
+3.  Use the command `local` to create temporary macros.
+4.  Use the command `global` to create permanent macros.
+5.  Forecast how you will use macros in your own research.
+
+## 4.1 Stata Variables
+
+In early econometrics courses, we learned that "variables" are characteristics of a data set. For example, if we had a data set that included all of the countries in the world, we might have a variable which indicates each country's population. As another example, if we had a data set that included a sample of persons in Canada, we might have a variable which indicates each person's marital status. These are data set variables, and they can be qualitative (strings) or quantitative (numeric).
+
+In Stata, there is a separate category of variables available for use which we call "macros". Macros work as placeholder variables for values that we want to store either temporarily or permanently in our workspace. Locals are macros that store data temporarily (within the span of the executed code), while globals are macros that store data permanently, or at least as long as we have Stata open on our computer. We can think of Stata macros as analogous to workspace objects in Python or R. Below, we are going to learn how to use these macros in our own research.
+
+## 4.2 Locals
+
+Locals are an extremely useful object in Stata. A local name is usually wrapped between two backticks.
+
+Here we will cover two popular applications of locals.
+
+### 4.2.1 Storing Results
+
+The first use of local macros is to store the results of our code. Most Stata commands have hidden results stored after they are run. We can then put those into local macros to use later. Consider the following example:
+
+```{stata}
+sysuse auto, clear
+
+summarize price
+```
+
+When we ran `summarize` above, Stata produced output that was stored in several local variables. We can access those stored results with the command `return list` (for regular commands) or `ereturn list` (for estimation commands, which we'll cover later in [Module 11](https://comet.arts.ubc.ca/docs/Research/econ490-stata/11_Linear_Reg.html). Since `summarize` is not an estimation command, we can run the following:
+
+```{stata}
+return list
+```
+
+Notice that Stata has reported that variables have been stored as scalars, where a scalar is simply a quantity.
+
+If we want Stata to tell us the mean price from the automobile data set that was just calculated using `summarize`, we can use the following:
+
+```{stata}
+display return(mean)
+```
+
+We can now store that scalar as a local, and use that local in other Stata commands:
+
+```{stata}
+local price_mean = return(mean)
+display "The mean of price variable is `price_mean'." 
+```
+
+We can also modify the format of our local, so that the average price is rounded to the closest integer and there is a comma separator for thousand units. We do so by typing `%5.0fc`. To learn more about different formats in Stata, type `help format`.
+
+```{stata}
+local price_mean_formatted : display %5.0fc return(mean)
+display "The average price is `price_mean_formatted'."
+```
+
+Imagine that we wanted to create a new variable that is equal to the price minus the mean of that same variable. We would do this if we wanted to de-mean that variable or, in other words, create a new price variable that has a mean of zero. To do this, we could use the `generate` command along with the local we just created to do exactly that:
+
+```{stata}
+local price_mean = return(mean)
+generate price_demean = price - `price_mean'
+```
+
+Note that there is no output when we run this command.
+
+If we try to run this command a second time, we will get an error because Stata doesn't want us to accidentally overwrite an existing variable. In order to correct this problem, we need to use the command `replace` instead of the command `generate`. Try it yourself above!
+
+Let's take a look at the mean of our new variable using `summarize` again.
+
+```{stata}
+su price_demean
+```
+
+We can see that the mean is roughly zero just as we expected.
+
+### 4.2.2 Executing Loops
+
+When we looked at loops in [Module 3](https://comet.arts.ubc.ca/docs/Research/econ490-stata/03_Stata_Essentials.html), we took a look at the second popular use of locals. Specifically, our examples of `foreach`, `forvalues`, and `while` use locals to iterate over strings or integers.  
+
+In this subsection, we will see how to use locals both **inside** of a loop (these locals are automatically generated by Stata) and **outside** of the loop (when we store the list of values into a local for the loop to loop from).
+
+Consider the following common application here involving a categorical variable that can take on 5 possible values.
+
+```{stata}
+summarize rep78
+```
+
+Note that if we run the command that we used to display the mean of price, we will now get a different value. Try it yourself!
+
+There are times when we might want to save all of the possible categorical values in a local. When we use the `levelsof` command as is done below, we can create a new local with a name that we choose. Here, that name is *levels_rep*.
+
+```{stata}
+levelsof rep78, local(levels_rep)
+```
+
+We can do different things with this new list of values. For instance, we can now summarize a variable based on every distinct value of *rep78*, by creating a loop using `foreach` and looping through all the values of the newly created local.
+
+```{stata}
+foreach x in `levels_rep' {
+summarize price if rep78 == `x'
+}
+```
+
+Notice that in the loop above there are two locals:
+
+1.  *levels_rep* : the local containing the list of values taken by variable *rep*;
+2.  *x* : the local containing, in each loop, one specific value from the list stored in *levels_rep*.
+
+## 4.3 Globals
+
+Globals are equally useful in Stata. They have the same applications as locals, but their values are stored permanently. Due to their permanent nature, globals cannot be used *inside* loops. They can be used for all the other applications for which locals are used.
+
+Here we will cover two popular applications of globals.
+
+### 4.3.1 Storing Lists
+
+Globals are used to store lists of variable names, paths, and/or directories that we need for our research project.
+
+Consider the following example where we create a global called *covariates* that is simply a list of two variable names:
+
+```{stata}
+global covariates "rep78 foreign"
+```
+
+We can now use this global anywhere we want to invoke the two variables specified. When we want to indicate that we are using a global, we refer to this type of macro with the dollar sign symbol `$`.
+
+Here we `summarize` these two variables.
+
+```{stata}
+summarize ${covariates}
+```
+
+In the empty cell below, `describe` these three variables using the macro we have just created.
+
+```{stata}
+
+```
+
+Notice that lists of variables can be very useful when we estimate multiple regression models. Suppose that we want to estimate how price changes with mileage, controlling for the car origin and the trunk space. We can store all our control variables in one global called *controls* and then call that global directly when estimating our regression.
+
+```{stata}
+global controls trunk foreign
+reg price mpg $controls
+```
+
+Using globals for estimating regressions is very helpful when we have to estimate many specifications, as it reduces the likelihood of making typos or mistakes.
+
+### 4.3.2 Changing Directories
+
+Globals are useful to store file paths. We will see more of them in the module of project workflow ([Module 18](https://comet.arts.ubc.ca/docs/Research/econ490-stata/18_Wf_Guide2.html)).
+
+In the following example, we are saving the file path for the folder where our data is stored in a global called *datadirectory* and the file path where we want to save our results in a global called *outputdirectory*.
+
+Note that this is a fictional example, so no output will be produced.
+
+```{stata}
+global datadirectory C:\project\mydata\
+global outputdirectory C:\project\output\
+```
+
+We can use the global *datadirectory* to load our data more easily:
+
+```{stata}
+use "$datadirectory\data.dta", clear
+```
+
+Similarly, once we have finished editing our data, we can store our results in the folder saved within the global *outputdirectory*:
+
+```{stata}
+save using "$outputdirectory\output.dta", replace
+```
+
+## 4.4 Common Mistakes
+
+The most common mistake that happens when using locals or globals is to accidentally save an empty macro. In those cases, the local or global will contain no value. This can happen if we run only some lines of the do-file in our local machine, as the local macros defined in the original do-file are not defined in the smaller subset of the do-file that we are running. These errors can happen if we run Stata on our local machine, but not if we run our code on JupyterLab. To avoid this kind of mistake, run your do-file entirely, not pieces of it.
+
+Another common mistake is to save the wrong values in our local variable. Stata always updates the automatically created locals in `return list` or `ereturn list`. In the following example, we fail to save the average price because Stata has updated the value of `return(mean)` with the average length.
+
+```{stata}
+summarize price length
+```
+
+```{stata}
+return list
+```
+
+```{stata}
+local price_mean = return(mean)
+display "The average price is `price_mean'." 
+```
+
+## 4.5 Wrap Up
+
+In this module, we learned how Stata has its own set of variables that have some very useful applications. We will see these macros throughout the following modules. You will also use them in your own research project.
+
+To demonstrate how useful macros can be, we can use our *covariates* global to run a very simple regression in which *price* is the dependent variable and the explanatory variables are *rep78* and *foreign*. That command using our macro would be:
+
+```{stata}
+regress price ${covariates}
+```
+
+If we only wanted to include observations where price is above average, then using the local we created earlier in this module the regression would be:
+
+```{stata}
+regress price ${covariates} if price > `price_mean'
+```
+
+You can see for yourself that Stata ran the regression on only a subset of the data.
+
+In the next module, we will work on importing data sets in various formats.

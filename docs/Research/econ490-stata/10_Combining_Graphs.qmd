@@ -1,0 +1,157 @@
+---
+title: '10 - Combining Graphs'
+author: Marina Adshade, Paul Corcuera, Giulia Lo Forte, Jane Platt
+date: 2024-05-29
+description: This notebook explains how to combine graphs. 
+categories: [econ 490, stata, visualization, combining graphs, twoway, generate]
+format: 
+  html: default
+  ipynb:
+      syntax-definitions: 
+      - stata.xml
+      kernelspec: 
+        display_name: Stata
+        language: Stata
+        name: stata
+---
+
+## Prerequisites 
+
+1. Be able to effectively use Stata do-files and generate log-files.
+2. Be able to change your directory so that Stata can find your files.
+3. Import datasets in .csv and .dta format. 
+4. Save data files. 
+5. Use the command `twoway`.
+
+## Learning Outcomes 
+
+1. Know how to combine and save graphs using the commands `graph combine` and `graph export`.
+
+## 10.0 Intro
+
+<div class="alert alert-block alert-info">
+
+**Note:** The best approach to completing this module is to copy and paste these commands into a do-file in Stata. Because Stata produces graphs in a separate window, Jupyter Notebooks will not produce a graph that we can see when we execute the commands on this page. The most we can do is export image files to a directory on our computer. We will see these commands whenever a graph is produced below.  </div>
+
+We'll continue working with the fake data set we have been using as we work on developing our research skills. Recall that this data set is simulating information for workers in the years 1982-2012 in a fake country where a training program was introduced in 2003 to boost their earnings. 
+
+```{stata}
+clear*
+*cd ""
+use fake_data, clear 
+```
+
+In this module, we will we will work on two examples. The first example covers combining two graphs with the same schema, while the second covers combining two graphs with different schemas. It will soon be very clear what we mean by *schema*.
+
+## 10.1 Example 1
+
+For this example, we want to generate two graphs with the same schema (they are the same type of graph and use the same variables as their x and y axis) and combine them using the `graph combine` command. Let's begin by setting up the data. We are going to first generate a new variable that shows the logarithm of workers' earnings. As explained in previous modules, collapsing data is irreversible; therefore, we can `preserve` the data set before we collapse it. Then, once we don't want to use the collapsed version of the data set anymore, we can `restore` it back to the original data set we preserved. Therefore,  we are going to preserve our data set and then collapse it by variables `treated` and `year`. This way our data has two unique identifiers, `treated` and `year`. 
+
+```{stata}
+generate log_earnings = log(earnings)
+label var log_earnings "Log-earnings"
+
+preserve
+
+collapse (mean) log_earnings, by(region treated year)
+```
+
+Now that we have our data prepared, we can start generating the two graphs and combining them using the `graph combine` command. We want these graphs to compare log-earnings between the control and treated groups in regions 1 and 2. To do this, we can create one graph that compares log-earnings between control and treated groups in region 1 and another that does the same comparison for region 2.
+
+Note that because the commands are so long it is clearer for us to break them up and run them using `///`. We can't execute multi-line commands in the Command Window; so we will need to include them in a do-file. Note that we also indent the lines to make it easier to read the complete command. 
+
+```{stata}
+*** Generate graph for Region 1 ***
+
+twoway (connected log_earnings year if region==?? & treated==1)      /// can you think of another way to specify treated vs untreated?
+    (connected log_earnings year if region==?? & treated==0),        ///
+        xline(2002, lpattern(dash))                                 /// 
+        ylab(9.5(0.5)11)                                            ///
+        ytitle("Log-earnings") xtitle("Year")                       ///
+        legend( label(1 "Treated") label(2 "Control"))              ///
+        aspectratio(1)                                              ///
+        title("Region 1") name("R1", replace)
+```
+
+```{stata}
+*** Generate graph for Region 2 ***
+
+twoway (connected log_earnings year if region==?? & treated) ||      ///
+    (connected log_earnings year if region==?? & !treated),          ///
+        xline(2002, lpattern(dash))                                 ///
+        ylab(9.5(0.5)11)                                            ///
+        ytitle("Log-earnings") xtitle("Year")                       ///
+        legend( label(1 "Treated") label(2 "Control"))              ///
+        aspectratio(1)                                              ///
+        title("Region 2") name("R2", replace)
+```
+
+We added a number of options here to make the graphs look appealing. You can learn more about these options in [Module 9](https://comet.arts.ubc.ca/docs/Research/econ490-stata/09_Stata_Graphs.html).
+
+Now let's see what it looks like when we combine these graphs together into one panel. The syntax for `graph combine` goes as follows: `graph combine name_of_graph1 name_of_graph2 ..., [options]`, where the `[options]` describe how we want to position our graphs. More information can be found by running `help graph combine` in the Stata Command Cindow.
+
+```{stata}
+*** Combine graphs ***
+
+graph combine R1 R2, cols(2) title("Panel A: Log-earnings by Region") saving(panel_a, replace)
+
+graph export graph10.jpg, as(jpg) replace
+```
+
+![Panel A](img/panel_a.svg)
+
+## 10.2 Example 2
+
+For this example, we want to combine graphs that do not follow the same schema. Let's say we are interested in seeing if there is any relationship between the distribution of earnings (*log_earnings*) and how worker's earnings change over time in region 1. Which graphs do you think would best present this information? 
+
+Like we saw last module, we usually use histograms to present density distributions and we can use a scatter plot or a line plot for the graph of *log_earnings* over time. We will begin by generating a histogram of *log_earnings* in region 1. 
+
+```{stata}
+restore       // do you remember what restore does? 
+```
+
+```{stata}
+histogram log_earnings if region==1,   ///
+    aspectratio(1)                     ///
+    name("histogram1", replace)
+```
+
+Let's create our second graph. 
+
+```{stata}
+preserve              
+
+collapse (mean) log_earnings, by(region year)
+```
+
+```{stata}
+twoway (connected log_earnings year if region==1), ///
+    ytitle("Log-earnings") xtitle("Year")        ///
+    aspectratio(1)                               ///
+    name("plot1", replace)
+```
+
+Now we combine `histogram1` with `plot1`. 
+
+```{stata}
+graph combine histogram1 plot1, cols(2) title("Region 1") name(newcombine, replace)
+
+graph export graph10.jpg, as(jpg) replace
+```
+
+## 10.3 Wrap Up
+
+In this module we learned how to use the command `graph combine`. When producing a research paper we might want to compare statistics from different countries or different regions such as GDP, population density, inflation, exports, etc. These types of graphs allow us to see how the same variables diverge between different categories (for example how earnings diverge between region 1 and 2 in ex. 1) and also can show the relationship between different variables throughout one. Understanding which graphs to use and how to portray them is of extreme importance when building a research project, which is why working alongside the `twoway` and `graph combine` documentation is always of great value.
+
+## 10.4 Wrap-up Table 
+
+|Command| Function|
+|-------|---------|
+|`graph combine`| It combines two graphs with the same or different schemas.|
+|`graph export`| It exports graphs to a local folder.|
+
+## References
+
+[Getting started in stata (includes graphing)](https://www.youtube.com/watch?v=YAVq99iUTTI) <br>
+[(Non StataCorp) Combining graphs in Stata](https://www.youtube.com/watch?v=GN9Jh7ZLauI)
+
