@@ -1,0 +1,514 @@
+---
+title: "02 - Introduction to R"
+author: COMET Team <br> _Colby Chambers, Anneke Dresselhuis, Oliver Xu, Colin Grimes, Jonathan Graves_
+date: 12 January 2023
+description: This notebook introduces you to some fundamental concepts in R.  It might be a little more complex than other notebooks, for a start, but it covers basically all of the fundamental syntax you need to know in later notebooks.  Don't get overwhelmed!  Remember, you can always review this later!
+categories: [basics, getting started, data types, data structures, introduction, dataframes, variables, operations, functions, R]
+format: 
+  html: default
+  ipynb:
+    jupyter:
+      kernelspec:
+        display_name: R
+        language: r
+        name: ir
+---
+
+
+
+## Outline
+
+### Prerequisites: 
+
+* Introduction to Jupyter
+
+### Learning Objectives
+
+- Understand variables, functions and objects in R
+- Import and load data into Jupyter Notebook
+- Access and perform manipulations on data
+
+```{r}
+# Run this cell
+
+source("getting_started_intro_to_r_tests.r")
+```
+
+# Introduction to Using R
+
+In this notebook, we will introducing **R**, which is a programming language that is particularly well-suited for statistics, econometrics, and data science.  If you are familiar with other programming languages, such as Python, this will likely be very familiar - if this is your first time, don't be intimidated!  Try to play around with the examples and exercises as you work through this notebook; it's easiest to learn R (or any programming language) by trying things for yourself.
+
+# Basic Data Types
+
+To begin, it's important to get a good grasp of the different **data types** in R and how to use them.  Whenever we work with R, we will be manipulating different kinds of information, which is referred to as "data".  Data comes in many different forms, and these forms define how we can use it in calculations or visualizations - these are called _types_ in R.
+
+R has 6 basic data types. Data types are used to store information about a variable or object in R:
+
+1. **Character**: data in text format, like "word" or "abc"
+2. **Numeric** (real or decimal): data in real number format, like 6, or 18.8 (referred to as **Double** in R)
+3. **Integer**:  data in a whole number (integer) format, like 2L (the L tells R to store this as an integer)
+4. **Logical**: truth values, like TRUE or FALSE
+5. **Complex**: data in complex (i.e. imaginary) format, like 1+6i (where $i$ is the $\sqrt{-1}$)
+6. **Raw**: raw digital data, an unusual type which we will not cover here
+
+If we are ever wondering what type an object in R is, or what its properties are, we can use the following two functions, which allow us to examine the data type and elements contained within an object:
+
+* `typeof()`: this function returns a character string that corresponds to the data type of an object 
+* `str()`: this function displays a compact internal structure of an R object 
+
+We will see some examples of these in just a moment.
+
+# Data Structures
+
+We often need to store data in complex forms.  Data can also be stored in different structures in R beyond basic data types. Data structures in R programming can be complicated, as they are tools for holding multiple values. However, some of them are very important and are worth discussing here. 
+
+* **Vectors**: a vector of values, like $(1,3,5,7)$
+* **Matrices**: a matrix of values, like $[1,2; 3,4]$ (usually displayed as a square)
+* **Lists**: a list of elements, like $($pet = "cat, "dog", "mouse"$)$, with named properties
+* **Dataframe**: a collection of vectors or lists, organized into rows and columns according to observations
+
+Note that vectors don't need to be numeric!  There are some useful built-in functions to create data structures (we don't have to create our own functions to do so).
+
+* `c()`: this function combines values into a vector
+* `matrix()`: this function creates a matrix from a given set of values
+* `list()`: this function creates a list from a given set of values
+* `data.frame()`: this function creates a data frame from a given set of lists or vectors
+
+Okay, enough background - lets see this in action!
+
+## Working with Vectors
+
+Vectors are important. We can create them from values or other elements, using the `c()` function:
+
+```{r}
+# generates a vector containing values
+z <- c(1, 2, 3)
+
+# generates a vector containing characters
+countries <- c("Canada", "Japan", "United Kingdom")
+```
+
+We can also access the elements of the vector.  Since a vector is made of basic data, we can get those elements using the `[ ]` index notation.  This is very similar to how in mathematical notation we refer to elements of a vector.
+
+> ***Note***: if you're familiar with other programming languages, it's important to note that R is 1-indexed.  So, the first element of a vector is 1, not 0.  Keep this in mind!
+
+```{r}
+# If we want to access specific parts of the vector:
+
+# the 2nd component of "z"
+z[2]
+
+# the 2nd component of "countries"
+countries[2]
+```
+
+As mentioned above, we can use the `typeof()` and `str()` functions to glimpse the kind of data stored in our objects. 
+Run the cell below to see how this works:
+
+```{r}
+# view the data type of countries
+typeof(countries)
+
+# view the data structure of countries
+str(countries)
+
+# view the data type of z
+typeof(z)
+
+# view the data structure of z
+str(z)
+```
+
+The output of `str(countries)` begins by acknowledging that the contained data is of a character (chr) type. The information contained in the `[1:3]` first refers to the component number (there is only 1 component list here) and then the number of observations (the 3 countries).
+
+## Check Your Knowledge! Vectors
+
+Let's see if you understand how to create new vectors!  In the block below:
+
+1. Create an object named `my_vector` which is a vector and which contains the numbers from 10 to 15. 
+2. Extract the 4th element of `my_vector` and store it in the object `answer1`
+
+```{r}
+#| eval: false
+#| classes: "question"
+
+my_vector <- c(...) # replace ... with the appropriate code
+
+answer1 <- my_vector[...] # replace ... with the appropriate code
+
+test_1()
+```
+
+```{r}
+#| eval: false
+#| classes: "answer"
+
+my_vector <- c(10,11,12,13,14,15) # replace ... with the appropriate code
+
+answer1 <- my_vector[4] # replace ... with the appropriate code
+
+test_1()
+```
+
+## Working with Matrices
+
+Just like vectors, we can also create matrices; you can think of them as organized collections of rows (or columns), which are vectors.  They're a little bit more complicated to create manually, since you need to use a more complex function.
+
+The simplest way to make a matrix is to provide a vector of all the values you are interested in including, and then tell R how the matrix is organized. R will then fill in the values:
+
+```{r}
+# generates a 2 x 2 matrix
+m <- matrix(c(2,3,6,7,7,3), nrow=2,ncol=3)
+
+print(m)
+```
+
+Take note of the order in which the values are filled it; it might be unexpected!
+
+Just like with vectors, we can also access parts of the matrix.  If you look at the cell output above, you will see some notation like `[1,]` or `[,2]`.  These are the _rows_ and _columns_ of the matrix.  We can refer to them using this notation.  We can also refer to elements using `[1,2]`.  Again, this is very similar to the mathematical notation for matrices.
+
+```{r}
+# If we want to access specific parts of the matrix:
+
+# 2th column of matrix
+m[,2]     
+
+# 1st row of matrix
+m[1,]  
+
+# Element in row 1, column 2
+
+m[1,2]
+```
+
+As with vectors, we can also observe and inspect the data structures of matrices using the helper function above.
+
+```{r}
+# what type is m?
+
+typeof(m)
+
+# glimpse data structure of m
+str(m)
+```
+
+The output of `str(m)` begins by displaying that the data in the matrix is of an numeric (num) type. The `[1:2, 1:3]` shows the structre of the rows and columns.  The final part displays the values in the matrix.
+
+## Test Your Knowledge! Matrices
+
+In this exercise:
+
+1. Create an object named `mat` which is a matrix with 2 rows and 2 columns. The first column will take on values 1,2, while the second column will take on values 3,4.
+2. Extract the value in the first row, second column from `mat` and store it in the object `answer2`
+
+```{r}
+mat <- matrix(..., nrow=...,ncol=...) # fill in the missing code
+answer2 <- mat[...]  # fill in the missing code
+
+test_2()
+```
+
+## Working with Lists
+
+Lists are a little bit more complex because they can store many different data types and objects, each of which can be given _names_ which are specific ways to refer to these objects.  Names can be any useful descriptive term for an element of the list.  You can think of lists like flexible vectors with names.
+
+```{r}
+# generates a list with 3 components named "text" "a_vector" and "a_matrix"
+my_list <- list(text="test", a_vector = z, a_matrix = m) 
+```
+
+We can access elements of the list using the `[ ]` or `[[ ]]` operations.  There is a difference:
+
+* `[ ]` accesses the _elements of the list_ which is the name and object
+* `[[ ]]` accesses the _object_ directly
+
+We usually want to use `[[ ]]` when working with data stored in lists.  One very nice feature is that you can refer to elements of a list by number (like a vector) or by their name.
+
+```{r}
+# If we want to access specific parts of the list:
+
+# 1st component in list
+my_list[[1]] 
+
+# 1st component in list by name (text)
+my_list[["text"]]
+
+# 1st part of the list (note the brackets)
+my_list[1] 
+
+# glimpse data type of my_list
+typeof(my_list)
+```
+
+There is one final way to access elements of a list by name: using the `$` or **access** operator.  This works basically like `[[name]]` but is more transparent when writing code.  You put the object you want to access, followed by the operator, followed by the property:
+
+```{r}
+# access the named property "text"
+my_list$text
+
+#access the named property "a_matrix"
+my_list$a_matrix
+```
+
+You will notice that this _only_ works for named object - which is particularly convenient for data frames, which we will discuss next.
+
+## Test Your Knowledge!  Lists
+
+In this exercise, you will need to:
+
+1. Create an object named `a_list`, which is a list with two components: an element called `String` which stores the character string "Hello World", and an element called `Range` which contains a vector with values 1 through 5.
+2. Extract the value of the second element, and store it in the object `answer3`
+
+```{r}
+a_list <- list(... = "Hello World", Range = ...) # fill in the missing code
+
+answer3 <- a_list... # fill in the missing code
+
+test_3()
+```
+
+## Working with Dataframes
+
+Dataframes are the most complex object you will work with in this course but also the most important.  They represent data - like the kind of data we would use in econometrics.  In this course, we will primarily focus on **tidy data**, which refers to data in which the columns represent variables, and the rows represent observations.  In terms of R, you can think of data-frames as a combination of a matrix and a list.
+
+We can access columns (variables) using their names, or their ordering
+
+```{r}
+# generates a dataframe with 2 columns and 3 rows
+df <- data.frame(ID=c(1:3),
+                 Country=countries)
+
+# If we want access specific parts of the dataframe:
+
+# 2nd column in dataframe
+df[2] 
+
+df$Country
+
+# glimpse compact data structure of df
+str(df)
+```
+
+Notice that the `str(df)` command shows us what the names of the columns are in this dataset and how we can access them.
+
+## Test Your Knowledge: Dataframes
+
+In this exercise:
+
+1. Create an object `my_dataframe` which is a dataframe with two variables and two observations. The first column `var1` will take on values `c(1,2)`. The second column `var2` will take on values `c("A", "B")`. 
+2. Extract the column `var1` and store it in the object `answer4`
+
+```{r}
+my_dataframe <- data.frame(var1=..., ...=c("A","B")) # fill in the missing code
+answer4 <- ... # fill in the missing code
+
+
+test_4()
+```
+
+# Objects and Variables
+
+At this point, you are familiar with some of the different types of data in R and how they work.  However, let's understand how we can work with these data types in more detail by writing R code.   A **variable** or **object** is a name assigned to a memory location in the R workspace (working memory). For now we can use the terms variable and object interchangeably. An object will always have an associated type, determined by the information assigned to it. Clear and concise object assignment is essential for **reproducible data analysis**, as mentioned in the module _Intro to Jupyter_.
+
+When it comes to code, we can assign information (stored in a specific data type) to variables and objects using the **assignment operator** `<-`. Using the assignment operator, the information on the right-hand side is assigned to the variable/object on the left-hand side; we've seen this before, in some of the examples earlier.
+
+In the example [2] below, `"Hello"` has been assigned to the object `var_1`. `"Hello"` will be stored in the R workspace as an object named `"var_1"`.
+
+> **Important Note**: R is case sensitive. When referring to an object, it must _exactly_ match the assignment.  `Var_1` is not the same as `var_1` or `var1`
+
+```{r}
+var_1 <- "Hello"
+
+var_1
+
+typeof(var_1)
+```
+
+You can create variables of many different types, including all of the basic and advanced types we discussed above.
+
+```{r}
+var_2 <- 34.5 #numeric/double
+var_3 <- 6L #integer
+var_4 <- TRUE #logical/boolean
+var_5 <- 1 + 3i #complex
+```
+
+# Operations
+
+In R, we can also perform **operations** on objects; the type of an object defines what operations are valid. All of the basic mathematical and logical operations you are familiar with are example of these, but there are many more.  For example:
+
+```{r}
+a <- 4 # creates an object named "a" assigned to the value: 4
+b <- 6 # creates an object named "b" assigned to the value: 6
+c <- a + b # creates an object "c" assigned to the value (a = 4) + (b = 6)
+```
+
+> Try and think about what value c holds!
+
+We can view the assigned value of `c` in two different ways:
+1. By printing `a + b`\
+OR
+1. By printing `c`
+
+Run the code cell below to see for yourself!
+
+```{r}
+a + b
+c
+```
+
+It is also possible to change the value of our objects. In the example below, the object `b` has been reassigned the value 5.
+
+```{r}
+b <- 5 
+```
+
+R will now store the updated value of 5 in the object `b`. This overrides the original assignment of 6 to `b`. The ability to change object names is a key benefit using variables in R. We can simply reassign the value to a variable without having to change that value everywhere in our code. This will be quite useful when we want to do things such as change the name of a column in a dataset.
+
+> ***Tip:***  Remember to use a unique object name that hasn't been used before in order to avoid unplanned object reassignments when creating a new object.  The more descriptive, the better!
+
+## Test Your Knowledge!  Basic Operations
+
+In this exercise:
+
+1. create an object `u` which is equal to 1
+2. create an object `y` which is equal to 7
+3. create an object `w` which is equal to 10.
+4. create an object `answer6` which is equal to the sum of `u` and `y`, divided by `w`
+
+```{r}
+... <- 1 # fill in the missing code
+y <- ...
+... <- ..
+
+answer6 <- ...
+
+
+test_6()
+```
+
+# Comments
+
+While developing our code, we do not always have to use markdown cells to document our process. We can also write notes in code cells using something called a **comment**. A comment simply allows us to write lines in our code cell which will not run when we run the cell itself. By simply typing the `#` sign, anything written directly after this sign and on the same line will not run; it is a comment. To comment out multiple lines of code, simply include the `#` sign at the start of each line. 
+
+> In general, the purpose of comments is to make the source code easier for readers to understand. Remember the concept of **reproducibility** from our last notebook?
+
+
+It is important to comment on our code for three main reasons:
+
+1. It allows us to **keep track of our actions and thought process**: Commenting is a great way to help us stay organized. Code comments provide an ordered process for everyone to follow. In case we need to debug our codes, we can easily track which step is problematic and come back to that particular line of code that may be the source of the problem.
+
+2. It **helps readers understand** why we're coding in a particular way: While coding something like `a + b` may be a more or less straightforward computation, our reader may not be able to understand what `a` or `b` are referring to, or why they need to be added to each other. Our readers or other developers may ask: why is addition used instead of multiplication or division? With comments, we can explain why this particular method was used for this particular code block and how it relates to other code blocks. 
+
+3. It **saves everyone's time** in the future, including yourself: It's far easier than you might expect to forget what a piece of code does, or is supposed to do.  Keeping good comments ensures that your code remains comprehensible.
+
+> **Tip**: an old woodworker's tip is to always label something when taking it apart so that a stranger could put the pieces back together.  The same advice applies to comments and coding: write code so that a stranger could figure out what it is supposed to do.
+
+Generally, it is always a good idea to add comments to our code. However, if we find ourselves needing to explain an important block of code using lines upon lines of comments, it is preferable to use a markdown cell instead to give ourselves more room. Comments are best served for the reasons above.
+
+# More on Operators
+
+Earlier, we used discussed operations and used the example of `+` to run the addition of `a` and `b`. `+` is a type of R arithmetic **operator** which means a symbol that tells R to perform a specific operation. We can use different R operators with variables. R has 4 types of operators:
+
+1. **Arithmetic operators**: used to carry out mathematical operations. Ex. `*` for multiplication, `/` for division, `^` for exponent etc.
+1. **Assignment operators**: used to assign values to variables. Ex. `<-` 
+1. **Relational operators**: used to compare between values. Ex. `>` for greater than, `==` for equal to, `!=` for not equal to etc.
+1. **Logical operators**: used to carry out Boolean operations. Ex. `!` for Logical NOT, `&` for Logical AND etc.
+
+We won't cover all of these right now, but you can look them up online; for now, keep an eye out for them when they occur.
+
+# Functions
+
+These simple operations are great to start with, but what if we want to do operations on different values of X and Y over and over and don’t want to constantly rewrite this code? This is where **functions** come in. Functions allow us to carry out specific tasks. We simply pass in a parameter or parameters to the function. Code is then executed in the function body based on these parameters, and output may be returned.
+
+```{r}
+# Functionname <- function(arguments)
+#  {code operating on the arguments
+#   }
+```
+
+This structure says that we start with a name for our function (`Functionname`, here) and we use the assignment operator similarly to when we assign values to variables. We then pass **arguments or parameters** to our function (which can be numeric, characters, vectors, collections such as lists, etc.); think of them as the _inputs_ to the function. 
+
+Finally, within the curly brackets we write our code needed to accomplish our desired task. Once we have done this, we can call this function anywhere in our code (after having run the cell defining the function!) and evaluate it based on specific parameter values. 
+
+An example is shown below; can you figure out what this function does?
+
+```{r}
+my_function <- function(x, y)
+ {x = x + y
+ 2 * x
+}
+```
+
+The parameters placed into functions can be given **defaults**. Defaults are specific values for parameters that have been chosen and defined within the circular brackets of the function definition. For example, we can define `y = 3` as a default in our `my_function`. When we call our function, we then do not have to specify an input for `y` unless we want to.
+
+```{r}
+my_function <- function(x, y = 3)
+ {x = x + y
+ 2 * x}
+
+my_function(2)
+```
+
+However, if we want to override this default, we can simply call the function with a new input for `y`. This is done below for `y=4`, allowing us to execute our code as though our default was actually `y=4`.
+
+```{r}
+my_function <- function(x, y = 3)
+ {x = x + y
+  2 * x}
+
+my_function(2, 4)
+```
+
+Finally, note that we can **nest** functions within functions, meaning we can call functions inside of other functions - creating very complex arrangements. Just be sure that these inner functions have themselves already been defined. 
+
+```{r}
+my_function_1 <- function(x, y)
+ {x = x + y + 2
+  2 * x}
+
+my_function_2 <- function(x, y)
+ {x = x + y - my_function_1(x, y)
+  2 * x}
+
+my_function_2(2, 3)
+```
+
+Luckily, we usually don't have to define our own functions, since most useful built-in functions we need already come with R - although we may need to import specific packages to access them. We can always use the help `?` feature in R to learn more about a built-in function if we're unsure. For example, `?max` gives us more information about the `max()` function.
+
+For more information about how you can read and use different functions, please refer to the [Function Cheat Sheet](https://cran.r-project.org/doc/contrib/Short-refcard.pdf). 
+
+## Test Your Knowledge! Functions
+
+In this exercise:
+
+1. Create a function `divide` which takes in two arguments, `x` and `y`. The function should return `x` divided by `y`. 
+2. Store the solution to `divide(5,3)` in the object `answer7`:
+
+```{r}
+divide <- function(x,y) {
+    ...
+    }
+
+# Your code goes here
+
+answer7 <- ...(5,3)
+
+
+test_7()
+```
+
+# Oops!  Dealing with Errors 
+Sometimes in our analysis we can run into errors in our code. This happens to everyone - don't worry - it's not a reason to panic. Understanding the nature of the error we are confronted with can be a helpful first step to finding a solution. There are two common types of errors:
+
+* **Syntax errors**: This is the most common error type. These errors result from invalid code statements/structures that R doesn’t understand. Suppose R speaks English, asking it to help by speaking German or broken English certainly would not work! Here are some examples of common syntax errors: the associated package is not loaded, misspelling of a command as R is case-sensitive, unmatched/incomplete parenthesis etc. How we handle syntax errors is case-by-case: we can usually solve syntax errors by reading the error message and finding what is often a typo or by looking up the error message on the internet using resources like stack overflow.
+
+* **Semantic errors**: These errors result from valid code that successfully executes but produces unintended outcomes. Again, let us suppose R speaks English. Although we asked it to hand us an apple in English and R successfully understood, it somehow handed us a banana! This is not okay! How we handle semantic errors is also case-by-case -  we can usually solve semantic errors by reading the error message and searching it online.
+
+Now that we have all of these terms and tools at our disposal, we can begin to load in data and operate on it using what we’ve learned.
+
+# Wrapping Up
+
+In this notebook, we have learned the different ways data can be stored and structured in our R memory. We have also learned how to manipulate, extract and operate on data from different structures. Finally, we have learned how to write a function that can perform operations more efficiently.
+
+

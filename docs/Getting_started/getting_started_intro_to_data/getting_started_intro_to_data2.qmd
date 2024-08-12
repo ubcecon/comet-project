@@ -1,0 +1,444 @@
+---
+title: "03.2 - Introduction to Data in R - Part 2"
+author: COMET Team <br> _Colby Grimes, Colby Chamber, Jonathan Graves, Manas Mridul, Valeria Zolla_
+date: 9 July 2023
+description: An introduction to analyzing data using tidyverse and dplyr in R including workflows for loading, merging, cleaning and visualizing data. 
+categories: [introduction, getting started, R, data, tidyverse, data cleaning, tables, data wrangling, missing values, merging data]
+format: 
+  html: default
+  ipynb:
+    jupyter:
+      kernelspec:
+        display_name: R
+        language: r
+        name: ir
+---
+
+## Outline
+
+### Suggested Prerequisites
+
+-   Introduction to Jupyter
+-   Introduction to R
+
+### Prerequisites
+
+-   Introduction to Data in R - Part 1
+
+### Learning Outcomes
+
+In this notebook, you will learn about:
+
+\- Filtering, Segmenting, Combining and Cleaning Data Sets for further analysis.
+
+\- Reshaping and Presenting Data in different kinds of Tidy-formats as best suited for your Research Question (RQs)
+
+### References
+
+-   [Introduction to Probability and Statistics Using R](https://mran.microsoft.com/snapshot/2018-09-28/web/packages/IPSUR/vignettes/IPSUR.pdf)
+-   [DSCI 100 Textbook](https://datasciencebook.ca/index.html)
+
+```{r}
+# Run this cell
+source("getting_started_intro_to_data_tests.r")
+# loading in our packages
+library(tidyverse)
+library(haven)
+```
+
+### Start with loading the WDI data set
+
+The World Development Indicators (WDI) is the primary World Bank collection of development indicators, compiled from officially recognized international sources.
+
+We have used World Bank's DataBank applet to select and import some macro and development-related time series data for the countries Canada, India, Mexico, South Africa, and Zimbabwe for years 2014-2022.
+
+```{r}
+# Importing required packages
+library(readr)
+library(dplyr)
+library(tidyr)
+library(stringr)
+
+#Loading the CSV file using the URL 
+file_path <- "WB_Data/WDI_raw.csv"
+wdi <- read_csv(file_path) %>%
+  rename(Series_Code = "Series Code", Series_Name = "Series Name",
+         Country = "Country Name", Country_Code = "Country Code")
+
+head(wdi, 10)
+```
+
+```{r}
+dim(wdi)
+```
+
+The data frame can be described to be in a long format. Each unique value in the **`Series_Name`** serves as an index (in addition to Country Name, Country Code) hence creating distinct rows.
+
+A simpler version of the data frame in a **wide-format** could look like this:
+
+1.  Canada, 2017, Var A, Var B, Var C
+2.  Canada, 2018, Var A, Var B, Var C
+
+Meanwhile, one way of representing the same data in a **long-format** looks like this:
+
+1.  Canada, Var A, 2017, 2018
+2.  Canada, Var B, 2017, 2018
+3.  Canada, Var C, 2018, 2018
+
+Do you now see the difference in the two ways of representing the same data?
+
+> While we don't cover it in this notebook, switching between long and wide formats is can be quite useful sometimes.
+>
+> For example, when you want to either aggregate values (eg. over years*)* or compute a new variable using two or more variables, having your data frame in a shape that best suits your *data-wrangling* skills becomes essential.
+
+While `Series Name` contains descriptions for each of the series in the data frame, `Series Code` offers a handy way to group related series (or call them variables).
+
+Our `Series Code`s follow a taxonomy system. For example, any code starting with `AG` belongs to a *family of series* related to the state of agriculture in the world countries.
+
+```{r}
+#Let's see the unique Series Families and Series Names contained within
+Series_Families <- wdi %>%
+  mutate(Series_Family = substr(`Series_Code`, 1, 2)) %>% #substring first two chars
+  group_by(Series_Family) %>% #group by unique vals
+  summarize(Series_Names_Under_Family = paste(unique(`Series_Name`), collapse = ", ")) #For each family, find and paste ALL the Series names in the "cell"
+
+head(Series_Families, 13)
+```
+
+If we had to prepare a *tidy* data frame comparing the state of *Access to Institutions* within the countries, we would look towards Series with codes beginning with `SE` (Schooling), `FX` (Financial Institutions) and `EG` (Electricity).
+
+Let's now create a new data called `access_wdi`.
+
+```{r}
+prefixes <- c("SE", "EG", "FX")
+
+access_wdi <- wdi %>% filter(str_detect(`Series_Code`, str_c("^", prefixes, collapse = "|")))
+
+# 'access_wdi' will now contain only the rows where the 'Series_Code' starts with any of the specified prefixes
+
+access_wdi <- access_wdi %>%  rename_with(~str_extract(., "\\d{4}"), starts_with("20")) #Rename Year cols to follow the 2XYZ format.
+
+head(access_wdi, 5)
+```
+
+### Handling Missing Values
+
+We are interested in seeing if there are any specific years for when the data was not collected or is missing for *most* of the variables/series.
+
+Let's look at each of the year columns and count the number of rows with `NA`.
+
+```{r}
+year_columns <- c("2018", "2019", "2020", "2021", "2022")
+
+missing_counts <- sapply(year_columns, function(column) sum(is.na(access_wdi[[column]])))
+
+print(missing_counts / nrow(access_wdi))
+```
+
+Looks like the data is missing for 98% of the Series for the year 2022, and it makes more sense to drop the 2022 column altogether.
+
+```{r}
+access_wdi <- access_wdi %>% select(-`2022`)
+head(access_wdi, 20)
+```
+
+Since we are interested in a comparative analysis of countries over time, we need to also check for missing values *row-wise*. So if for a certain combination of Country, Series values, data is systematically missing more than general. We can use thresholds -- for example, let's see if there are any particular series for which the data (for any country) is missing for more than 2 years.
+
+```{r}
+#Create a new column that shows NA count by columns for each row
+access_wdi$count_na <- rowSums(is.na(access_wdi))
+
+#Sort by number of missing vals
+access_wdi <- access_wdi %>% arrange(desc(count_na))
+
+select(access_wdi, c("Country_Code", "Series_Code", "count_na"))
+```
+
+This data frame shows that we don't have *any* data for Series beginning with the `SE` (Schooling) prefix.
+
+> *Think Critically*: We can be a lot of systematic about dropping missing values! In our case, we have two indexes (Country and Series) while the years are the columns of interest. Dropping values hence becomes a bit more complex as we have a lot of options to choose from: 
+>
+> -   Dropping/Replacing Series altogether
+>
+> -   Dropping/Replacing Countries
+>
+> -   Dropping/Replacing specific rows, ie. Country-Series observation pairs.
+>
+> Of course, making such decisions by looking at a 3x4 data frame is a lot easier than making decisions by looking at a 10x4 data frame with multiple indexes. Hence, it helps to narrow your research scope and define your RQs before making decisions about replacing/dropping observations.
+
+Continuing with our tutorial, there are *any* countries that are Series data for more than 3 years.
+
+> This would make sense if we were interested in analyzing, comparing or visualizing YoY change in Series values. For example, How did primary school enrollment change *as a result of* COVID-19 lockdowns?
+
+```{r}
+#Creating an array of Series_Code(s) that need to be dropped from access_wdi
+
+to_drop <- access_wdi %>%
+  filter(count_na > 2) %>%
+  distinct(Series_Code) %>% unique() 
+
+to_drop <- unlist(to_drop, use.names = FALSE)
+
+to_drop
+```
+
+> *Think Critically:* If we drop all Series included in `to_drop`, our research scope will become significantly narrower! The presence of missing data thus poses a challenge, but there are potential solutions to address this limitation. One approach is to import data series from alternative sources and *fill them into* our original data set. This is beyond the scope of this tutorial but sincere caution must be practices with appropriate citations when combining data from different data sources.
+
+For simplicity's sake, let's now drop all the rows where `Series_Code` matches any of the codes in *`to`*`_drop` and save the resulting data frame as a new version of `access_wdi`.
+
+```{r}
+filtered_access_wdi <- access_wdi %>%
+   filter(!(Series_Code %in% to_drop))
+
+filtered_access_wdi
+```
+
+Now the only variables really left in this data frame are the `EG` variables that indicate the levels of access to electricity and other power sources within the countries.
+
+If we had to answer a holistic set of questions on the state of access to public amenities, do you think the data frame above would be appropriate?
+
+Narrowing down our research scope a bit, we could still visualize the growth in access to energy across the countries over the last 5 years using R. 
+
+### Merging Data Frames in R
+
+The World Bank (in tandem with the International Monetary Fund) also updates the Quarterly Public Debt data base. The WDI data set has a few key macro-series including *national incomes*, *CABs*, *Bank Capital to Assets Ratios,* and various kinds of *CPIA* ratings.
+
+Let's try to present some macro-relevant information in a neat *tidy* frame that one would further use to visualize and analyze the fiscal and monetary landscapes within different world countries.
+
+```{r}
+#Here are all the Series_Families I want from WDI
+prefixes <- c("NY", "FD", "FB", "IQ", "BN")
+
+#Subset WDI and create macro_WDI
+macro_wdi <- wdi %>% filter(str_detect(`Series_Code`, str_c("^", prefixes, collapse = "|"))) %>% # Documentation on `?str_detect`
+  rename_with(~str_extract(., "\\d{4}"), starts_with("20")) #Cleaning Year Column names
+  
+macro_wdi
+```
+
+Again take note of the missing values! It's sad that we're missing the CPIA rating variables (starting with `IQ`) for all the countries (Canada, India, Mexico, South Africa and Indonesia).
+
+Since this won't add much to our *comparitive* analysis of the world countries, it makes more sense to drop the CPIA rows altogether.
+
+```{r}
+
+macro_wdi <- macro_wdi %>% filter(!(Series_Code %in% c('IQ.CPA.FINS.XQ', 'IQ.CPA.FISP.XQ', 'IQ.CPA.MACR.XQ', 'IQ.CPA.PROP.XQ', 'IQ.CPA.PROT.XQ', 'IQ.CPA.DEBT.XQ', 'IQ.CPA.TRAD.XQ')))
+
+c(macro_wdi$Series_Code %>% unique(), macro_wdi$Series_Name %>% unique())
+```
+
+So these are the variables we'll include from the WDI data frame! Now, let's load the QPD data base.
+
+```{r}
+#Loading the CSV file using the URL 
+file_path_2 <- "WB_Data/qpd.csv"
+
+qpd <- read_csv(file_path_2) %>%
+  rename(Series_Code = "Series Code", Series_Name = "Series Name",
+         Country = "Country Name", Country_Code = "Country Code")
+
+head(qpd, 25)
+
+```
+
+### Aggregating Quarterly Values by Year
+
+The Series data in QPD is stored on a quarter-by-year basis, and we can aggregate _column_wise_ to get yearly amounts for each year. 
+
+> As you might ask, how do missing values affect data aggregation? R will usually throw an error if you're telling it to sum over certain rows/columns and if they include NA values. We resolve this by setting the parameter `na.rm = TRUE` telling the aggregation functons to handle NA values properly. 
+
+As for best practice, I want to check the number of periods for which data is missing for **each unique combination of Country and Series_Code values**. The following code can be described as a custom loop-function telling R to _manually_ go over each unique row, count the number of NAs along the period columns, and then store the result in another dataframr called `status`. 
+
+
+
+```{r}
+status <- data.frame() #empty data-frame where we will store the information
+Series_Codes <- qpd$Series_Code %>% unique() #gets all Series_Codes to iterate over
+Countries <- qpd$Country_Code %>% unique() #gets all Country_Codes to iterate over 
+
+for (country_code in Countries) {
+  select <- filter(qpd, Country_Code == country_code) # first filter by country
+  
+  for (series_code in Series_Codes) {
+    select_further <- filter(select, Series_Code == series_code) #then filter by Series_Code
+    #now, select the period columns. The result will be a single row of period columns
+    # for each unique Country_Code, Series_Code combination. 
+    cols_to_check <- select(select_further, c("2018Q1 [YR2018Q1]", "2018Q2 [YR2018Q2]", "2018Q3 [YR2018Q3]", "2018Q4 [YR2018Q4]",
+                                              "2019Q1 [YR2019Q1]", "2019Q2 [YR2019Q2]", "2019Q3 [YR2019Q3]", "2019Q4 [YR2019Q4]",
+                                              "2020Q1 [YR2020Q1]", "2020Q2 [YR2020Q2]", "2020Q3 [YR2020Q3]", "2020Q4 [YR2020Q4]",
+                                              "2021Q1 [YR2021Q1]", "2021Q2 [YR2021Q2]", "2021Q3 [YR2021Q3]", "2021Q4 [YR2021Q4]",
+                                              "2022Q1 [YR2022Q1]", "2022Q2 [YR2022Q2]", "2022Q3 [YR2022Q3]", "2022Q4 [YR2022Q4]"))
+    
+    na_count <- sum(is.na(cols_to_check)) #finally, store the value of NAs
+    
+    result <- data.frame(Country_Code = country_code, Series_Code = series_code, na_count = na_count)
+    
+    status <- rbind(status, result)
+    #this loop appends the result to the status dataframe
+  }
+}
+
+
+```
+
+As expected, `status` should have three columns: Country_Code, Series_Code, and the na_count. I can now figure out which Country, Series combinations are missing data for **less than 20 periods**. 
+
+```{r}
+status_to_drop <- status %>% filter(na_count < 20 & na_count > 0) #strictly less than 20
+status_to_drop
+```
+_So_, these are the Countries-Series pairs which we must drop from the data-frame. Why specifically `na_count < 20 & na_count > 0`. It's because, if the data is missing for **all** of the 20 columns, R's aggregate function will take care of that and give me `0` as the yearly aggregate value. However, if data is missing for strictly less than 20 period columns, the yearly aggregate values will be **under-estimated**.
+
+> By storing our exploration's results in `status`, we can re-visit our decision to drop values anytime we want. Such proper documentation builds _trust_ around the validity of the aggregate computations!
+
+Let's now use `anti_join()` to drop any rows from `qpd` that match the Country_Code, Series_Code pairs in `status_to_drop`. 
+
+```{r}
+qpd_filtered <- anti_join(qpd, status_to_drop, by = c("Country_Code", "Series_Code"))
+qpd_filtered
+```
+>`anti_join()` is a function that removes rows from a dataframe that have matching values in specified columns with another dataframe. In this context, it is used to drop rows from qpd that match the Country_Code and Series_Code pairs in status_to_drop, resulting in the filtered dataframe qpd_filtered.
+      
+The code below tells R how to manually go over each unique combination of Country, Series_Code values and aggregate quaterly values by year. To see each line in action, head to the Appendix!
+
+```{r}
+# Pivot the data from wide to long format, creating separate rows for each quarterly value
+qpd_long <- qpd_filtered %>%
+  tidyr::pivot_longer(starts_with("20"), names_to = "quarter", values_to = "value")
+
+# Extract the year from the "quarter" column
+qpd_extracted <- qpd_long %>%
+  dplyr::mutate(year = stringr::str_extract(quarter, "\\d+"))
+
+# Group the data by country, series, and year for aggregation
+qpd_grouped <- qpd_extracted %>%
+  dplyr::group_by(Country_Code, Country, Series_Code, Series_Name, year)
+
+# Calculate the sum of values for each combination of country, series, and year
+qpd_summarized <- qpd_grouped %>%
+  dplyr::summarise(total_value = sum(value, na.rm = TRUE))
+
+# Pivot the data back to wide format, with separate columns for each year
+qpd_aggregated <- qpd_summarized %>%
+  tidyr::pivot_wider(names_from = year, values_from = total_value, names_prefix = "year_")
+
+qpd_aggregated
+```
+Also, take note of the zeroes in the data frame. These occur due to certain Country, Series pairs missing data for all of the 20 periods. We could filter out these observations if we had to! 
+
+> The best thing about the dataframe is that the aggregate values strictly greater than 0 are at least not being under-aggregated since we took care of cases where data was missing for less than 20 periods. 
+
+#### Performing the Merge
+
+I'll now create a new data frame which includes both the macro variables from WDI and the QPD data. We'll use `rbind()` to append observations from QPD to `macro_wdi`.
+
+```{r}
+# Example: Since the yearly column names are different, we can rename them to match
+colnames(qpd_aggregated) <- colnames(macro_wdi)
+
+# Combine the data frames using rbind
+df_macro <- rbind(macro_wdi, qpd_aggregated)
+
+# Print the dimensions of the combined data frame
+print(dim(df_macro))
+
+# View the combined data frame
+df_macro
+
+```
+
+#### Performing a Horizontal Merge
+
+Let's suppose we were to update `df_macro` with 2023 values which we have saved in a different dataframe.
+
+```{r}
+values_2023 <- c(-46898267372, -25575220073, 1457067267, 81641557999, -59663613794, 79677936994, 88935053721, 32159558497, 25822808780, -87642745906, -58805085020, -64688649494, 37404569332, -23179256357, 53968284000, -460151583, 43523701653, 98381218966, -23992964113, 55489044264, 86941046221, -57571495743, 30334753217, -74888980808, -46555866254, -22777181491, -97321933368, -23522408586, 73938169144, -31930200662, -3583976906, 19913165085)
+
+Country <- c("India",  "India", "Canada", "Canada", "Honduras", "Honduras", "Indonesia", "Indonesia", "South Africa", "South Africa", "Mexico",  "Mexico", "United Kingdom", "United Kingdom", "United States", "United States", "China", "China", "Hong Kong SAR, China", "Hong Kong SAR, China", "Netherlands", "Netherlands", "Egypt, Arab Rep.", "Egypt, Arab Rep.", "Georgia", "Georgia", "Slovak Republic", "Slovak Republic", "Georgia", "Honduras", "Indonesia", "Slovak Republic")
+
+Series_Code <- rep(df_macro$Series_Code, length.out = length(values_2023))
+Series_Name <- rep(df_macro$Series_Name, length.out = length(values_2023))
+
+series_2023 <- data.frame( Country = Country, Series_Code = Series_Code, Series_Name = Series_Name, values_2023 = values_2023)
+
+head(series_2023, 5)
+```
+
+Now, we can use `merge()` to add the 2023 values column into `df_macro` while ensuring  only the observations where values for `Country` are matched between the two data frames are merged.
+
+```{r}
+df_macro_2 <- merge(df_macro, df_2023, by = c("Country", "Series_Code", "Series_Name"))
+
+df_macro_2 <- df_macro_2 %>% rename("2023" = "values_2023")
+
+df_macro_2
+```
+
+### Optional: Review of different Merge Methods in R
+
+```{r}
+library(knitr)
+knitr::include_graphics("join_visual.png")
+```
+
+As illustrated in the image, an `full_join()` and `right_join()` are great for merging data sources in situations when we are particularly interested in the issue of missing matches.
+
+For simpler cases, `inner_join()` is ideal when you only want to include fully matched observations in the final data set.
+
+### Conclusion
+
+Thanks for completing this module. The skills you have learnt in **Intro to Data Parts 1 and 2** should help with various kinds of data interviews. Researchers should remember to document their decisions while excluding/including data, merging different data sources, always think about how certain actions might change the validity of later statistical tests or the drawn conclusions.
+
+
+### Appendix
+
+#### More on the _Wrangling Code_ that aggregates period values in QPD
+
+The following code should produce 5 different data-frames that incrementally show how our _wrangling_ code calculated the yearly aggregates for each Country and Series. 
+
+```{r}
+# Select a specific country and series for demonstration (e.g., "USA" and "GDP")
+country_code <- "ALB"
+series_code <- "DP.DOD.DSCD.CR.PS.CD"
+
+# Filter the data for the specific country and series
+qpd_example <- qpd_filtered %>%
+  dplyr::filter(Country_Code == country_code, Series_Code == series_code)
+
+# Pivot the data from wide to long format, creating separate rows for each quarterly value
+qpd_long <- qpd_example %>%
+  tidyr::pivot_longer(starts_with("20"), names_to = "quarter", values_to = "value")
+
+# Show the intermediate result: qpd_long
+qpd_long
+
+# Extract the year from the "quarter" column
+qpd_extracted <- qpd_long %>%
+  dplyr::mutate(year = stringr::str_extract(quarter, "\\d+"))
+
+# Show the intermediate result: qpd_extracted
+qpd_extracted
+
+# Group the data by country, series, and year for aggregation
+qpd_grouped <- qpd_extracted %>%
+  dplyr::group_by(Country_Code, Country, Series_Code, Series_Name, year)
+
+# Show the intermediate result: qpd_grouped
+qpd_grouped
+
+# Calculate the sum of values for each combination of country, series, and year
+qpd_summarized <- qpd_grouped %>%
+  dplyr::summarise(total_value = sum(value, na.rm = TRUE))
+
+# Show the intermediate result: qpd_summarized
+qpd_summarized
+
+# Pivot the data back to wide format, with separate columns for each year
+qpd_aggregated <- qpd_summarized %>%
+  tidyr::pivot_wider(names_from = year, values_from = total_value, names_prefix = "year_")
+
+# Show the final result: qpd_aggregated
+qpd_aggregated
+
+
+```
