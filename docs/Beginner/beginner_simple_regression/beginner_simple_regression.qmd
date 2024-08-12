@@ -1,0 +1,1000 @@
+---
+title: "1.7 - Beginner - Simple Regression"
+author: COMET Team <br> _Jonathan Graves, Jonah Heyl, Anneke Dresselhuis, Rathin Dharani, Devan Rawlings, Jasmine Arora_
+date: 11 July 2023
+description: What is a regression model?  This notebook introduces simple (i.e. one-variable) regression by comparing it to a comparison-of-means test.  We also look at a few issues in regression, and the interpretation of a regression model.
+categories: [econ 325, regression, simple regression, residuals, fitted values, beginner, R, conditional expectation]
+format: 
+  html: default
+  ipynb:
+    jupyter:
+      kernelspec:
+        display_name: R
+        language: r
+        name: ir
+---
+
+## Outline
+
+### Prerequisites
+
+-   Introduction to Jupyter
+-   Introduction to Data
+-   Introduction to R
+-   Hypothesis testing
+
+### Outcomes
+
+-   Build a simple linear regression using R
+-   Create and interpret regression outputs in R including: coefficient
+    estimates
+-   Examine the various elements of regression objects in R (including
+    fitted values, residuals and coefficients)
+-   Explain the role of qualitative variables in regression analysis as
+    dummy variables
+
+```{r}
+
+library(tidyverse)
+library(haven)
+
+source("beginner_simple_regression_tests.r")
+```
+
+# Part 1: Learning About Regressions
+
+-   What is a regression?
+
+-   What is the relationship of a regression to other statistical
+    concepts?
+
+-   How do we use regressions to answer economic questions?
+
+In this notebook, we will explore these questions using our census data
+set and will learn more about the immigrant wage gap. If you remember
+from last lecture, we were interested in the relationship between
+`wages` and `immstat` - wages and immigration status. However we can
+also use to the variable, `mrkinc` (market income) to measure income.
+Let's explore the relationship between `wages` and `mrkinc` in this data
+set.
+
+Let's start off with a visualization:
+
+```{r}
+
+census_data <- read_dta("../datasets_beginner/01_census2016.dta")
+
+census_data <- as_factor(census_data)
+
+census_data <- filter(census_data, !is.na(census_data$wages)) #Removing the rows in which wages = NA
+census_data <- filter(census_data, !is.na(census_data$mrkinc)) #Removing the rows in which mrkinc = NA
+
+glimpse(census_data)
+```
+
+```{r}
+
+options(repr.plot.width=6,repr.plot.height=4) #controls the image size
+
+f <- ggplot(data = census_data, aes(x = wages, y = mrkinc)) + xlab("Wages") + ylab("Market Income")
+f + geom_point()
+```
+
+> *Think Deeper*: What do you see here? Is there anything about this
+> relationship that sticks out to you? Why does it have the shape it
+> does?
+
+While you can probably tell that there is some relationship between
+wages and market income, it can be difficult to visualize using a
+scatterplot alone since there are far too many points.
+
+## Conditional Expectation:
+
+The expectation of $X$ is what outcome we expect $X$ to *typically* be
+after *a lot* of sampling. We calculate the predicted value by
+multiplying the different values $X$ can take by the various
+probabilities of $X$ taking on that value. For instance, the expectation
+of a die throw is 3. Essentially, $$
+E[X] =  \sum_{i=1}^n P(X_i=x) X_i
+$$
+
+You can think of conditional expectation as the expected value based on
+some condition: $$
+E[X|y_i=y] =  \sum_{i=1}^n P(X_i=x|y_i=y) X_i
+$$
+
+-   The conditional expectation: **the expectation of a random variable
+    X, conditional on the value taken by another random variable Y** .
+    If the value of Y affects the value of X (i.e. X and Y are
+    dependent), the conditional expectation of X given the value of Y
+    will be different from the overall expectation of X.
+
+-   In other words, we use conditional expectation when we predict that
+    there is a relationship between a predictor variable and the
+    response variable, such that we want our predictions to be made in
+    the context of a specific value of the predictor(s).
+
+-   The shape of the conditional expectation function indicates the
+    relationship between the two variables we are interested in. For
+    example, the conditional expectation of a dice roll *given* that the
+    number is even, is 4.
+
+Linear regression assumes a linear conditional expectation function
+which means that the conditional expectation function can be described
+by a straight line:
+
+$E[Y|X=x]= \beta_0 +\beta_1X$
+
+We can split a regression model into two parts:
+
+1\. The conditional expectation
+
+2. An error term
+
+To be clear, let's look at an example of this linear conditional
+expectation function, where our $Y$ (outcome variable) is wages and our
+$X$ (explanatory variable) is years of education.
+
+The conditional expectation function would
+be:$E[WAGES|YEARS=years_i] = \beta_0 +\beta_1X$.
+
+This means that the *given* a particular value of years of education
+($years_i$) for an individual $i$, the wages of that individual will
+follow the linear regression form $\beta_0 +\beta_1X$.
+
+## Regression Models
+
+A regression model specifies (the *specification*) the relationship
+between two variables. For example, a linear relationship would be:
+
+$$
+M_i = \beta_0 + \beta_1 W_i
+$$
+
+-   $M_i$, the market income of individual $i$ is our outcome variable.
+
+-   $W_i$, their wage is our explanatory variable.
+
+-   In econometrics, we use the terms **outcome** variable and
+    **explanatory** variable rather than the dependent and *independent*
+    variable respectively.
+
+A model like this describes the relationship between the variables - but
+it also depends on two unknowns: $\beta_0$, $\beta_1$.
+
+-   The $\beta_0$ and $\beta_1$ are **parameters** of the model: they
+    are numbers that determine the relationship (intercept and slope)
+    between $M_i$ and $W_i$
+-   This is a linear relationship as indicated by the linear
+    coefficients. It is also linear in the variables, but that isn't
+    required (we will explore this later).
+
+It is highly unlikely that $M_i = \beta_0 + \beta_1 W_i$) can explain
+everything about our data. We also need to include the *residual* term
+(meaning "leftover").
+
+-   The $\epsilon_i$ is the residual: a component that corresponds to
+    the part of the data which is *not* described by the model
+-   These residual terms will usually have certain assumed properties
+    that allow us to estimate the model.
+
+We can think about a regression as two parts:
+
+1.  The part of the relationship explained by our model
+    ($M_i = \beta_0 + \beta_1 W_i$)
+2.  The part which is not explained ($\epsilon_i$). The process of
+    "fitting" or estimating a regression model selects certain values
+    for $\beta_0$ and $\beta_1$ such that we minimize the amount that
+    needs to be explained by the residual term. We write the complete
+    *regression equation* by combining the two parts of the model:
+
+$$
+M_i = \beta_0 + \beta_1 W_i + \epsilon_i
+$$
+
+The goal of regression analysis is to:
+
+1.  Accurately estimate this equation (and especially the model
+    parameters)
+2.  Learn about the relationship between $M_i$ and $W_i$ from the
+    results of that estimation.
+
+While there are several ways we can define "accurately as possible" and
+"estimate" the equation. In this course, we use *ordinary least squares*
+(OLS):
+
+$$
+(\hat{\beta_0},\hat{\beta_1}) = \arg \min_{b_0,b_1} \sum_{i=1}^{n} (M_i - b_0 - b_1 W_i)^2 = \sum_{i=1}^{n} (e_i)^2
+$$
+
+While this may look complicated, it is just the calculus way of writing
+"choose $\beta_0$ and $\beta_1$ ( $\hat{\beta_0},\hat{\beta_1}$) such
+that they minimize the sum of the squared residuals".
+
+-   A regression should aim to have the bulk of the results explained by
+    the parameters ($\beta_0, \beta_1$) and as little as possible using
+    $\epsilon_i$.
+-   Our statistical problem has now transformed into a calculus problem,
+    which you could solve for instance by taking derivatives.
+
+There are numerous ways to solve this estimation problem - either
+through R or Math. Let's start by drawing a best fit line through points
+with a linear regression in R.
+
+## Example: Manual Estimation
+
+A bad way to solve this is the good-'ole eyeball method by observing the
+scatter plot and guessing how some values may perform.
+
+Try to get the best fit you can by playing around with the following
+example.
+
+```{r}
+
+# set the value of B_0 and B_1 with these values
+
+B_0 = 0  #change me
+B_1 = 1  #change me
+
+# don't touch the rest of this code - but see if you can understand it!
+
+SSE = sum((census_data$mrkinc - B_0 - B_1*census_data$wages)^2)
+
+# here is the SSE from your model
+
+round(SSE/1000000,0)
+```
+
+What was the lowest value you got? Here is what your guess looks like in
+a graph:
+
+```{r}
+
+# just run this cell to see your results
+# re-run it if you change the values
+
+options(repr.plot.width=6,repr.plot.height=4) #controls the image size
+
+fitted_line = data.frame(wages = census_data$wages, mrkinc = B_0 + B_1*census_data$wages)
+
+f <- ggplot(data = census_data, aes(x = wages, y = mrkinc)) + xlab("Wages") + ylab("Market Income")
+f <- f + geom_point() + geom_line(color = "red", data = fitted_line)
+
+f
+```
+
+## Interactive Visualization of OLS
+
+Understanding OLS is fundamental to understanding regressions and other
+opics in econometrics. Let's try and understand the formula for OLS
+above through a more visual approach:.
+
+$$
+(\hat{\beta_0},\hat{\beta_1}) = \arg \min_{b_0,b_1} \sum_{i=1}^{n} (M_i - b_0 - b_1 W_i)^2 = \sum_{i=1}^{n} (e_i)^2
+$$
+
+To demonstrate this, we will use a small scatter plot with just 4
+points.
+
+-   The straight line through the scatter plot is modelled by the simple
+    regression formula $B_0 + B_1X$.
+
+-   Since it's nearly impossible for a regression to perfectly predict
+    the relationship between two variables, we will almost always
+    include an **unobservable error** $e_i$ with our regression
+    estimation. This is the vertical distance between the regression
+    line and the actual data points
+
+-   Hence each of the points can be modelled by the equation
+    $Y_i = B_0 + B_1X + e_i$.
+
+-   Instead of minimizing the error terms, we will try to minimize the
+    squared errors which are represented by the size of those red boxes.
+
+> Try your own values for `beta_0` and `beta_1`. Make sure to try the
+> values only roughly within the specified range. The actual value of
+> `beta_0` and `beta_1` that minimize the residual sum of squares is
+> 0.65 and 0.82 respectively. The code block below also displays the
+> area of the red boxes; deviation from these optimal values will
+> increase the area of the red boxes.
+
+```{r}
+beta_0 <- 0.65 #CHANGE THIS VALUE, TRY VALUES BETWEEN 0 - 1
+beta_1 <- 0.82 #CHANGE THIS VALUE, TRY VALUES BETWEEN 0.6 - 1.4
+
+x <- c(1, 2, 3, 4)
+y <- c(1.7, 1.5, 4, 3.6)
+
+# don't worry about this code, just run it!
+dta <- data.frame(x, y)
+example_df_graph <- dta %>%
+                    ggplot(aes(x = x, y = y)) +
+                    geom_point() +
+                    geom_abline(intercept = beta_0, slope = beta_1) +
+                    xlim(0, 5) +
+                    ylim(0, 5) +
+                    geom_rect(aes(xmin = (dta[1, "x"] + (beta_0 + (beta_1 * dta[1, "x"])) - dta[1, "y"]), xmax = dta[1, "x"], 
+                                  ymin = (beta_0 + (beta_1 * dta[1, "x"])), ymax = dta[1, "y"]),
+                            alpha = 0.1,
+                            fill = "red") +
+                    geom_rect(aes(xmin = dta[2, "x"], xmax = (dta[2, "x"] + (beta_0 + (beta_1 * dta[2, "x"])) - dta[2, "y"]), 
+                                  ymin = dta[2, "y"], ymax = (beta_0 + (beta_1 * dta[2, "x"]))), 
+                            alpha = 0.1, 
+                            fill = "red") +
+                    geom_rect(aes(xmin = (dta[3, "x"] + (beta_0 + (beta_1 * dta[3, "x"])) - dta[3, "y"]), xmax = dta[3, "x"], 
+                                  ymin = (beta_0 + (beta_1 * dta[3, "x"])), ymax = dta[3, "y"]), 
+                            alpha = 0.1, 
+                            fill = "red") +
+                    geom_rect(aes(xmin = dta[4, "x"], xmax = (dta[4, "x"] + (beta_0 + (beta_1 * dta[4, "x"])) - dta[4, "y"]), 
+                                  ymin = dta[4, "y"], ymax = (beta_0 + (beta_1 * dta[4, "x"]))), 
+                            alpha = 0.1, 
+                            fill = "red")
+example_df_graph
+
+area_1 <- ((dta[1, "x"] - (dta[1, "x"] + (beta_0 + (beta_1 * dta[1, "x"])) - dta[1, "y"])) * 
+        ((beta_0 + (beta_1 * dta[2, "x"])) - dta[2, "y"]))
+area_2 <- ((dta[2, "x"] + (beta_0 + (beta_1 * dta[2, "x"])) - dta[2, "y"]) - dta[2, "x"]) * 
+          ((beta_0 + (beta_1 * dta[2, "x"])) - dta[2, "y"])
+area_3 <- (dta[3, "x"] - (dta[3, "x"] + (beta_0 + (beta_1 * dta[3, "x"])) - dta[3, "y"])) * 
+          (dta[3, "y"]) - (beta_0 + (beta_1 * dta[3, "x"]))
+area_4 <- ((dta[4, "x"] + (beta_0 + (beta_1 * dta[4, "x"])) - dta[4, "y"]) - dta[4, "x"]) * 
+          ((beta_0 + (beta_1 * dta[4, "x"])) - dta[4, "y"])
+
+area <- area_1 + area_2 + area_3 + area_4
+print("Area of red boxes is: ")
+area
+```
+
+# Simple Regressions in R
+
+Now, let's see how we could use a regression in R to do this.
+
+-   Regression models look like: `Y ~ X` where `Y` is regressed on `X`
+    and the `~` symbol is called "tilde".
+
+We can ignore the residual terms and parameters when writing the model
+in R and just focus on the variables for now.
+
+So, for example, our regression model is
+
+$$
+M_i = \beta_0 + \beta_1 W_i + \epsilon_i
+$$
+
+Which can be written in R as
+
+`mrkinc ~ wages`
+
+Regressions are estimated in R using the `lm` function, which takes the
+data as an argument.
+
+-   This creates a *linear model* object, which can be used to calculate
+    things (using prediction) or perform tests
+-   It also stores all of the information about the model, such as the
+    coefficient and fit
+-   These models can also be printed and summarized to give important
+    basic information about a regression
+
+For an example linear model called `my_model`, some of the most
+important elements are:
+
+-   `my_model$coefficients`: the parameter coefficients
+-   `my_model$residuals`: the residuals
+-   `my_model$fitted.values`: the predicted values
+
+Let's see our model in action here.
+
+```{r}
+
+regression1 = lm(mrkinc ~ wages, data = census_data)
+
+summary(regression1)
+
+head(regression1$coefficients)
+```
+
+Take a close look at the results. Identify the following elements:
+
+-   The values of the parameters
+-   The standard errors of the parameters
+-   The %-of the data explained by the model (R-sqaured)
+
+> **Test Your Knowledge**: What % of the data is explained by the model?
+> Answer to 2 decimal places.
+
+```{r}
+#| eval: false 
+#| classes: "question"
+
+#Hint: Convert the Multiple-R squared value into a percentage 
+ans1 <- ...  # answer goes here
+
+test_1()
+```
+
+```{r}
+#| eval: false 
+#| classes: "answer"
+
+#Hint: Convert the Multiple-R squared value into a percentage
+ans1 <- 79.19  # answer goes here
+
+test_1()
+```
+
+The underlying model and the parameters tell us about the relationship
+between the different values:
+
+$$
+M_i = -2455 + 1.61 W_i + \epsilon_i
+$$
+
+Notice, for example:
+
+$$
+\frac{\partial M_i}{\partial W_i} = \beta_1 = 1.61
+$$
+
+In other words, when wages go up by 1 dollar, we would expect that
+market income will rise by 1.61 dollars. This kind of analysis is key to
+*interpreting* what this model is telling us.
+
+Finally, let's visualize our fitted model on the scatterplot from
+before. How does it compare to your original model?
+
+```{r}
+
+fitted_line2 = data.frame(wages = census_data$wages, mrkinc = regression1$fitted.values)
+
+f <- ggplot(data = census_data, aes(x = wages, y = mrkinc)) + xlab("Wages") + ylab("Market Income")
+f <- f + geom_point() + geom_line(color = "red", data = fitted_line) + geom_line(color = "blue", data = fitted_line2)
+
+f
+```
+
+As you can see - there's a very close relationship between `mrkinc` and
+`wages`. This implies that we can focus our attention on wages in our
+analysis of the immigrant wage gap.
+
+# Part 2: Simple Regressions and $t$-Tests
+
+Previously, we looked at the relationship between market income and
+wages. However, these are both *quantitative* variables. However, what
+if we wanted to work with a *qualitative* variable like `immstat`?
+
+Thankfully regression models can still incorporate this kind of variable
+as this is the most common type of variable in real-world data. How is
+this possible?
+
+Let's start out with the simplest kind of qualitative variable: a
+**dummy** (0 or 1) variable. Consider the regression equation:
+
+$$
+W_i = \beta_0 + \beta_1 I_i + \epsilon_i
+$$
+
+The conditional expectation when I_i is 0 and when it is 1 is :
+
+$$
+E[W_i|I_i = 1] = \beta_0 + \beta_1 \cdot 1 + E[\epsilon_i|I_i = 1]
+$$
+
+$$
+E[W_i|I_i = 0] = \beta_0 + \beta_1 \cdot 0 + E[\epsilon_i|I_i = 0]
+$$
+
+Under Assumption 1, we have that $E[\epsilon_i|I_i] = 0$, so:
+
+$$
+E[W_i|I_i = 1] = \beta_0 + \beta_1
+$$
+
+$$
+E[W_i|I_i = 0] = \beta_0
+$$
+
+Combining these two expressions:
+
+$$
+\beta_1 = E[W_i|I_i = 1] - E[W_i|I_i = 0]
+$$
+
+What this tells us:
+
+1.  You can include **dummy** variables in regressions
+2.  The coefficients of the dummy variable have meaning in terms of the
+    regression model
+3.  They measure the (average) difference in the dependent variable
+    between the two levels of the dummy variable
+
+Therefore dummy variables can be included in a regression model just
+like quantitative variables.
+
+Let's look at this in terms of `immstat`. We can create our regression
+equation as:
+
+$$
+W_i = \beta_0 + \beta_1 I_i + \epsilon_i
+$$
+
+Then we can estimate this using R.
+
+```{r}
+
+regression2 <- lm(wages ~ immstat, data = census_data)
+
+summary(regression2)
+```
+
+What do you see here?
+
+> **Test Your Knowledge**: What is the difference in average wage
+> between immigrants and non-immigrants?
+
+```{r}
+#| eval: false
+#| classes: "question"
+# input the answer (to 1 decimal place)
+answer2 <- ...  
+
+test_2()
+```
+
+```{r}
+#| eval: false
+#| classes: "answer"
+
+# input the answer (to 1 decimal place)
+answer2 <- 2552.9  
+
+test_2()
+```
+
+The number about might seem familiar, if you remember what we learned
+about a $t$-test from earlier. Remember this result?
+
+```{r}
+
+t1 <- t.test(x = filter(census_data, immstat == "immigrants")$wages,
+       y = filter(census_data, immstat == "non-immigrants")$wages,
+       alternative = "two.sided",
+       mu = 0,
+       conf.level = 0.95)
+t1
+
+t1$estimate[1] - t1$estimate[2]
+```
+
+Look closely at the results. What is the relationship here?
+
+Regression exemplifies the comparison that two sample variables make
+when the explanatory variable is a dummy. Recall:
+
+$$
+\beta_1 = E[W_i|I_i = 1] - E[W_i|I_i = 0]
+$$
+
+The regression coefficient of $\beta_1$ here is a comparison of two
+means. This is the same as how a $t$-test compares two means by
+different groups - groups which are specified by $I_i = 0$ or $I_i = 1$.
+
+-   In other words, another way of thinking about a regression is like a
+    form of a comparison of means test.
+-   It can handle the same kind of analysis (i.e. with dummies), but can
+    also include quantitative variables - which regular comparison of
+    means tests cannot handle.
+
+# Part 3: Exercises
+
+## Activity 1
+
+In this activity, we'll explore how the immigrant wage gap could depend
+on sex (male vs. female). We can now examine this issue directly using
+regressions.
+
+Estimate the immigrant wage gap for males and for females using
+regressions.
+
+<em>Tested objects:</em> `regm` (the regression for males), `regf` (the
+regression for females).
+
+```{r}
+#| eval: false
+#| classes: "question"
+
+# Activity 1
+
+# Regression for males
+regm <- lm(... ~ ..., data = filter(census_data, ... == ...)) #what should replace the ...
+#Hint: Don't forget the quotation marks when specifying the subset 
+
+# Regression for females
+regf <-  ... # what should replace the ...
+
+summary(regm) # Allow us to view regm's coefficient estimates
+summary(regf) # Same as above, but for regf
+
+test_3() # Quiz1
+test_4() # Quiz2
+```
+
+```{r}
+#| eval: false
+#| classes: "answer"
+# Activity 1
+
+# Regression for males
+regm <- lm(wages ~ immstat, data = filter(census_data, sex == "male")) #what should replace the ...
+#Hint: Don't forget the quotation marks when specifying the subset 
+
+# Regression for females
+regf <- lm(wages ~ immstat, data = filter(census_data, sex == "female"))  # what should replace the ...
+
+summary(regm) # Allow us to view regm's coefficient estimates
+summary(regf) # Same as above, but for regf
+
+test_3() 
+test_4() 
+```
+
+## Short Answer 1
+
+**Prompt:** How do we interpret the coefficient (Intercept) estimate on
+`immstat` in each of these regressions?
+
+**A** The average wage of a non-immigrant\
+**B** The average wage of an immigrant\
+**C** The difference between the average wage of an immigrant and
+non-immigrant\
+**D** Nothing we should worry about
+
+```{r}
+#| eval: false
+#| classes: "question"
+# Enter your answer below as "A", "B", "C", or "D"
+
+answer20 <- "..."
+test_20(answer20)
+```
+
+```{r}
+#| eval: false
+#| classes: "answer"
+# Enter your answer below as "A", "B", "C", or "D"
+
+answer20 <- "A"
+test_20(answer20)
+```
+
+## Short Answer 2
+
+**Prompt:** Compare the gaps. Is the immigrant wage gap larger for males
+or females? Why do you think that might that be?
+
+**A** The immigrant pay gap for females is much greater than that of
+males\
+**B** The immigrant pay gap for males is much greater than that of
+females\
+**C** The immigrant pay gap is roughly the same
+
+```{r}
+#| eval: false
+#| classes: "question"
+# Enter your answer below as "A", "B", or "C"
+
+answer21 <- ""
+test_21(answer21)
+```
+
+```{r}
+#| eval: false
+#| classes: "answer"
+# Enter your answer below as "A", "B", "C", or "D"
+
+answer21 <- "B"
+test_21(answer21)
+```
+
+## Activity 2
+
+Many studies have suggested that workers' wages increase as they age. In
+this activity, we will explore how the immigrant wage gap varies by age.
+First, let's see the factor levels of the `agegrp`:
+
+```{r}
+
+levels(census_data$agegrp) # Run this!
+```
+
+As we can see, there are several age groups in this dataframe, including
+ones that would not be particularly informative (have you ever seen a
+3-year-old doing salary work?). Let's estimate the immigrant wage gap
+(with no controls) for five of these groups separately: \* 20 to 24
+years \* 30 to 34 years \* 40 to 44 years \* 50 to 54 years \* 60 to 64
+years
+
+<em>Tested objects:</em> `reg5_20` (20 to 24 years), `reg5_50` (50 to 54
+years)
+
+```{r}
+#| eval: false
+#| classes: "question"
+reg5_20 <- lm(wages ~ immstat, data = filter(census_data, agegrp == '20 to 24 years')) 
+
+reg5_30 <- ... # what should go here? Use the code above as a template
+
+reg5_40 <- ...
+
+reg5_50 <- ...
+
+reg5_60 <- ... 
+
+# store the summaries (but don't show them!  too many!)
+sum20 <- summary(reg5_20)
+sum30 <- summary(reg5_30)
+sum40 <- summary(reg5_40)
+sum50 <- summary(reg5_50)
+sum60 <- summary(reg5_60)
+
+test_12() # Quiz3
+test_16() # Quiz4
+```
+
+```{r}
+#| eval: false
+#| classes: "answer"
+reg5_20 <- lm(wages ~ immstat, data = filter(census_data, agegrp == '20 to 24 years')) 
+
+reg5_30 <- lm(wages ~ immstat, data = filter(census_data, agegrp == '30 to 34 years')) # what should go here? Use the code above as a template
+
+reg5_40 <- lm(wages ~ immstat, data = filter(census_data, agegrp == '40 to 44 years'))
+
+reg5_50 <- lm(wages ~ immstat, data = filter(census_data, agegrp == '50 to 54 years'))
+
+reg5_60 <- lm(wages ~ immstat, data = filter(census_data, agegrp == '60 to 64 years'))
+
+# store the summaries (but don't show them!  too many!)
+sum20 <- summary(reg5_20)
+sum30 <- summary(reg5_30)
+sum40 <- summary(reg5_40)
+sum50 <- summary(reg5_50)
+sum60 <- summary(reg5_60)
+
+test_12() # Quiz3
+test_16() # Quiz4
+```
+
+The code below will tabulate a brief summary of each regression:
+
+```{r}
+
+# Just run me!  You don't need to edit this
+
+Age_Group <- c("20-24", "30-34", "40-44", "50-54", "60-64")
+Wage_Gap <- c(reg5_20$coefficients[2], reg5_30$coefficients[2], reg5_40$coefficients[2], reg5_50$coefficients[2], reg5_60$coefficients[2])
+Std._Error <- c(sum20$coefficients[2,2], sum30$coefficients[2,2], sum40$coefficients[2,2], sum50$coefficients[2,2], sum60$coefficients[2,2])
+t_Value <- c(sum20$coefficients[2,3], sum30$coefficients[2,3], sum40$coefficients[2,3], sum50$coefficients[2,3], sum60$coefficients[2,3])
+p_Value <- c(sum20$coefficients[2,4], sum30$coefficients[2,4], sum40$coefficients[2,4], sum50$coefficients[2,4], sum60$coefficients[2,4])
+
+tibble(Age_Group, Wage_Gap, Std._Error, t_Value, p_Value) # it's like a table but a tibble
+```
+
+## Short Answer 3
+
+**Prompt**: What happens to the immigrant wage gap as we move across age
+groups? What do you think might explain these changes?
+
+**A** Wage gap declines as age group decreases\
+**B** Wage gap increases as age group increases\
+**C** Wage gap is the highest at the "40 to 44 years" age group
+
+```{r}
+#| eval: false
+#| classes: "question"
+# Enter your answer below as "A", "B", or "C"
+
+answer22 <- ""
+test_22(answer22)
+```
+
+```{r}
+#| eval: false
+#| classes: "answer"
+# Enter your answer below as "A", "B", or "C"
+
+answer22 <- "C"
+test_22(answer22)
+```
+
+## Activity 3
+
+As we observed in last week's worksheet, the immigrant wage gap could
+differ by education level. As there are many education categories, it
+may be tedious to run a regression for each individual education level.
+
+Instead, we could run a single regression and add education level as a
+second regressor, $E_i$:
+
+$$
+W_i = \beta_0 + \beta_1 I_i + \beta_2 E_i + \epsilon_i
+$$
+
+This is actually a **multiple regression**, which we will learn about
+later - but from the point of the this lesson, the idea is that it is
+"run" in R essentially in the same way as a simple regression. Estimate
+the regression model above without $E_i$, then re-estimate the model
+with $E_i$ added.
+
+<em>Tested objects:</em> `reg2A` (regression without controls), `reg2B`
+(regression with controls).
+
+```{r}
+#| eval: false
+#| classes: "question"
+# Naive regression (just immstat)
+reg2A <- lm(... ~ ..., data = census_data) #this one works already
+
+# Regression with controls
+reg2B <-  lm(... ~ immstat + ..., data = census_data) # what should replace the ... think about the model
+
+# This will look ugly; try to look carefully at the output
+summary(reg2A)$coefficients
+summary(reg2B)$coefficients
+
+test_7()
+test_8() # Quiz 5
+```
+
+```{r}
+#| eval: false
+#| classes: "answer"
+# Naive regression (just immstat)
+reg2A <- lm(wages ~ immstat , data = census_data)  #this one works already
+
+# Regression with controls
+reg2B <- lm(wages ~ immstat + hdgree, data = census_data) # what should replace the ... think about the model
+
+# This will look ugly; try to look carefully at the output
+summary(reg2A)$coefficients
+summary(reg2B)$coefficients
+
+test_7()
+test_8() # Quiz 5
+```
+
+## Short Answer 4
+
+**Prompt**: compare the estimated immigrant wage gap with and without
+$E_i$ in the regression. What happens to the gap when we add $E_i$? How
+do we interpret this?
+
+**A** The estimated immigrant wage gap has increased after adding
+controls\
+**B** The estimated immigrant wage gap has decreased after adding
+controls\
+**C** The estimated immigrant wage gap has not changed after adding
+controls
+
+```{r}
+#| eval: false
+#| classes: "question"
+# Enter your answer below as "A", "B", or "C"
+
+answer23 <- "..."
+test_23(answer23)
+```
+
+```{r}
+#| eval: false
+#| classes: "answer"
+# Enter your answer below as "A", "B", or "C"
+
+answer23 <- "A"
+test_23(answer23)
+```
+
+## Activity 4
+
+Another topic of interest for labor economists that is related to the
+immigrant wage gap is racial wage discrimination - the issue of workers
+of similar productivity being paid different wages on average because of
+their race. Consequently, we can also use regressions to estimate the
+racial wage gap.
+
+Let's suppose that we want to estimate this racial wage gap. Run a
+regression (without controls) that does this.
+
+<em>Test objects:</em> `reg_race`.
+
+```{r}
+#| eval: false
+#| classes: "question"
+
+# Do not modify this l#| ine (sets "not a visible minority" as the reference level):
+census_data$vismin <- relevel(census_data$vismin, ref = "not a visible minority")
+# this is also how you set a different base level for a factor (handy!)
+
+# Racial Wage Gap Regression
+
+reg_race <- lm(wages ~ ..., data = census_data) # what model should we use here?
+
+summary(reg_race)
+
+test_10() #Quiz6
+```
+
+```{r}
+#| eval: false
+#| classes: "answer"
+# Do not modify this line (sets "not a visible minority" as the reference level):
+census_data$vismin <- relevel(census_data$vismin, ref = "not a visible minority")
+# this is also how you set a different base level for a factor (handy!)
+
+# Racial Wage Gap Regression
+
+reg_race <- lm(wages ~ vismin, data = census_data) # what model should we use here?
+
+summary(reg_race)
+
+test_10() #Quiz6
+```
+
+## Short Answer 5
+
+**Prompt**: How should we interpret the regression estimate for
+`visminblack`?
+
+**A** People from the Black community make on average about 14,795
+dollars less as compared to an average white person.\
+**B** Black immigrants make 14,795 dollars less than Black
+non-immigrants on average\
+**C** On average, a person from the Black community makes 14,795 dollars
+less than an average white person, holding all other variables constant
+
+```{r}
+#| eval: false
+#| classes: "question"
+# Enter your answer below as "A", "B", or "C"
+
+answer24 <- "..."
+test_24(answer24)
+```
+
+```{r}
+#| eval: false
+#| classes: "answer"
+# Enter your answer below as "A", "B", or "C"
+
+answer24 <- "B"
+test_24(answer24)
+```
+
+## Short Answer 6
+
+**Prompt**: With this racial wage gap in mind, let's return to the
+immigrant wage gap. Should we add explanatory variables for race to our
+regression from activity 2 and 3? Why or why not?
+
+**A** No we should not\
+**B** Yes, we should because there could be other factors explaining the
+wage gap\
+**C** Yes, we should control for education only.\
+**D** Yes, we should control for immigrant status only.
+
+```{r}
+#| eval: false
+#| classes: "question"
+# Enter your answer below as "A", "B", or "C"
+
+answer25 <- "..."
+test_25(answer25)
+```
+
+```{r}
+#| eval: false
+#| tags: [aswer]
+# Enter your answer below as "A", "B", or "C"
+
+answer25 <- "B"
+test_25(answer25)
+```

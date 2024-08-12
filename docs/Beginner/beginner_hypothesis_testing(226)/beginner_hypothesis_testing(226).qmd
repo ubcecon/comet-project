@@ -1,0 +1,444 @@
+---
+title: "1.4.1 - Beginner - Hypothesis Testing (226)"
+author: COMET Team <br> _Mridul Manas_
+date: Aug 3, 2023
+description: What is a hypothesis?  How do we test it?  This notebook introduces hypothesis testing, outlining the connection between sampling distributions, repeated sampling, and test-statistics; how we can use classical hypothesis testing techniques to answer economic questions.
+categories: [econ 226, econ 227, hypothesis testing, t-test, p-value, central limit theorem, null distribution, significance level, sampling distribution, R, beginner]
+format: 
+  html: default
+  ipynb:
+    jupyter:
+      kernelspec:
+        display_name: R
+        language: r
+        name: ir
+---
+
+### Prerequisites:
+
+-   Introduction to Jupyter
+
+-   Introduction to R
+
+-   Confidence Intervals
+
+### Learning Outcomes:
+
+1.  Modelling real-world problems as a null hypothesis tests carefully defining the hypotheses using correct notation.
+
+2.  Simulating the distribution of population observations as hypothesized under the null assumption.
+
+3.  Simulating the process of repeated sampling in R.
+
+4.  Verifying if **Central Limit Theorem** holds by simulating the sampling distribution under the null hypothesis.
+
+5.  Obtaining the null distribution of test-statistics and understand its significance to hypothesis testing. 
+
+6.  Computing **p-values** and using them to reject or not reject the null hypothesis.
+
+7.  Interpreting **significance levels (**$\alpha$) and how they are used in hypothesis testing.
+
+### 1. An Introduction to Hypothesis Testing using R
+
+Hypothesis Testing is a formal approach to choosing between two possible interpretations of an observed relationship in a sample. You are comparing two populations A and B and draw one independent sample randomly from each population to find that the point estimate obtained from sample A (eg. sample mean) is higher than the point estimate obtained from sample B. Thinking about the true population parameters for the two populations, we can choose between two interpretations:
+
+- $H_0$ or null hypothesis: there is no relationship between the two population parameters, and the observed relationship between the two point estimates is a result of sampling variability
+- $H_1$ or alternative hypothesis: there _is_ a relationship between the two population parameters, as sampling variability alone cannot explain the observed relationship between the two point estimates 
+
+Please note that we neither reject or accept the alternative hypothesis. Hypothesis testing always concludes with us either accepting or rejecting the null hypothesis or $H_0$.
+
+You might have heard of the *right tailed* hypothesis tests. When interested in a _single_ population, this indicates that we are asking if the true parameter (could be the mean, standard deviation or variance) is strictly "greater than" a fixed constant value(eg. $\mu_A > 23$ or when checking if the coefficient from a regression is significant, ie. $\beta_1 > 0$). In the two-sample case, we are always interested in knowing whether one population's true parameter is greater than another population's (eg. $\mu_A > \mu_B$).
+
+> This notebook explains how to conduct a *right-tailed* using R. The left-tailed test is similar to right-tailed except we are interested in "lesser than" relationships observed within populations. Two-tailed tests are used to check for strict equality, such as asking if $\mu_A = mu_B$ or whether one parameter (eg. $\mu_A$, $\sigma_A$ or $\beta_A$ (regression) is strictly equal to a certain fixed value or the true parameter of some other population. 
+
+### 1.1: Do Mandatory Tutorials Increase GPAs?
+
+The UWC School at the start of 2022-23 launched a policy requiring all of the boarding students in the school to attend supervised "prep sessions" or tutorials. You are given the challenge to infer whether the average GPA for 2022-23 year was higher than the 2021-22 GPA average (72.5%) while only having access to 2022-23 grades for 50 (randomly picked) students from the whole class of 500. 
+
+### 1.2: Formulating The Null And Alternate Hypotheses
+
+Let's first define our population parameters:
+
+-   $\mu_0 = 72.5$: Population mean GPA (%) in 2021-22 (base)
+
+-   $\mu_1 (unknown)$: Population mean GPA (%) in 2022-23 (treatment)
+
+We are essentially interested in determining whether $\mu_1 > \mu_0$. Since we know the true value for $\mu_0$, we can choose the _relationship to be tested_ as: $\mu_1 > 72.5$ where $\mu_1$ is the true average GPA of all 500 students in 2022-23. 
+
+> Side note: This is also equivalent to asking if $\mu_1 - mu_0 > 0$, and that is a right-tailed test for population difference in means. 
+
+Our hypotheses for the right-tailed test are:
+
+-   $H_0$: After-school tutorials did not increase the average GPA $\mu_1 = 72.5$
+
+-   $H_1$: After-school tutorials did increase the average GPA ($\mu_1 > 72.5)$
+
+Here, $\H_0$ is the **null hypothesis** and we always begin with assuming that this is true. Our job essentially is to use statistical inference and reasoning to conclude whether null hypothesis is true or not, based on a single sample from the population!
+
+### 1.2: The Distribution Individual GPAs In 2022-23 Under Null Hypothesis
+
+```{r}
+#RUN THIS CELL BEFORE CONTINUING
+# Load the necessary library
+library(dplyr)
+library(ggplot2)
+```
+
+Since the values for GPAs are both random and of continuous type, we can visualize the **distribution** to see the number of times we observe specific values for the GPAs across a continuous x-axis. For this tutorial, we assume that we know the GPAs in both years (2021-22 and 2022-23) are **normally distributed**. This means that the distribution is symmetric and bell-like in shape with its center situated at its mean.
+
+As always, we begin the test with assuming the null hypothesis is true. Hence, in the following code cell, we have set the mean of the **hypothesized under null** distribution of GPAs as 72.5%. 
+
+```{r}
+# Set the seed for reproducibility (optional)
+set.seed(42)
+n = 500 # number of observations
+mean_h0 = 72.5 #hypothesized population mean under the null
+sd_pop = 2.8 #population standard deviation of GPAs in 2022-23 
+
+# Generate a bounded normal distribution of GPAs with mean 72.5% and standard deviation of 2.8%. 
+gpa_null_dist <- data.frame(GPA = rnorm(n, mean_h0, sd_pop))
+
+# Create the density plot and add the vertical line and annotation
+gpa_null_dist_plot <- ggplot(gpa_null_dist, aes(x = GPA)) +
+  geom_density(fill = "skyblue", color = "black") +
+  geom_vline(xintercept = mean_h0, color = "red", linetype = "dashed") +
+  geom_text(aes(label = sprintf("Mean: %.2f", mean_h0), x = mean_h0, y = 0.01), vjust = 1, color = "red") +
+  labs(title = "Hypothesized Distribution of GPAs (2022-23) Under Null Hypothesis",
+       x = "GPA (%)", y = "Density")
+gpa_null_dist_plot
+```
+Our choice of the population mean for this distribution has been borrowed directly from the **null hypothesis**. Hence, we can call it the distribution of 2022-23 GPAs _under null_. 
+
+> Data simulated in R comes with inherent variability that should explain the *imperfections* in the shape of the distribution or why the center (mean) is not exactly equal to the set mean, $\mu_0 = 72.5$.
+
+***_Thinking Critically_:*** Consider one student the population has obtained a GPA of 82.3%, placing themselves in the top 0.15% of the 2022-23 class (assuming the the population mean $\mu_1$ is still equal to $\mu_0$ under null).
+
+Would you reject the null hypothesis based on this observation alone?
+
+Our answer is a clear NO. Outliers might challenge our null hypothesis but they can occur in all fairness the null hypothesis. They tell nothing about the validity of the null hypothesis!
+
+You might be wondering how we calculated the $P(GPA > 82.3) = 0.15$. We used a rule called the 68-95-99.7 rule that only works for normal distributions.
+
+> **The 68-95-99.7 rule** -- also known as the empirical rule or three-sigma rule -- is a statistical guideline that describes the percentage of data that falls within a certain number of standard deviations from the mean in a normal distribution.
+>
+> For a normal distribution, approximately 68% of the data falls within one standard deviation (σ) of the mean (μ). Approximately 95% of the data falls within two standard deviations (2σ) of the mean (μ). Approximately 99.7% of the data falls within three standard deviations (3σ) of the mean (μ).
+
+Instead of considering individual values from the population, let's explore the idea of taking a representative set of 50 randomly chosen students from the 2022-23 class.
+
+### 1.3: The Distribution of Sample Means Under Null Hypothesis
+
+*Essentially, the sampling distribution of sample means can be generated through the following steps:*
+
+1.  Draw all possible samples of a fixed size $n$ from the population (drawing observations randomly with replacement)
+
+2.  Record the point estimate or the sample statistic for each sample. This is the $\bar{x_i}$ or the sample mean GPA for sample $i$.
+
+3.  Plot _each and every_ point estimate obtainable from the population, ie. the ($\bar{x_i}$s), as a distribution (just like we did for 2022-23 individual GPAs). This distribution will be called the **sampling distribution of sample means**. 
+
+*What does the sampling distribution look like under the null hypothesis? Where is it centered under null, and what is its standard deviation?*
+
+The **Central Limit Theorem** states that for large enough sample sizes, the sampling distribution of sample means will approach a normal distribution, regardless of the shape of the population distribution. As the sample size increases, the mean of the sampling distribution of sample means will get closer and closer to the population mean.
+
+Assume that our sample size is 50 which is big enough for CLT ($> 30$). Assuming the GPAs (2022-23) follow a normal distribution with a population mean of $\mu_0 = 72.5$, the sampling distribution of sample means will be distributed as:
+
+$$
+\text{N}\sim(\mu_0 = 72.5, \frac{\sigma}{\sqrt{n}})
+$$
+
+Here, $\frac{\sigma}{\sqrt{n}}$is called the *standard error* of the sampling distribution with $\sigma$ being the population standard deviation and $n$ the sample size.
+
+However, population standard deviations ($\sigma$) are rarely known in real-world cases, and we can use $s$ or the sample standard deviation as an estimator. But, using $s$ instead of $\sigma$ means that sample means will follow the `t-distribution` instead. 
+$$
+\bar{X} \sim \text{t}_{n-1}(\mu, \frac{\sigma}{\sqrt{n}})
+$$
+
+> A t-distribution has fatter tails than a normal distribution but it does a good job at approximating a normal distribution when sample size, n, is large ($> 30$). The $n-1$ notation denotes the "degrees of freedom" which you would learn is important for calculating the right probabilities. 
+
+### 1.4: Simulating the Sampling Distribution under Null Hypothesis
+
+Here is a function that simulates the process of taking repeated samples (with replacement). Though this is beyond the scope of this tutorial, handy pre-built methods exist for R which simulate repeated sampling procedures such as those offered as part of the `infer` package. 
+
+```{r}
+#RUN THIS CELL BEFORE CONTINUING:
+rep_sample_n <- function(reps, n, pop_array) {
+  
+  output <- data.frame(replicate = integer(), GPA = numeric())
+
+  for (i in 1:reps) {
+    sample_vals <- sample(pop_array, n, replace = TRUE)
+    temp_df <- data.frame(sample_id = rep(i, n), GPA = sample_vals)
+    output <- rbind(output, temp_df)
+  }
+
+  return(output)
+}
+
+```
+
+```{r}
+# Example usage of the function:
+test <- rep_sample_n(reps = 1500, n = 50, gpa_null_dist$GPA)
+
+head(test)
+```
+
+Now, let's compute the sample means for each sample:
+
+```{r}
+#RUN THIS CELL
+set.seed(80) #DO NOT CHANGE for reproducibility. 
+
+sampling_dist_null <- rep_sample_n(reps = 1500, n = 50, gpa_null_dist$GPA)
+
+sampling_dist_means_null <- sampling_dist_null %>%
+  group_by(sample_id) %>% summarise(mean_GPA = mean(GPA))
+
+head(sampling_dist_means_null, 10)
+```
+
+Next, we will visualize the distribution of the 1500 sample means. Can you guess what the mean for this distribution will be?
+
+```{r}
+
+mean_sample_means_null <- mean(sampling_dist_means_null$mean_GPA)
+
+# Create the density plot for the sampling distribution and add the vertical line and annotation
+sampling_dist_means_null_plot <- ggplot(sampling_dist_means_null, aes(x = mean_GPA)) +
+  geom_density(fill = "skyblue", color = "black") +
+  geom_vline(xintercept = mean_sample_means_null, color = "red", linetype = "dashed") +
+  geom_text(aes(label = sprintf("Mean: %.2f", mean_sample_means_null), x = mean_sample_means_null, y = 0.15), vjust = 1, color = "red") +
+  labs(title = "Sampling Distribution of Sample Means (2022-23) Under Null Hypothesis",
+       x = "Sample Mean GPA (%)", y = "Density")
+
+sampling_dist_means_null_plot
+```
+
+The mean of our sampling distribution under null is 72.43% which is the (quite the) same as the hypothesized mean for the population under null. The Central Limit Theorem clearly holds in our case!
+
+> ***Think Critically:*** Researchers and statisticians *rarely* ever get the chance to take *all possible* samples from the population. Hence, we rely on classical inferential theory and the CLT assumption to *hypothesize* what the sampling distribution will look like under the null and alternate models. R is able to simulate and visualize the process for us which helps us verify that the classical theory and assumption we're taught in classes are actually quite reliable!
+
+### 1.5: Calculating the `test-statistic` Under Null Hypothesis
+
+Suppose you were given two samples: **Sample A** shows an average GPA of 78%, while **Sample B** boasts a higher average of 83%. At first glance, we might lean towards Sample B being more convincing evidence of an increase in the true mean GPA in 2022-23. But let's consider the **standard deviations**.
+
+In **Sample A**, the standard deviation is only 1.2% which suggests the GPAs are huddled close to the average. **Sample B** wields a 7.4% standard deviation, implying the GPAs are more spread out, resembling a diverse set of students. Sample A's small standard deviation supports the idea of a genuine increase as the GPAs are well-clustered around the average. In contrast, Sample B's larger standard deviation introduces some doubt as the wide spread of GPAs within the sample doesn't strongly back the claim of an increase in average GPA.
+
+The **test-statistic** incorporates the observed sample statistics and the sample size against the backdrop of assumptions implied by the null hypothesis, such as what the true population mean is. The result is *a numeric value* that we then use to calculate the **p-value** for the test.
+
+The formula for the test-statistic, assuming we don't know the true population standard deviation ($\sigma$), is as follows:
+
+$$
+\frac{\bar{x} - \mu_0}{\frac{{s}}{\sqrt{n}}}
+$$
+
+where $s$ is the standard deviation of the sample, and $n$ is the sample size (50 in our case).
+
+Let's now draw a sample randomly from the **true** 2022-23 population of GPAs, and *continue to assume* that this sample has been drawn from a population with mean equal to $\mu_0 = 72.5$.
+
+```{r}
+#RUN THE FOLLOWING CELL BEFORE CONTINUING:
+# Set the seed for reproducibility
+set.seed(42)
+
+# Alternate Distribution of 500 GPAs with mean 83.30% and standard deviation of 3.2%. 
+gpa_dist_alt <- rnorm(n = 500, mean = 83.40, sd = 3.2)
+
+# Create a data frame with the population GPA data
+gpa_dist_alt <- data.frame(GPA = gpa_dist_alt)
+
+random_sample <- data.frame(GPA = sample(gpa_dist_alt$GPA, size = 50, replace = FALSE))
+
+head(random_sample, 10)
+```
+
+Let's now calculate and store the mean and standard deviation for this sample:
+
+```{r}
+sample_mean <- mean(random_sample$GPA)
+sample_sd <- sd(random_sample$GPA)
+
+print(sample_mean)
+print(sample_sd)
+```
+
+Calculating the test-statistic:
+
+```{r}
+# First, let's estimate the standard error using the sample S.D. 
+standard_error <- sample_sd / sqrt(50)
+
+# Calculate the test-statistic
+test_stat <- (sample_mean - 72.5) / standard_error
+test_stat
+```
+
+As you might ask, how do we interpret this test-statistic? Does this provide enough evidence to reject or not reject the null hypothesis? We will introduce the concept of the **p-value** to answer these questions. 
+
+### 1.6: The Null Distribution
+
+The null distribution describes how the test-statistic will be distributed **under the null hypothesis**.
+
+Consider individual 2022-23 GPAs distributed as:
+
+$$
+x \sim N(\mu_0, \sigma)
+$$
+
+Our null hypothesis makes no assumptions about how the population is distributed or what its true variance or standard deviation is.
+
+The Central Limit Theorem, however, tells us that the sample mean ($\bar{X}$) will follow the normal distribution with a standard deviation that depends on the an estimator called $s$ or the sample standard deviation (obstained from any arbitary sample). The distribution of sample estimates will follow:
+
+$$
+\bar{X} \sim \text{t}_{n-1}(\mu_0, \frac{s}{\sqrt{n}})
+$$
+
+Here, $n$ is the sample size, $s$ the sample standard deviation and $n - 1$ denotes the degrees of freedom (a parameter which descibes the $t$-distribution).
+
+We can take this a bit further and describe how the test-statistic $\frac{\bar{x} - \mu_0}{\frac{s}{\sqrt{n}}}$ is distributed under the null hypothesis:
+
+$$
+\frac{\bar{x} - \mu_0}{\frac{s}{\sqrt{n}}} \sim \text{t}_{n-1}(0, 1)
+$$
+
+This is in face is the **null distribution**, ie. the distribution of the test-statistic under the null hypothesis.
+
+Let's use R to visualize the distribution of test-statistics, ie. the $t_{n-1}$ distribution or "the null distribution":
+
+```{r}
+null_dist <- sampling_dist_null %>% 
+  group_by(sample_id) %>% 
+  summarise(sample_mean = mean(GPA),
+            sample_sd = sd(GPA),
+            sample_standard_error = sample_sd / sqrt(50)) %>%
+  mutate(test_statistic = (sample_mean - 72.5)/ (sample_standard_error)) %>%
+  ggplot(aes(x = test_statistic)) +
+  geom_density(fill = "lightblue", color = "darkgrey") +
+  labs(x = "Test-Statistic", y = "Density", title = "Null Distribution of Test-Statistics") +
+  geom_vline(xintercept = test_stat, color = "red", type = "dashed")
+
+null_dist
+```
+
+> You'll learn in further classes that the test-statistic is a standardized version of the sample estimates. Hence, the $t$-distribution is centered at a mean of 0 and has standard deviation of 1.
+
+The red line indicates the test-statistic we had calculated in Part 1.5. We will calculate a probability of observing a test-statistic as extreme as the one indicated by the red line using the null distribution.
+
+### 1.6: Calculating the `p-value` From The Null Distribution
+
+Let's now calculate the p-value for the test-statistic. For $t$-distribution, we need to know the degrees of freedom, which is simply equal to $n - 1$ in the case of single-sample one-tailed hypothesis testing.
+
+```{r}
+df = 50 - 1 #degrees of freedom = sample size minus 1
+
+# Calculate the p-value using the t-distribution
+p_val <- 1 - pt(test_stat, df = df)
+
+print(paste("P-value:", p_val))
+```
+
+> `pt(x, df = df)` is the probability of observing a test-statistic equal to or **smaller** than x. We are interested in p-value which denotes the probability of observing a test statistic equal to or greater than x. Hence, the correct code for the p-value is `1 - pt(x, df = df)`.
+
+> **P-values** explain the probability of observing a value of a test-statistic as big as 23.7 under the assumption that the null model for sample means holds. In other words, assuming the null model holds, ie. the distribution of sample means in centered at $\mu_0$, what is the probability of observing a test-statistic (from a single sample) of 23.7 or bigger?
+
+### 1.7: Rejecting or Not Rejecting the Null Model
+
+Let's now compare our p-value to a **threshold** to decide whether to reject or not reject the null hypothesis.
+
+The threshold we commonly use for hypothesis tests are called $\alpha$ that are commonly set as: **0.10, 0.05, or 0.01**.
+
+In the following code cell, we will first visualize the **distribution of sample means under the null hypothesis** and mark where the percentile corresponding to $\alpha = 0.05$ falls.
+
+```{r}
+# Calculate the alpha = 0.05 critical value under the null assumption
+critical_value_h0 <- quantile(sampling_dist_means_null$mean_GPA, probs = 1 - 0.05)
+
+sampling_dist_means_null_plot <- sampling_dist_means_null_plot +
+  # Annotate the mean of the sampling distribution under null
+  geom_vline(xintercept = mean_sample_means_null, color = "purple", linetype = "dashed") +
+  # Annotate where the quantile for alpha 0.05 falls under null
+  geom_vline(xintercept = critical_value_h0, color = "red", linetype = "dashed") +
+  # Annotate alpha = 0.05
+  annotate("text", x = critical_value_h0 + 0.02, y = 0.9, label = "alpha = 0.05", color = "red") +
+  labs(title = "Null Model Distribution of Sample Means (2022-23)", 
+       x = "Sample Mean GPA (%)",
+       y = "Density") +
+  theme_minimal()
+
+sampling_dist_means_null_plot
+```
+
+The purple line indicates the quantile to the left of which lie ($1-\alpha$)% of all the observations. Since we chose $\alpha = 0.05$, 95% of all the possible means should lie to the left of it.
+
+Whenever we observe a sample mean which falls to the **right** of the purple line, we say we have *enough evidence to reject the null hypothesis at $\alpha = 0.05$*.
+
+We can also choose to simply verify if $\alpha > p-value$ in order to decide whether to reject or not reject $H_0$ at that chosen level of alpha. 
+
+```{r}
+#RUN THIS CELL:
+print(p_val < 0.05)
+print(p_val < 0.01)
+print(p_val < 0.1)
+```
+
+Not only our p-value (0) is smaller than $\alpha = 0.05$ but it's smaller than all of the other commonly chosen levels. Hence we choose to reject the null hypothesis at each of those significance levels (ie. $\alpha$'s)
+
+*Conclude and interpret the test as follows*:
+
+The p-value obtained from our single sample is smaller than $\alpha = 0.05$. We thus have enough evidence to reject the null hypothesis which is equivalent to rejecting the hypothesis that $\mu_1 = 72.5$.
+
+As one can infer using the plots displayed above, the sample mean we had obtained earlier seems to be _too unlikely_ for us to not refute the assumption that the sample observations belong to the distribution of GPAs hypothesized under null (See the plot in Part 1.2). 
+
+Observe that our reasoning is quite similar to a "_proof by contradiction_", except that we use a chosen threshold such as $\alpha = 0.05$ to decide if we have likely reached a contradiction. If the p-value is too small from a right-tailed hypothesis test, we have enough evidence to *informally conclude* that the true mean (ie. the center of both the population and sampling distribution must be to the right of previously hypothesized population mean). 
+
+We can also use the null-distribution to visualize and understand *why* the null hypothesis was rejected:
+
+```{r}
+null_dist <- null_dist +
+  geom_vline(xintercept = qt(0.95, df = 49), color = "blue", type = "dashed")
+
+null_dist
+```
+
+We make the following observations: 1. The blue line indicates the $\alpha = 0.05$ percentile for the null distribution. The area under the curve to the right of the blue marker is equal to 0.05, or we say, the probability of observing a test-statistic as extreme as the one marked by the blue line is 0.05.
+
+2.  The red line indicates the test-statistic we obtained from the single sample we had drawn earlier. As you can see, this falls way beyond to the right of the blue line.
+
+Both statements above conclude with the idea that the observed test-statistic is that unlikely under the null distribution that it has more chances of belonging to a different distribution which we call the alternative distribution.
+
+### 2. Conclusions
+
+### 2.1: Sanity Checks
+
+So did we make the correct decision by rejecting the null hypothesis?
+
+Let's look at the *actual* distribution of 2022-23 GPAs that we used to draw our random sample:
+
+```{r}
+#RUN THIS CELL:
+gpa_dist_alt_plot <- gpa_dist_alt %>% 
+  ggplot(aes(x = GPA)) +
+  geom_density(fill = "skyblue", color = "black") +
+  labs(x = "True GPAs (%) in 2022-23", y = "Density") +
+  geom_vline(xintercept = mean(gpa_dist_alt$GPA), color = "red", type = "dashed") +
+  geom_text(aes(label = sprintf("True Population Mean: %.2f", mean(gpa_dist_alt$GPA)), x = mean(gpa_dist_alt$GPA), y = 0.15), vjust = 1, color = "red")
+
+gpa_dist_alt_plot
+```
+
+SO we DID correctly conclude that the true mean GPA is not equal to 72.5% by just observing one single sample! How impressive is that?
+
+Now, you might find it helpful to learn that we didn't actually need to go all the way to Part 1.6 to make a decision about the null hypothesis. We could have instead followed either of the two methods:
+
+1.  Compute a 95% Confidence Interval for the True Population Mean GPA (2022-23) using the random sample we had obtained, and then, verify if the interval contains the hypothesized mean $\mu_0 = 72.5$.
+
+2.  Calculate the probability of observing the sample mean (not the test-statistic) under the distribution of sample means assumed under null (ie. the one which is centered at $\mu_0$ due to CLT), and see if the probability (can call this p-val) is less than alpha.
+
+### 2.2: Remarks
+
+Suppose the organizers know the true **set in stone** average GPA for 2022-23. If you conclude that the 2023 mean GPA is higher than 2022 mean GPA, when it actually is, you score 150 points. This is equivalent to saying, if you reject the null hypothesis when the null hypothesis in fact is not true, you score 150 points. However, if you reject the null hypothesis when the null hypothesis is in fact true, you lose 100 points!
+
+When you reject the null hypothesis when it's actually true, you are comitting a Type 1 error and the probability of comitting a Type 1 error is equal to the chosen significance level, ie. $\alpha$ used for the test. This follows from the fact that $\alpha = 0.05$ marks the point on the distributions (hypothesized under null) to the right of which lie 5% of the observations. Hence there is a 5% probability of comitting a Type 1 error in this case. 
+
+An **alternate distribution** describes how the test-statistic would be distributed under the alternative hypothesis. In our case, we found enough evidence supporting that the test-statistic did not belong to the null model. Instead, they belong to an alternative model where the population mean is different than the hypothesized value. Since our test was **right-tailed**, both of the distributions for the sample means and test-statistics must, according to our test's conclusions, have centers (means) which lie to the right of the hypothesized mean $\mu_0$.
+
+There's also the two-tailed hypothesis test where the null hypothesis assumes that $\mu_1 != \mu_0$. Here, the alternate model would say that the true means (centers) for the distributions (eg. of null, sample means, or population itself) can lie either to the left or right of the $\mu_0$.

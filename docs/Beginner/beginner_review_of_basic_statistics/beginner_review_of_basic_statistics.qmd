@@ -1,0 +1,426 @@
+---
+title: "1.0.1 - Beginner - Review of Basic Statistics using R"
+author: COMET Team <br> _William Co, Anneke Dresselhuis, Jonathan Graves, Emrul Hasan, Jonah Heyl, Mridul Manas, Shiming Wu. 
+version: 0.1
+date: 2023-05-08
+description: This notebook is an introduction to basic statistics using Jupyter and R, and some fundamental data analysis.  It is a high-level review of the most important applied tools from earlier units.
+categories: [introduction, review, econ 326, descriptive statistics, beginner, importing data, data wrangling, t-test, chi-square test, inferential statistics, R]
+format: 
+  html: default
+  ipynb:
+    jupyter:
+      kernelspec:
+        display_name: R
+        language: r
+        name: ir
+---
+
+## Outline
+
+### Prerequisites
+
+-   Introduction to Jupyter
+-   Introduction to R
+
+### Outcomes
+
+In this notebook, you will learn how to:
+
+-   Import data from the Survey of Financial Security (Statistics Canada, 2019)
+-   Wrangle, reshape and visualize `SFS_data` as part of an Exploratory Data Analysis (EDA)
+-   Run statistical tests, such as the $t$-test, to compare mean income of male-led vs. female-led households
+-   Generate summary statistics tables and other data-representations of the data using `group_by()`
+-   Optional: Run a formal two sample t-test to check for heterogeneity in how gender affects income and compare the returns to education
+
+## Part 1: Import Data into R
+
+The data we use comes from the [2019 Survey of Financial Security]{.underline} released by Statistics Canada[<sup id="fn1s">1</sup>](#fn1).
+
+```{r}
+# Run this cell to load necessary packages for this tutorial
+library(tidyverse)
+library(haven)
+library(dplyr)
+install.packages('vtable')
+install.packages('viridis')
+
+source("beginner_review_of_basic_statistics_functions.r")
+#warning messages are okay
+```
+
+The **tidyverse** is a collection of R packages developed by Hadley Wickham and his colleagues as a cohesive set of tools for data manipulation, visualization, and analysis. In a **tidy** data set, each variable forms a column and each observation forms a row.
+
+> `tidyverse` packages such as the `tidyr` and `dplyr` are recommended for cleaning and transforming your data into tidy formats.
+
+Let's import the `.dta` file from Statistics Canada using the `read_dta` function.
+
+```{r}
+#If this is your first time using Jupyter Lab, the shortcut to run a cell is `Shift + Enter`.
+SFS_data <- read_dta("../datasets_beginner/SFS_2019_Eng.dta")
+```
+
+Here are some of the common File Extensions and Import Methods in R:
+
+-   `.dta` and `read_dta()` for STATA files
+-   `.csv` and `read_csv()` for data stored as comma-separated values
+-   `.Rda` and `load()` for RStudio files and other files formatted for R
+
+```{r}
+head(SFS_data, 5)
+```
+
+> `head(df, n)` displays first n rows of the data frame. Other popular methods include `glance()` and `print()`
+
+```{r}
+#You can read the documentation for a given function by adding a question-mark
+?head
+#Run this
+```
+
+### Part 2: Exploratory Data Analysis in R
+
+There are a routine of steps you should generally follow as part of your *EDA* or *Exploratory Data Analysis.* Normally, you would analyze and visualize the variation, correlation, and distribution of your variables of interest. We do this to gain an intuitive understanding of the data before we undetake any formal hypothesis tests or model-fitting.
+
+Let's think of our key variables of interest. Given our research question, here are a few:
+
+-   gender of the highest income earner **(independent variable)**
+
+-   income after tax for each individual (variable of interest)
+
+-   income before tax for each individual (variable of interest)
+
+-   wealth for the household (control)
+
+-   education (control)
+
+**Cleaning and Reshaping `SFS_data`**
+
+For now, it'd be convenient to work with a new data frame containing only the key variables (columns) listed above. Moreover, the columns need to be renamed so they are easier for the reader to remember.
+
+```{r}
+#rename columns
+SFS_data <- SFS_data %>%
+    rename(income_before_tax = pefmtinc) %>% 
+    rename(income_after_tax = pefatinc) %>%
+    rename(wealth = pwnetwpg) %>%
+    rename(gender = pgdrmie) %>%
+    rename(education = peducmie) 
+
+#Drop rows where tax info is missing, ie. pefmtinc = 'NA'.
+SFS_data <- filter(SFS_data, !is.na(SFS_data$income_before_tax))
+
+keep <- c("pefamid", "gender", "education", "wealth", "income_before_tax", "income_after_tax")
+
+#new df with chosen columns
+df_gender_on_wealth <- SFS_data[keep]
+
+#preview
+head(df_gender_on_wealth, 5)
+```
+
+> This is another **tidy representation** of the original data but with less number of variables. The original data set is still stored as `SFS_data`.
+
+**Ensuring correct data-types**
+
+Notice that education is stored as `<chr>` and generally qualitative variables should be *encoded* and stored as `factors`.
+
+> The variable `education` in the data-set came as *encoded* as it is from a set of values {1, 2, 3, 4, 9}, each of which represent a level of education obtained.
+
+```{r}
+df_gender_on_wealth <- df_gender_on_wealth %>%
+  mutate(education = as.factor(education), 
+         gender = as.factor(gender),
+         income_before_tax = as.numeric(income_before_tax),
+         income_after_tax = as.numeric(income_after_tax))
+
+head(df_gender_on_wealth, 2)
+```
+
+All good! Let's understand how each of the numbers in the set {1, 2, 3, 9} represent an individual's educational background.
+
+**Computing Descriptive Statistics using `vtable` in R**
+
+Next, I can calculate summary statistics for income and wealth, both overall and for male-led vs. female-led households.
+
+```{r}
+library(vtable)
+```
+
+> `sumtable` method from the `vtable` package can be used to display the table in different formats including LaTeX, HTML, and data.frame.
+
+```{r}
+sumtbl <- sumtable(df_gender_on_wealth, out = "kable")
+#out = "kable" tells it to return a knitr::kable()
+#Replace "kable" with "latex" and see what happens!
+sumtbl
+```
+
+This is like having a birds-eye view at our data*.* As researcher, we should take note of outliers and other irregularities in how data for variables is distributed and ask how it might affect the *validity* of our models and tests.
+
+> See Appendix for a common method to remove outliers using Z-score thresholds
+
+**Grouping observations by their characteristics**
+
+Wouldn't it be neat to see how mean or median incomes for male and female-led households look like based on the level of education obtained by the main income-earner?
+
+```{r}
+by_gender_education <- df_gender_on_wealth %>%
+  
+  group_by(gender, education) %>%
+  summarise(mean_income = mean(income_before_tax, na.rm = TRUE),
+            median_income = median(income_before_tax, na.rm = TRUE),
+            mean_wealth = mean(wealth, na.rm = TRUE),
+            median_wealth = median(wealth, na.rm = TRUE))
+
+by_gender_education
+```
+
+> This is again a **tidy representation** of the SFS_data. *Grouping* observations by gender and education makes it a bit easier to analyze how the different groups compare.
+
+We can take this chain-of-thought further and generate a `heatmap` using the `ggplot` package.
+
+```{r}
+library(ggplot2)
+library(viridis)
+
+# Create the heatmap with an accessible color palette
+heatmap_plot <- ggplot(by_gender_education, aes(x = education, y = gender, fill = mean_income)) +
+  geom_tile() +
+  scale_fill_viridis_c(option = "plasma", na.value = "grey", name = "Mean Income") +
+  labs(x = "Education", y = "Gender")
+
+# Display the heatmap
+heatmap_plot
+
+```
+
+> I used the `scale_fill_viridis_c()` method from the `viridis` package to ensure that the color palette used for this plot is as per the standards of DS.
+>
+> Now, what does this tell you about how male-led households (gender = 1) compare with female-led households in terms of the mean household income? Does this tell if education widens the income gap between male-led and female-led households with the same level of education?
+
+We can claim from the visualization that the female-led households with the same level of education have different mean incomes as compared to male-led households. This smells of *heterogeneity* and we can explore regression and other empirical methods to formally test this claim.
+
+However, we shouldn't *yet* draw any conclusive statements about the relationships between gender (of the main income earner), income, education and other con-founders such as wealth.
+
+As researchers, we should ask if the differences in the mean or median incomes for the two groups are significant at all. **Think about how you would specify the null and alternative hypotheses!** We can then go a bit further and test if education indeed widens the gap or not.
+
+### Part 3: Running $t$-test and $Chi$-square test in R
+
+```{r}
+# Performs a t-test for means comparison
+t_test_result <- t.test(income_before_tax ~ gender, data = df_gender_on_wealth)
+print(t_test_result)
+```
+
+The 95% C.I does not include 0 and we can confirm that the male-led households on average earn more as income before tax than the female-led households, and the gap is statistically significant.
+
+> How about the medians for the two groups?
+
+```{r}
+# Perform a Mann-Whitney U test for median comparison
+mannwhitneyu_test_result <- wilcox.test(income_before_tax ~ gender, data = df_gender_on_wealth)
+print(mannwhitneyu_test_result)
+```
+
+This p-value is again highly significant, and based on our data, the median incomes for the two groups are not equal.
+
+Our variable of interest is income, and so far, we have provided statistical evidence for the case that the gender of the main income-earner is correlated with the household's income.
+
+We are however more interested in the causal mechanisms through which education and wealth *determine* how gender affects household income.
+
+> Think deeper: According to Ortiz-Ospina and Roser (2018), women are overrepresented in low-paying jobs but are underrepresented in high-paying ones.
+>
+> What role does the attainment of education play in sorting genders into high vs. low-paying jobs. Can we test this formally with the data?
+
+**Optional: Studying how Wealth and Education might impact the income-gap**
+
+There are multiple reasons to study the links between **wealth** and the **income** gap? DFor instance, we might want to answer whether having more wealth affects an individual's income? Moreover, are certain genders inheriting more wealth than the others, and if so, what can we say about the gender wage gap?
+
+We can use some of the methods we have learned in R to analyze and visualize relationships between income, gender, education and wealth.
+
+> Let's see if having a university degree widens the gender income gap?
+
+```{r}
+SFS_data <- SFS_data %>% 
+               mutate( # more information on mutate in introduction to r modules
+               university = case_when( 
+                     education == "4" ~ "Yes", #the ~ seperates the original from the new name
+                     TRUE ~ "No")) %>% #changes the non university variable to
+             mutate(university = as_factor(university)) #remember, it's a factor!
+
+head(SFS_data$university, 10)
+```
+
+Let's visualize how the mean wealth compares for male-led vs. female-led households conditional on whether the main-income earner went to university!
+
+```{r}
+results <- 
+    SFS_data %>%
+    group_by(university,gender) %>%
+    summarize(m_wealth = mean(wealth), sd_wealth = sd(wealth))
+
+results 
+
+f <- ggplot(data = SFS_data, aes(x = gender, y = wealth)) + xlab("Gender") + ylab("Wealth") #label and define our x and y axis
+f <- f + geom_bar(stat = "summary", fun = "mean", fill = "lightblue") #produce a summary statistic, the mean
+f <- f + facet_grid(. ~ university) #add a grid by education
+
+f
+```
+
+It smells like the wealth gap between the two types of households widens for groups that have obtained an university degree.
+
+Similarly, let's look at the difference in wealth gap in percent terms. We use `results` generated in previous cell (the $4\times 4$ table) as the inputs this time.
+
+```{r}
+library(scales)
+percentage_table <- SFS_data %>%
+  group_by(university) %>%
+  group_modify(~ data.frame(wealth_gap = mean(filter(., gender == 2)$wealth)/mean(filter(., gender == 1)$wealth) - 1)) %>%
+  mutate(wealth_gap = scales::percent(wealth_gap))
+
+percentage_table
+```
+
+Notice the signs are both negative, hence on average, female-led households have less wealth regardless of whether they have an university degree or not.
+
+More importantly, based on our data, female-led households with university degrees on average have 28% less wealth than male-led households with university degrees. Comparing the two groups given they don't have university degrees, the gap is quite smaller: 18%.
+
+So, we have shown that the gap widens by about 10% when conditioned for university degree.
+
+Let's test this further by creating sub-samples of "university degree" and "no university degree" respectively and then running formal two sample t-test.
+
+```{r}
+university_data = filter(SFS_data, university == "Yes") # university only data 
+nuniversity_data = filter(SFS_data, university == "No") # non university data
+
+t2 = t.test(
+       x = filter(university_data, gender == 1)$wealth,
+       y = filter(university_data, gender == 2)$wealth,
+       alternative = "two.sided",
+       mu = 0,
+       conf.level = 0.95)
+
+t2  # test for the wealth gap in university data
+
+round(t2$estimate[1] - t2$estimate[2],2) #rounds our estimate
+
+
+t3 = t.test(
+       x = filter(nuniversity_data, gender == 1)$wealth,
+       y = filter(nuniversity_data, gender == 2)$wealth,
+       alternative = "two.sided",
+       mu = 0,
+       conf.level = 0.95)
+
+t3 # test for the wealth gap in non-university data
+
+round(t3$estimate[1] - t3$estimate[2],2) #rounds our estimate
+```
+
+In both tests, the p-values are very small, indicating strong statistical evidence to reject the null hypothesis. The confidence intervals also provide a range of plausible values for the difference in means, further supporting the alternative hypothesis.
+
+Based on these results, there appears to be a significant difference in wealth between the two gender groups regardless of university-status, with gender 1 consistently having higher mean wealth compared to gender 2.
+
+### Optional: Returns to HS diploma
+
+Next, examine whether returns to education differ between genders. For our purposes, we will define:
+
+**Returns to Education**: The difference in average income before tax between two subsequent education levels.
+
+*The following t-test* finds the returns to education of a high school diploma for males (`retHS`) and for females(`retHSF`), and returns to education of a university's degree for males (`retU`) and for females (`retUF`).
+
+```{r}
+#| eval: false
+
+#Returns to education: High school diploma
+
+##Males
+less_than_high_school_data = filter(SFS_data, education == 1) #Less than high school
+high_school_data = filter(SFS_data, education == 2) #High school
+post_secondary_data = filter(SFS_data, education == 3) #Non-university post-secondary
+university_data = filter(SFS_data, education == 4) #University
+
+
+retHS = t.test(
+       x = filter(high_school_data, gender == 1)$income_before_tax,
+       y = filter(less_than_high_school_data, gender == 1)$income_before_tax,
+       alternative = "two.sided",
+       mu = 0,
+       conf.level = 0.95)
+retHS_ans=round(retHS$estimate[1] - retHS$estimate[2],2)
+
+retHSF = t.test(
+       x = filter(high_school_data, gender == 2)$income_before_tax,
+       y = filter(less_than_high_school_data, gender == 2)$income_before_tax,
+       alternative = "two.sided",
+       mu = 0,
+       conf.level = 0.95)
+
+retHS
+retHSF
+#retHS_ans=round(retHS$estimate[1] - retHS$estimate[2],2)
+#retHSF_ans=round(retHSF$estimate[1] - retHSF$estimate[2],2)
+```
+
+We have found statistically significant evidence for the case that returns to graduating with a high school diploma are indeed positive for individuals living in both male-led and female-led households.
+
+> We could also compute the average returns to a university diploma as well by changing a few pieces of the code above.
+
+### Wrapping Up
+
+Congratulations on completing this tutorial! We really got started exploring the gender-wage gap from an empirical point-of-view. We also spent a few minutes exploring the relationships between gender, income, wealth and education. These early or preliminary-level explorations are quite helpful for specifying a regression model that is appropriate!
+
+You can head to **Appendix** to see further examples of R code working with data.
+
+### Appendix
+
+> If your data set comes with *meta-data*, you try `dictionary()` or `str()` to know more about the **variables**.
+
+```{r}
+dictionary('peducmie')
+```
+
+> The `$` operator in `data$variable` points to your variable
+
+```{r}
+#Computes the mean networth of the family units in the dataset
+mean(SFS_data$pwnetwpg)
+```
+
+> Removing outliers is a common practice in DS. Here's the code for removing outliers based on a custom Z-score threshold.
+>
+> Alternatively, you can first visualize your data with box plots and then find a convenient threshold to remove outliers in the variables of interest.
+
+```{r}
+#Calculate the 75th percentile values for wealth, income_before_tax and income_after_tax
+
+#Drop all rows where any of the variables exceed their 75th percentile value
+
+# Function to remove outliers based on z-score
+remove_outliers_zscore <- function(data, variable, threshold) {
+  z_scores <- scale(data[[variable]])
+  data_without_outliers <- data[abs(z_scores) <= threshold, ]
+  return(data_without_outliers)
+}
+
+# Set the threshold for z-score outlier removal
+zscore_threshold <- 3  # Adjust as needed
+
+# Remove outliers based on z-score for the desired variable
+df_filtered <- remove_outliers_zscore(df_gender_on_wealth, "wealth", zscore_threshold)
+
+df_filtered
+```
+
+> In many places throughout this notebook, we have used the pipe operator, ie. `%>%`. In essence, it tells R what to do next and breaks the code into incremental steps for the reader including yourself.
+
+```{r}
+#df <- df %>% rename(income_before_tax = pefmtinc)
+#is the same as
+#df <- rename(df, income_before_tax = pefmtinc)
+```
+
+[[<sup>1</sup>](#fn1s)Statistics Canada, Survey of Financial Security, 2019, 2021. Reproduced and distributed on an "as is" basis with the permission of Statistics Canada.Adapted from Statistics Canada, Survey of Financial Security, 2019, 2021. This does not constitute an endorsement by Statistics Canada of this product.]{#fn1}
+
+    Esteban Ortiz-Ospina and Max Roseqoifhoihr (2018) - "Economic inequality by gender". Published online at OurWorldInData.org. Retrieved from: 'https://ourworldindata.org/economic-inequality-by-gender' [Online Resource]
