@@ -1,0 +1,314 @@
+---
+title: '14 - Good Regression Practices'
+author: Marina Adshade, Paul Corcuera, Giulia Lo Forte, Jane Platt
+date: 2024-05-29
+description: This notebook covers some good practices that should be implemented when we perform regression analysis. We look at how to handle outliers, multicollinearity, heteroskedasticity, and nonlinearity. 
+categories: [econ 490, pystata, outliers, winsorizing, trimming, multicollinearity, heteroskedasticity, nonlinearity]
+format:
+  html: default
+  ipynb:
+    jupyter:
+        kernelspec:
+            display_name: python3
+            language: python
+            name: Python3
+---
+
+## Prerequisites 
+
+1. Importing data into Stata.
+2. Creating new variables using `generate` and `replace`.
+3. Identifying percentiles in data using `summarize` and `return list`.
+4. Running OLS regressions.
+
+## Learning Outcomes
+
+1. Identify and correct for outliers by trimming or winsorizing the dependent variable. 
+2. Identify and correct for the problem of multicollinearity.
+3. Identify and correct for the problem of heteroskedasticity. 
+4. Identify and correct for the problem of non-linearity. 
+
+## 14.0 Intro
+
+```{python}
+import stata_setup
+stata_setup.config('C:\Program Files\Stata18/','se')
+```
+
+```{python}
+>>> import sys
+>>> sys.path.append('/Applications/Stata/utilities') # make sure this is the same as what you set up in Module 01, Section 1.3: Setting Up the STATA Path
+>>> from pystata import config
+>>> config.init('se')
+```
+
+## 14.1 Dealing with Outliers 
+
+Imagine that we have constructed a dependent variable which contains the earnings growth of individual workers and we see that some worker's earnings increased by more than 400%. We might wonder if this massive change is just a coding error made by the statisticians that produced the data set. Even without that type of error, though, we might worry that the earnings growth of a small number of observations are driving the results of our analysis. If this is the case, we will produce an inaccurate analysis based on results that are not associated with the majority of our observations. 
+
+The standard practice in these cases is to either winsorize or trim the subset of observations that are used in that regression. Both practices remove the outlier values in the dependent variable to allow us to produce a more accurate empirical analysis. In this section, we will look at both approaches.
+
+<div class="alert alert-block alert-warning">
+    
+**Warning:** We should only consider fixing outliers when there is a clear reason to address this issue. Do not apply the tools below if the summary statistics in your data make sense to you in terms of abnormal values. For example, outliers might be a sign that our dependent and explanatory variables have a non-linear relationship. If that is the case, we will want to consider including an interaction term that addresses that non-linearity. A good way to test for this is to create a scatter plot of our dependent and independent variables. This will help us to see if there are actually some outliers, or if there is just a non-linear relationship. </div>
+
+### 14.1.1 Winsorizing a Dependent Variable
+
+Winsorizing is the process of limiting extreme values in the dependent variable to reduce the effect of (possibly erroneous) outliers. It consists of replacing values below the $a$th percentile by that percentile's value, and values above the $b$th percentile by that percentile's value. Consider the following example using our fake data set:
+```{python}
+%%stata
+
+clear all
+*cd ""
+use fake_data, clear 
+```
+
+Let's have a look at the distribution of earnings in the data set.
+
+Specifically, focus on the earnings at four points of the distribution: the minimum, the maximum, the 1st percentile, and the 99th percentile. We can display them using locals, as seen in [Module 4](https://comet.arts.ubc.ca/docs/Research/econ490-pystata/04_Locals_and_Globals.html).
+
+```{python}
+%%stata
+
+summarize earnings, detail
+local ratio_lb = round(r(p1)/r(min))
+local ratio_ub = round(r(max)/r(p99))
+display "The earnings of the individual in the 1st percentile are `r(p1)'"
+display "The lowest earner in the dataset earned `r(min)'"
+display "The earnings of the individual in the 99th percentile are `r(p99)' "
+display "The highest earner in the dataset earned `r(max)'"
+display "The individual in the 1st pctile earned `ratio_lb' times as much as the lowest earner!"
+display "The highest earner earned `ratio_ub' times as much as the individual in the 99th pctile!"
+```
+
+From the summary statistics above, we can see that that the income earned by the individual at the 1st percentile is 2,831.03 and that the lowest earner in the data set earned 8.88.  
+
+We can also see that income earned by the individual at the 99th percentile is only 607,140.32 and that the highest earner in the data earned over 60 millions!
+
+These facts suggest to us that there are large outliers in our dependent variable.
+
+We want to get rid of these outliers by winsorizing our data set. What that means is replacing the earnings of all observations below the 1st percentile by exactly the earnings of the individual at the 1st percentile, and replacing the earnings of all observations above the 99th percentile by exactly the earnings of the individual at the 99th percentile. 
+
+Recall that we can see how Stata stored the information in the previously run `summarize` command by using the command `return list`.
+
+```{python}
+%%stata
+
+return list
+```
+
+To winsorize this data, we do the following 3 step process:
+
+1. We create a new variable called *earnings_winsor* which is identical to our _earnings_ variable (`gen earnings_winsor = earnings`). We choose to store the winsorized version of the dependent variable in a different variable so that we don't overwrite the original data set. 
+2. If earnings are smaller than the 1st percentile, we replace the values of *earnings_winsor* with the earnings of the individual at the 1st percentile (stored in Stata in `r(p1)`). Note that we need to ensure that Stata does not replace missing values with `r(p1)`.
+3. If earnings are larger than the 99th percentile, we replace the values of *earnings_winsor* with the earnings of the individual at the 99th percentile (stored in Stata in `r(p99)`). Note that we need to ensure that Stata does not replace missing values with `r(p99)`.
+
+We do this below:
+
+```{python}
+%%stata
+
+generate earnings_winsor = earnings
+replace earnings_winsor = r(p1) if earnings_winsor<r(p1) & earnings_winsor!=.
+replace earnings_winsor = r(p99) if earnings_winsor>r(p99) & earnings_winsor!=.
+```
+
+Let's take a look at the summary statistics of the original earnings variable and the new variable that we have created:
+
+```{python}
+%%stata
+
+summarize earnings earnings_winsor
+```
+
+Now we will use this new dependent variable in our regression analysis. If the outliers were not creating problems, there will be no change in the results. If they were creating problems, those problems will now be fixed. 
+
+Let's take a look at this by first running the regression from [Module 11](https://comet.arts.ubc.ca/docs/Research/econ490-pystata/11_Linear_Reg.html) with the original _logearnings_ variable.
+
+```{python}
+%%stata
+
+capture drop logearnings
+generate logearnings = log(earnings)
+regress logearnings age 
+```
+
+Now we will run this again, using the new winsorized _logearnings_ variable. 
+
+```{python}
+%%stata
+
+capture drop logearnings_winsor
+generate logearnings_winsor = log(earnings_winsor)
+regress logearnings_winsor age 
+```
+
+Do you think that in this case the outliers were having a significant impact before being winsorized?
+
+### 14.1.2 Trimming a Dependent Variable 
+
+Trimming consists of replacing both values below the $a$th percentile and values above the $b$ percentile by a missing value. This is done to exclude these outliers from regression, since Stata automatically excludes missing observations in the command `regress`.
+
+Below, we look at the commands for trimming a variable. Notice that the steps are quite similar to when we winsorized the same variable. Don't forget to create a new *earnings_trim* variable to avoid overwriting our original variable!
+
+```{python}
+%%stata
+
+summarize earnings, detail
+
+capture drop earnings_trim
+generate earnings_trim = earnings
+replace earnings_trim = . if earnings_trim < r(p1) & earnings_trim!=.
+replace earnings_trim = . if earnings_trim > r(p99) & earnings_trim!=.
+```
+
+And here is the result of the regression with the new dependent variable:
+
+```{python}
+%%stata
+
+capture drop logearnings_trim
+generate logearnings_trim = log(earnings_trim)
+regress logearnings_trim age 
+```
+
+## 14.2 Multicollinearity 
+
+If two variables are linear combinations of one another they are multicollinear. Ultimately, Stata does not allow us to include two variables in a regression that are perfect linear combinations of one another, such as a constant or a dummy variable for male and a dummy for female (since female = 1 - male). In all of the regressions above, we see that one of those variables was dropped from the regression "because of collinearity".
+
+```{python}
+%%stata
+
+capture drop male
+generate male = sex == "M"
+
+capture drop female 
+generate female = sex == "F"
+```
+
+```{python}
+%%stata
+
+regress logearnings male female
+```
+
+Is this a problem? Not really. Multicollinearity is a sign that a variable is not adding any new information. Notice that with the constant term and a male dummy we can know the mean earnings of females. In this case, the constant term is, by construction, the mean earnings of females, and the male dummy gives the earning premium paid to male workers.
+
+While there are some statistical tests for multicollinearity, nothing beats having the right intuition when running a regression. If there is an obvious case where two variables contain basically the same information, we'll want to avoid including both in the analysis. 
+
+For instance, we might have an age variable that includes both years and months (e.g. if a baby is 1 year and 1 month old, then this age variable would be coded as 1 + 1/12 = 1.083). If we included this variable in a regression which also included an age variable that includes only years (e.g the baby's age would be coded as 1) then we would have the problem of multicollinearity. Because they are not perfectly collinear, Stata might still produce some results; however, the coefficients on these two variables would be biased.
+
+## 14.3 Heteroskedasticity 
+
+When we run a linear regression, we essentially split the outcome into a (linear) part explained by observables ($x_i$) and an error term ($e_i$):
+$$
+y_i = a + b x_i + e_i
+$$ 
+
+The standard errors in our coefficients depend on $e_i^2$ (as you might remember from your econometrics courses). Heteroskedasticity refers to the case where the variance of this projection error depends on the observables $x_i$. For instance, the variance of wages tends to be higher for people who are university educated (some of these people have very high wages) whereas it is small for people who are non-university educated (these people tend to be concentrated in lower paying jobs). Stata by default assumes that the variance does not depend on the observables, which is known as homoskedasticity. It is safe to say that this is an incredibly restrictive assumption.
+
+While there are tests for heteroskedasticity, the more empirical economists rely on including the option `robust` at the end of the `regress` command for the OLS regression to address this. This will adjust our standard errors to make them robust to heteroskedasticity.
+
+```{python}
+%%stata
+
+capture drop logearnings
+generate logearnings = log(earnings)
+regress logearnings age, robust
+```
+
+Best practices are simply to always use robust standard errors in your own research project, since most standard errors will be heteroskedastic.
+
+## 14.4 Non-linearity
+
+Our regression analysis so far assumes that the relationship between our independent and explanatory variables is linear. If this is not the case, and the relationship is non-linear, then we are getting inaccurate results with our analysis. 
+
+Let's consider an example. We know that earnings increases with age, but what if economic theory predicts that earnings increase by more for each year of age when workers are younger than when they are older? What we are asking here is whether earnings is increasing with age at a decreasing rate. In essence, we want to check whether there is a concave relation between age and earnings. We can think of several mechanisms for why this relationship might exist: for a young worker, as they age, they get higher wages through increased experience in the job; for an older worker, as they age, those wage increases will be smaller as there are smaller productity gains with each additional year working. In fact, if the productivity of workers decreaseas as they age, perhaps for reasons related to health, then it is possible to find a negative relationship between age and earning beyond a certain age -- the relationship would be an inverted U-shape.
+
+We could check if this is the case in our model by including a new interaction term that is simply age interacted with itself, which is the equivalent of including age and age squared. We learned how to do this in [Module 13](https://comet.arts.ubc.ca/docs/Research/econ490-pystata/13_Dummy.html). Let's include this in the regression above, remembering that age is a continuous variable (do you remember how to include a continuous variable in a regression?).
+
+```{python}
+%%stata
+
+regress logearnings c.age##c.age
+```
+
+There does seem to be some evidence in our regression results that this economic theory is correct, since the coefficient on the interaction term is both negative and statistically significant.
+
+How do we interpret these results? Let's think about the equation we have just estimated:
+$$
+Earnings_i = \beta_0 + \beta_1 Age_i + \beta_2 Age^2_i + \varepsilon_i 
+$$
+
+This means that earnings of an individual change in the following way with their age:
+$$
+\frac{\partial Earnings_i}{\partial Age_i} = \beta_1 + 2 \beta_2 Age_i
+$$
+
+Due to the quadratic term, as age changes, the relationship between age and earnings changes as well.
+
+We have just estimated $\beta_1$ to be positive and equal to 0.079, and $\beta_2$ to be negative and equal to 0.001.
+
+This means that, as age increases, it's correlation with earnings decrease:
+$$
+\frac{\partial Earnings_i}{\partial Age_i} = 0.079 - 2 * 0.001 Age_i
+$$
+
+Since the marginal effect changes with the size of $Age_i$, providing one unique number for the marginal effect becomes difficult.
+
+The most frequently reported version of this effect is the "marginal effect at the means": the marginal effect of age on earnings when age takes its average value. In our case, this will be equal to 0.079 minus 0.002 times the average value of age.
+
+To do this in practice, we store the estimated coefficients and average age in three locals: local *agemean* stores the average age, while locals *beta1* and *beta2* store the estimated coefficients. You learned how to do this in [Module 4](https://comet.arts.ubc.ca/docs/Research/econ490-pystata/04_Locals_and_Globals.html). Notice that Stata automatically stores the estimated coefficients in locals with syntax `_b[regressor name]`. To retrieve the estimated coefficient $\beta_2$, we manually create the variable $Age^2_i$ and call it *agesq*.
+
+```{python}
+%%stata
+
+summarize age
+local agemean : display %2.0fc r(mean)
+capture drop agesq
+generate agesq = age*age
+regress logearnings age agesq
+local beta1 : display %5.3fc _b[age]
+local beta2 : display %5.3fc _b[agesq]
+local marg_effect = `beta1' + (2 * `beta2' * `agemean')
+display "beta1 is `beta1', beta2 is `beta2', and average age is `agemean'."
+display "Therefore, the marginal effect at the means is `beta1' + 2*(`beta2')*`agemean', which is equal to `marg_effect'."
+```
+
+We find that the marginal effect at the mean is -0.011. What does that mean? It means that, for the average person, becoming one year older is associated with a 1% decrease in log earnings.
+
+Notice that this is the effect for the *average person*. Is the same true for young workers and older workers? To learn how to interpret this non-linearity in age, let's see how the predicted earnings correlate with age.
+
+We can obtain the predicted earnings with the `predict` command and then use a scatterplot to eyeball it's relationship with age. We covered how to create scatterplots in [Module 9](https://comet.arts.ubc.ca/docs/Research/econ490-pystata/09_Stata_Graphs.html) and the `predict` function in [Module 11](https://comet.arts.ubc.ca/docs/Research/econ490-pystata/11_Linear_Reg.html).
+
+<div class="alert alert-info">
+
+**Note:** Stata graphs will not appear in the Jupyter Notebooks. To make the most out of this part of the module, it is recommended that you run this code on Stata installed locally in your computer. </div>
+
+```{python}
+%%stata
+
+* Run the regression with the quadratic term
+regress logearnings c.age##c.age
+
+* Predict earnings and save them as yhat
+predict yhat, xb
+
+* Plot the scatterplot
+twoway scatter yhat age
+```
+
+The scatterplot shows an inverted-U relationship between age and the predicted log-earnings. This relationship implies that, when a worker is very young, aging is positively correlated with earnings. However, after a certain age, this correlation becomes negative and the worker gets lower earnings for each additional year of age. In fact, based on this graph, workers earnings start to decline just after the age of 50. Had we modelled this as a linear model, we would have missed this important piece of information!
+
+<div class="alert alert-info">
+
+**Note:** If there is a theoretical reason for believing that non-linearity exists, Stata provides some tests for non-linearity. We can also create a scatter-plot to see if we observe a non-linear relationship in the data. We covered that approach in [Module 9](https://comet.arts.ubc.ca/docs/Research/econ490-pystata/09_Stata_Graphs.html). </div>
+
+## 14.5 Wrap Up 
+
+It is important to always follow best practices for regression analysis. Nonetheless, checking and correcting for outliers, as well as addressing heteroskedasticity, multicollinearity and non-linearity can be more of an art than a science. If you need any guidance on whether or not you need to address these issues, please be certain to speak with your instructor, TA, or supervisor.
+
+## References
+
+[How to identify and replace unusual data values](https://www.youtube.com/watch?v=jIiHb0gsyVo)
+
