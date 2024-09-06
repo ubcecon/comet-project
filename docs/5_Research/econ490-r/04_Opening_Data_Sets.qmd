@@ -1,0 +1,352 @@
+---
+title: "04 - Opening Datasets"
+author: Marina Adshade, Paul Corcuera, Giulia Lo Forte, Jane Platt
+date: 2024-05-29
+description: This notebook explains how to load, view, and clean data. We go over importing and previewing our data, as well as preparing the data for analysis.  
+categories: [econ 490, r, loading data, glimpse, summary, cleaning, factorizing, missing data]
+format: 
+  html: default
+  ipynb:
+    jupyter:
+      kernelspec:
+        display_name: R
+        language: r
+        name: ir
+---
+
+## Prerequisites
+
+1. Understand the basics of R such as data types and structures.
+
+## Learning Outcomes
+
+1. Load a variety of data types into R using various functions.
+2. View and reformat variables, specifically by factorizing.
+3. Work with missing data.
+4. Select subsets of observations and variables for use.
+
+## 4.0 Intro
+
+In this notebook, we will focus on loading, viewing and cleaning up our data set: these are **fundamental** skills which will be necessary for essentially every data project we will do. This data analysis process usually consists of four steps:
+
+1. We clear the workspace and set up the directory (the folder that R accesses whenever we run a command that either opens or saves a file).
+2. We load the data into R, meaning we take a file on our computer and tell R how to interpret it.
+2. We inspect the data through a variety of methods to ensure it looks good and has been properly loaded.
+2. We clean up the data by removing missing observations and adjusting the way variables are interpreted.
+
+In this module, we will cover each of these steps in detail.
+
+## 4.1 Clearing the Workspace and Changing the Directory
+
+Our script files should begin with a command that clears the previous work that has been done in R. This makes sure that:
+
+1. we do not waste computer memory on things other than the current project;
+2. whatever result we obtain in the current session truly belongs to that session.
+
+To clear our workspace, we can use the `rm()` function. If we do not specify any object names as inputs of the `rm()` function, R will remove all objects available in the workspace. Alternatively, we can use the function `ls()` which lists all the objects in the current workspace. Any one of the two commands below will clear our workspace from all existing objects.
+
+```{r}
+rm()
+rm(list=ls())
+```
+
+Before importing data into R, it is useful to know how to change the folder that R accesses whenever we run a command that either opens or saves a file. Once we instruct R to change the directory to a specific folder, from that point onward it will open files from that folder and save all files to that folder, including data files and script files. R will continue to do this until either the program is closed or we change to another directory.
+
+Before changing the directory, it is important to know what the current directory is. In R, we can view the current directory with the command `getwd()`.
+
+```{r}
+print(getwd())
+```
+
+<div class="alert alert-info">
+
+**Note:**  We write the directory path within quotation marks to make sure R interprets this as a single string of words. If we don't do this, we may encounter issues with folders that include blank spaces. </div>
+
+Now that we know what the current directory is, we can change it to any specific location you like by using the command `setwd()` and a file path in quotes.
+
+For example, we can change our working directory to a directory named "some_folder/some_folder" with the command `setwd("some_folder/some_subfolder")`.
+
+Instead of changing directory every time, R allows us to create 'projects'. RStudio Projects are built-in features of RStudio that allow us to create a working directory for a project which we can launch whenever we want. 
+
+To create an RStudio Project, first launch RStudio. Then navigate through __File__, __New Project__, __New Directory__, and then __New Project__. We can then choose the name of our project and select where we would like the project to be stored. To allow for the project to live on OneDrive (which is highly recommended), we select the OneDrive directory in our computer. Finally, we can create the project. If we access your OneDrive folder on our computer, we should then see a subfolder with our project name and a default .RProj object already inside.
+
+Whenever we want to return to our project to work on it, we can simply click the .RStudio Project object above. We can also start a fresh session in RStudio and navigate to our project by selecting __File__, __Open Project__, and then following the specified instructions.
+
+More details on RStudio Projects can be found in [Module 17](https://comet.arts.ubc.ca/docs/Research/econ490-r/17_Wf_Guide.html).
+
+## 4.2 Loading Data
+
+Before we can load our data, we need to tell R which packages we will be using in our notebook. Without these packages, R will not have access to the appropriate functions needed to interpret our raw data. As explained previously, packages only need to be installed once; however, they need to be imported every time we open a notebook.
+
+We have discussed packages previously: for data loading, the two most important ones are `tidyverse` and `haven`.
+
+* `tidyverse` should already be somewhat familiar. It includes a wide range of useful functions for working with data in R.
+* `haven` is a special package containing functions that can be used to import data.
+
+Let's get started by loading them now.
+
+```{r}
+# loading in our packages
+library(tidyverse)
+library(haven)
+library(IRdisplay)
+```
+
+Data can be created by different programs and stored in different styles - these are called **file types**. We can usually tell what kind of file type we are working with by looking at the extension.  For example, a text file usually has the extension `.txt`. The data we will be using in this course is commonly stored in Stata, Excel, text, or comma-separated variables (csv) files.  These have the following types:
+
+* .dta for a Stata data file;
+* .xls or .xlsx for an Excel file;
+* .txt for a text file;
+* .csv for a comma-separated variables file.
+
+To load any data set, we need to use the appropriate function in order to specify to R the format in which the data is stored: 
+
+- To load a .csv file, we use the command `read_csv("file name")`.
+- To load a STATA data file, we use the command `read_dta("file name")`.
+- To load an Excel file, we use the command `read_excel("file name")`.
+- To load a text file, we use the command `read_table("file name", header = FALSE)`.
+  - The header argument specifies whether or not we have specified column names in our data file. 
+- There exist many other commands to import different types of data files. Feel free to research other shortcuts that might help you with whatever data you are using!
+  
+<div class="alert alert-info">
+
+**Note:** If we are using an Excel file, we need to load in the readxl package alongside the tidyverse and haven packages above to read the file. </div>
+
+In this module, we'll be working with the data set in the `"fake_data.dta"` files. This data set is simulating information of workers in the years 1982-2012 in a fake country where a training program was introduced in 2003 to boost their earnings. 
+
+Let's read in our data in .dta format now.
+
+```{r}
+# reading in the data
+fake_data <- read_dta("../econ490-stata/fake_data.dta") ## .. just tells R to go back one folder.
+```
+
+## 4.3 Viewing Data
+
+Now that we've loaded in our data, it's important to inspect the data. Let's look at a series of commands which help us to do this.
+
+### 4.3.1 `glimpse` and `print`
+
+The first command we are going to use describes the basic characteristics of the variables in the loaded data set.
+
+```{r}
+glimpse(fake_data)
+```
+
+Alternatively, we can use the `print` command, which displays the same information as the `glimpse` command but in horizontal form.
+
+```{r}
+print(fake_data)
+```
+
+With many variables, this can be harder to read than the `glimpse` command. Thus, we typically prefer to use the `glimpse` command.
+
+### 4.3.2 `view`, `head`, and `tail`
+
+In addition to the `glimpse` command, we can also see the raw data we have imported as if it were an Excel file. To do this, we can use the `view` function. This command will open a clear representation of our data as though it were a spreadsheet. We can also use the command `head`. This prints out a preview of our data set exactly as it would appear in Excel (showing the first ten rows by default). We can then specify a numeric argument to the function to change the number of rows we want to see, as well as the specific rows we want via indicating their positions.
+
+```{r}
+head(fake_data)
+```
+
+There is even the function `tail`, which functions identically to `head` but works from the back of the data set (outputs the final rows).
+
+```{r}
+tail(fake_data)
+```
+
+Opening the data editor has many benefits. Most importantly we get to see our data as a whole, allowing us to have a clearer perspective of the information the data set is providing us. For example, here we observe that we have unique worker codes, the year where they are observed, worker characteristics, and whether or not they participated in the training program. This viewing process is particularly useful when we first load a data set, since it lets us know if our data has been loaded in correctly and looks appropriate.
+
+### 4.3.3 `summary` and `sapply`
+
+We can further analyze any variable by using the `summary` command. This command gives us the minimum, 25th percentile, 50th percentile (median), 75th percentile, and max of each of our variables, as well as the mean of each of these variables. It is a good command for getting a quick overview of the general spread of all variables in our data set.
+
+```{r}
+summary(fake_data)
+```
+
+From the command above, we can tell that this function will only be meaningful for variables in numeric or integer form. 
+
+We can also apply `summary` to specific variables.
+
+```{r}
+summary(fake_data$earnings)
+```
+
+If we want to quickly access more specific information about our variables, such as their standard deviations, we can supply this as an argument to the function `sapply`. It will output the standard deviations of each of our numeric variables. However, it will not operate on character variables. Remember, we can check the type of each variable using the `glimpse` function from earlier.
+
+```{r}
+sapply(fake_data, sd)
+```
+
+We can also apply arguments such as mean, min, and median to the function above; however, `sd` is a good one since it is not covered in the `summary` function.
+
+### 4.3.4 `count` and `table`
+
+We can also learn more about the frequency of the different measures of our variables by using the command `count`. We simply supply a specific variable to the function to see the distribution of values for that variable.
+
+```{r}
+count(fake_data, region)
+```
+
+Here we can see that there are five regions indicated in this data set, that more people surveyed came from region 1 and then fewer people surveyed came from region 3. Similarly, we can use the `table` function and specify our variable to accomplish the same task.
+
+```{r}
+table(fake_data$region)
+```
+
+## 4.4 Cleaning Data
+
+Now that we've loaded in our data, the next step is to do some rudimentary data cleaning. This most commonly includes factorizing variables and dropping missing observations.
+
+### 4.4.1 Factorizing Variables
+
+We have already seen that there are different types of variables which can be stored in R. Namely, there are quantitative variables and qualitative variables. Any quantitative variable can be stored in R as a set of strings or letters. These are known as **character** variables. Qualitative variables can also be stored in R as factor variables. Factor variables associate a qualitative response to a categorical value, making analysis much easier. Additionally, data is often encoded, meaning that the levels of a qualitative variable are represented by "codes", usually in numeric form.
+
+Look at the *region* variable in the output from `glimpse` above:
+
+```
+region     <dbl> 1, 1, 4, 4, 4, 5, 5, 5, 5, 2, 2, 5, 5, 5, 5, 2, 2, 4, 4, 2,~
+```
+
+The *region* variable in this data set corresponds to a particular region that the worker is living in. We can also see the variable type is `<dbl+lbl>`: this is a labeled double. This is good: it means that R already understands what the levels of this variable mean.
+
+There are three similar ways to change variables into factor variables. 
+
+1.  We can change a specific variable inside a data frame to a factor by using the `as_factor` command. Let's do that below, using the special pipe `%>%` operator. This operator allows us to pipe existing code into a new function. In this way, it helps us break up long code across many lines, improving legibility. You can think of the pipe operator as saying AND THEN when describing your code aloud.
+
+```{r}
+fake_data <- fake_data %>%  #we start by saying we want to update the data, AND THEN... (%>%)
+    mutate(region = as_factor(region)) #mutate (update) region to be a factor variable
+
+glimpse(fake_data)
+```
+
+Do you see the difference in the _region_ variable?  You can also see that the type has changed to `<fct>`, a **factor variable**.
+
+R would already know how to "decode" the factor variables from the imported data if and only if they were of type `<dbl+lbl>`.  What about when this isn't the case? This brings us to the next method:
+
+2.  We can **supply a list of factors** using the `factor` command. This command takes two other values:
+    * A list of levels the qualitative variable will take on.
+    * A list of labels, one for each level, describing what each level means.
+
+We can create a custom factor variable as follows:
+
+```{r}
+#first, we write down a list of levels
+region_levels = c(1:5)
+#then, we write down a list of our labels
+region_labels = c('Region A', 'Region B', 'Region C', 'Region D', 'Region E')
+
+#now, we use the command but with some options - telling factor() how to interpret the levels
+
+fake_data <- fake_data %>%  #we start by saying we want to update the data, AND THEN... (%>%)
+    mutate(region2 = factor(region,   #notice it's factor, not as_factor
+                          levels = region_levels, 
+                          labels = region_labels)) #mutate (update region) to be a factor of regions
+glimpse(fake_data)
+```
+
+Again, do you see the difference between _region_ and _region2_ here? This is how we can customize factor labels when creating new variables.
+
+3.  The final method is very similar to the first. If we have a large data set, it can be tiresome to decode all of the variables one-by-one. Instead, we can use `as_factor` on the **entire data set** and it will convert all of the variables with appropriate types.
+
+```{r}
+fake_data <- as_factor(fake_data)
+
+glimpse(fake_data)
+```
+
+This is our final data set, with all variables factorized.
+
+### 4.4.2 Removing Missing Data
+
+We often face the challenge of dealing with missing values among observations for some of our variables. To check if any of our variables have missing values, we can use the `is.na` function alongside the `any` function. This code will return a value of TRUE or FALSE depending on whether we do or do not have any missing observations in our data set.
+
+```{r}
+any(is.na(fake_data))
+```
+
+Here, we can see that our data set already has no missing observations, so we do not need to worry about the process of potentially removing or redefining them. However, this is often not the case.
+
+Let's go through the process of dropping missing observations for the *sex* variable anyway, assuming that missing observations are coded as "not available". We will do this as a demonstration, even though no observations will actually be dropped. To do this, we will use the `filter()` method. This function conditionally drops rows (observations) by evaluating each row against the supplied condition. Only observations where the condition is true/met are retained (selection by inclusion) in the data frame. To use this to drop hypothetical missing observations for *sex*, we do the following:
+
+```{r}
+filter(fake_data, sex != "not available")
+```
+
+<div class="alert alert-info">
+
+**Recall**: The operator `!=` is a conditional statement for "not equal to". Therefore, we are telling R to keep the observations that are not equal to "not available". </div> 
+
+This process utilized the `filter` function, which retains rows meeting a specific condition. However, we can also supply a series of conditions to filter at once. We could have, for instance, decided that we only wanted to keep observations for females from region 1. In this case, we could run the following code.
+
+```{r}
+head(filter(fake_data, sex == "F" & region == 1))
+```
+
+<div class="alert alert-warning">
+
+**Important Note**: Choosing which observations to drop is always an important research decision. There are two key ways to handle missing data: dropping it altogether (done above) or treating "missing" as its own valid category (not done above since no data is missing). This decision has important consequences for your analysis, and should always be carefully thought through - especially if the reasons why data are missing might not be random. </div>
+
+### 4.4.3 Removing Variables
+
+Beyond filtering observations as was done above, we sometimes want to "filter" our variables. This process of operating on columns instead of rows requires the `select` function instead of the `filter` function. This is a useful function when we have more data at our disposal than we actually need to answer the research question at hand. This is especially pertinent given the propensity for data sets to collect an abundance of information, some of which may not be useful to us and instead slow down our loading and cleaning process.
+
+Let's assume we are interested in seeing the gender wage gap among male and female workers of region 2, and nothing else. To help us with our analysis, we can filter by only observations which belong to region 2, then select for just the variables we are interested in.
+
+```{r}
+head(fake_data %>% filter(region == 2) %>% select(sex, earnings)) 
+```
+
+In the code above, we pass as parameters to the `select` function every column we wish to keep.
+
+* `select(variables, I, want, to, keep)`
+* `select(-variables, -I, -don't, -want)`
+
+This is very useful and is usually done for practical reasons such as memory. Cleaning data sets to remove unessential information also allows us to focus our analysis and makes it easier to answer our desired research question. In our specific case, we want to keep data on just wages and sex. We have used the select function for this. If we were to further our research of the gender wage gap within region 2, we would now be able to refer to "fake_data" more quickly for immediate results.
+
+## 4.5 Common Mistakes
+
+Common mistakes happen because we do not respect the format of specific variables. Let's say we want to filter the observations in order to get only women working in region 1. We may forget that variable *sex* is a string variable and type the following:
+
+```{r}
+head(filter(fake_data, sex == F & region == 1))
+```
+
+We obtain a tibble with no observations. This mistake occurs when we forget to wrap values of string variables in quotes. The correct command would be the following:
+
+```{r}
+head(filter(fake_data, sex == "F" & region == 1))
+```
+
+## 4.6 Wrap Up
+
+In this notebook, we have covered the basic process of working with data. Specifically, we looked at how to load in data, how to view it, and how to clean it by factorizing, dropping and selecting variables and observations. This general scheme is critical to any research project, so it is important to keep in mind as you progress throughout your undergraduate economics coursework and beyond. In the next section, we will cover a larger concept which is also essential to the cleaning of a data set, but merits its own section: creating variables.
+
+## 4.7 Wrap-up Table
+
+| Command | Function |
+|---------|----------|
+|`rm()`     | It removes all objects in the workspace.|
+|`getwd()`  | It shows the current working directory.|
+|`setwd()`  | It changes the working directory to a file path of our choice.|
+|`read_dta()` | It imports a .dta file.|
+|`read_csv()` | It imports a .csv file. |
+|`read_table()` | It imports a .txt file.|
+|`glimpse()` | It shows basic characteristics of the data. |
+|`print()` | It shows basic characteristics of the data, displaying them on a horizontal format. |
+|`head()` | It shows the top observations of the data. |
+|`tail()` | It shows the bottom observations of the data.|
+|`summary()` | It gives the minimum, 25th percentile, 50th percentile (median), 75th percentile, and max of each variable.|
+|`sapply()` | It returns a given statistic for each variable of the dataset.|
+|`count()` | It counts how many different values there are for a given variable.|
+|`as_factor()` | It transforms a variable into a factor variable.|
+|`is.na()` | It returns a value of TRUE if there are not-available observations for a given variable; otherwise, it returns FALSE.|
+|`filter()` | It filters the data according to specific conditions that observations must satisfy.|
+|`select()` | It keeps only certain variables of our data.|
+
+## References
+
+* [Introduction to Probability and Statistics Using R](https://mran.microsoft.com/snapshot/2018-09-28/web/packages/IPSUR/vignettes/IPSUR.pdf)
+* [DSCI 100 Textbook](https://datasciencebook.ca/index.html)

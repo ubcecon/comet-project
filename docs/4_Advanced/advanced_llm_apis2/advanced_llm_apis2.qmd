@@ -1,0 +1,223 @@
+---
+title: Advanced - LLM APIs 2
+author: 'COMET Team <br> _Jonathan Graves, Alex Haddon_'
+date: 7 August 2024
+categories:
+  - advanced
+  - python
+  - OpenAI
+format:
+  html: default
+  ipynb:
+    jupyter:
+      kernelspec:
+        display_name: Python 3 (ipykernel)
+        language: python3
+        name: python3
+jupyter: python3
+---
+
+## What are LLMs?
+Large Language Models (LLMs) are advanced machine learning models designed to understand and generate human-like text based on the data they have been trained on. Examples of popular LLMs include GPT-3.5 from OpenAI and open-source models such as `ollama` or `huggingface`.
+
+## Applications of LLMs
+Large language models have a wide range of applications across various domains. In natural language understanding (NLU), they excel in tasks like text classification, named entity recognition, and language translation, enabling efficient content categorization and multilingual communication. LLMs are also powerful tools for text generation, facilitating the creation of articles, creative writing, and summarization of lengthy documents. Additionally, they enhance conversational agents and virtual assistants, providing human-like interactions and support. Furthermore, LLMs play a crucial role in knowledge extraction, sentiment analysis, and automated coding, making them invaluable in fields like customer support, market analysis, software development, and beyond. In fact, what you are reading right now was created using an LLM!
+
+Here is a [cool video](https://www.youtube.com/watch?v=5sLYAQS9sWQ&ab_channel=IBMTechnology) made by IBM that explains a little more about how LLMs work. 
+
+
+# Setting Up the Environment
+
+Head to [ollama.com](https://ollama.com/) and download ollama locally. Then, in your terminal, run the code `ollama pull llama3` and wait for it to install
+
+## Installing Required Libraries
+Make sure to install the ollama library if you haven't already; in your terminal use the command `pip install ollama`. There will be various other packages you will be prompted to install later in this notebook. 
+
+
+# Using an LLM (e.g., llama3)
+
+## Connecting to the LLM API
+Define a function to query the model by specifying the correct model as well as the prompt we want to pass to the model. 
+
+NOTE: Make sure that you have the ollama application open and running locally before you try and make an API call or else you will get an error likely stating your connection has been "refused". 
+
+```{python}
+# Import the required library (ollama)
+import ollama
+
+
+response = ollama.chat(
+    model='llama3',  # specify the model 
+    messages=[{'role': 'user', 'content': 'In fewer than 50 words, why is the sky blue?'}]) # insert the desired prompt
+
+print(response)
+```
+
+The output of our API call to `ollama` comes in the [JSON](https://www.json.org/json-en.html) form which stands for JavaScript Object Notation. Essentially the output is split into a series of pairs consisting of a field name, colon, and then the value. For example, the output of our API call has `'model':'llama3'` as one of the entries meaning that the model we used to generate the response is llama3. If we want just the response to be the output we can specify that in our print statement using the code below:
+
+```{python}
+# Only show the response from llama3
+print(response['message']['content'])
+```
+
+Now you try! Fill in the code skeleton with the correct code. 
+
+HINT: *In your prompt specify that you don't want a long response. Without that, ollama can take a very long time, especially if your machine is slower, as it is running locally rather than connecting to external servers.* 
+
+```{python}
+#response = ollama.chat(
+#     model= ...,
+#     messages=[{'role': 'user', 'content': ...}])
+
+# print(...)
+```
+
+
+# Self-Tests and Exercises
+
+## Multiple Choice Questions
+Here are a few questions you can use to check your understanding. Run the cell below before attempting the multiple choice questions.
+
+```{python}
+from v2_tests import Tests
+```
+
+### Question 1
+
+The output in JSON form uses the dictionary data type. What key (or sequence of keys) in the dictionary holds the output of the model?
+- A) ['model']
+- B) ['message']
+- C) ['message']['content']
+- D) ['content']
+- E) ['content']['message']
+- F) ['model']['message']
+
+*Enter your answer below as a a string with one of A,B,C,D,E,F ie. "A"*
+
+```{python}
+answer1 = #your answer here 
+
+Tests.test1(answer1)
+```
+
+### Question 2
+
+Out of the options below, which best describes what an LLM (Large Language Model) is?
+
+- A) A specialized algorithm for analyzing large datasets and generating insights.
+- B) A type of neural network that excels in generating human-like text based on extensive training data.
+- C) A tool designed for processing and translating spoken language into text.
+- D) A machine learning model primarily used for image and object recognition.
+
+*Enter your answer below as a a string with one of A,B,C,D ie. "A"*
+
+```{python}
+answer2 = #your answer here 
+
+Tests.test2(answer2)
+```
+
+
+# Worked Example: Retrieving Data from a PDF
+
+## Problem Statement
+One real world application of what we learned above is when we have a pdf that we want our LLM to be able to answer questions about. This is a process called "fine tuning" where we train the LLM to answer our prompts under the context of the contents of our pdf or more broadly the information that we give to it. In this example, we will fine tune our LLM using The Gobal Risks Report 2024 from the World Economic Forum. After doing so, we will ask the LLM to give us some contextual based answers to questions we prompt the LLM with. 
+
+## Solution Using the LLM
+Follow the steps below to get a comprehensive analysis using an LLM.
+
+#### Step 1
+
+First we will need to install various packages that will allow the PDF to be read and interpreted by the LLM. If you are interested in how this process works, feel free to open up the functions file as well as check out other lessons on word embeddings and creating RAGs. 
+
+```{python}
+%pip install --upgrade --q unstructured langchain
+%pip install --upgrade --q "unstructured[all-docs]"
+%pip install --q langchain_community langchain_text_splitters chromadb
+!brew install libmagic
+!brew install poppler
+!brew install tesseract
+```
+
+#### Step 2
+
+Now we will import the pdf using the `load_file(...)` function.
+
+```{python}
+from v2_functions import load_file
+
+path = "WEF_The_Global_Risks_Report_2024.pdf"
+
+data = load_file(path)
+
+# Check if data was loaded successfully
+if data:
+    # Preview the first page content
+    print(data[0].page_content)
+else:
+    print("Failed to load the PDF file.")
+```
+
+#### Step 3
+
+We will now embed to text into vectors and create a database from which the LLM will pull information from. We are essentially "translating" the contents of the pdf into a readable text for the LLM to use. Here, we use the function `process_and_store_pdf(...)`. 
+
+```{python}
+from v2_functions import process_and_store_pdf
+
+!ollama pull nomic-embed-text
+
+vector_database = process_and_store_pdf(data)
+```
+
+#### Step 4
+
+Now, we need to specify that we will be using the `llama3` LLM model and then use the function `setup_retriever_and_chain(..., ...)` which will make calls to the API to answer our prompts. Then, we will try answering a few prompts using the LLM!
+
+```{python}
+from v2_functions import setup_retriever_and_chain
+
+# specify LLM model
+model = "llama3"
+
+# retrieval function; see the functions file for more information
+chain = setup_retriever_and_chain(vector_database, model)
+
+# specify prompt
+prompt = "Provide a summary of the report."
+
+# After, try a few of the prompts below:
+# - "What does the report say about climate change?"
+# - "What does the report say about misinformation?"
+# - "Summarize the section on conflict."
+
+# create a function to put it all together
+def local_model(chain, prompt):
+    response = chain.invoke(prompt)
+    print(response)
+
+# making a function call; adjust the prompt as desired
+local_model(chain, prompt)
+```
+
+#### Step 6 (Optional)
+
+If we wanted to restart with a different pdf, we would need to delete all the existing embeddings we made and you can do so by running the code below.
+
+```{python}
+# Reset the embeddings with this line of code
+# vector_database.delete_collection()
+```
+
+
+# Conclusion
+
+## Recap of What Was Learned
+- We re-introduced the concept of Large Language Models (LLMs) and their applications.
+- We set up the environment and connected to the Ollama API.
+- We explored how to use LLMs with example prompts and responses.
+- We created our own embeddings from which we could make api calls to the Ollama API with the additional context of the given pdf.
+
+For more information about word embeddings and retrieval-augmented generation (RAG) see our other applicable notebooks.
+
+

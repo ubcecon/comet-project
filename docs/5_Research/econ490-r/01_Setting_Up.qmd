@@ -1,0 +1,122 @@
+---
+title: "01 - Setting Up Jupyter and R"
+authors: Marina Adshade, Paul Corcuera, Giulia Lo Forte, Jane Platt
+date: 2024-05-29
+description: This notebook explains how to set up Jupyter, add an R Kernel, and connect to COMET. It is the first step to take when embarking on a research project. 
+categories: [econ 490, r, setting up, intro]
+format: 
+  html: default
+  ipynb:
+    jupyter:
+      kernelspec:
+        display_name: R
+        language: r
+        name: ir
+---
+
+## Prerequisites 
+
+1. Have Anaconda Navigator installed onto your personal computer.
+
+## Learning Outcomes
+
+1. Connect to JupyterLab using an R session.
+
+
+## 1.1 Jupyter 
+
+We will need to install [Anaconda Navigator](https://www.anaconda.com/) in order to be able to run our files in JupyterLab.
+
+Conda is an open-source package and environment management system. With Conda, we can create a particular directory folder (also known as environment) that will contain the packages that allow us to run Jupyter online notebooks. These notebooks run code coming from different softwares (henceforth referred as kernels): Stata, R, Python, etc. The bare minimum for our environments is some version of Python. 
+
+The only way to set up an environment based on R requires us to manually connect our computer's R program to Jupyter notebooks.
+
+<div class="alert alert-info">
+
+**Note:** We only have to do this once on any computer. After that we can go directly to Jupyter Notebooks for our work. </div>
+
+## 1.2 Setting Up Our Computer 
+
+Once Anaconda has been installed, launch JupyterLab from Anaconda Navigator. Within JupyterLab, click on the plus sign in the blue box on the top right corner and from the page that appears select "Terminal". All commands given below will be typed into that terminal window in the box that follows the `$`.
+
+Once we have the terminal open, we can run the `conda` commands that find packages to install. This is not dissimilar to downloading software from a server. We want to make sure that the computer first finds the `conda-forge` channel which contains packages. 
+
+To do this,  we should run the following commands directly in our own terminal window in JupyterLab:
+
+```bash
+  conda config --add channels conda-forge
+  conda config --set channel_priority strict
+```
+
+The goal here is to create a package bundle, i.e. an environment, where we will install some version of R, Stata Kernel, and Jupyter. You can explore the things you can download to an environment from the  `conda-forge` channel by running, for example, `conda search r-base`, `conda search stata_kernel`, etc. That way, you can see all the different versions of these packages that you can download from the different channels. 
+
+Now we are ready to create a new environment where we will install all these packages. In this particular case, we will create an environment based on Python 3.9.7. Let us create an environment called `stata_r_env` by writing:
+
+```bash
+  conda create -n stata_r_env python=3.9.7
+```
+
+If we omit the `=3.9.7` part, we will create an environment with the default Python version. 
+
+We want anything that we install from the channel to be part of this new environment. To do so, we need to activate it by running
+
+```bash
+  conda activate stata_r_env
+```
+
+Now that our environment is activated, we can install everything we want. We begin by installing Jupyter, which will allow us to run the interactive notebooks:
+
+```bash
+  conda install jupyter
+```
+
+## 1.3 Installing R Kernel on an Environment
+
+Finally, to be able to run the entire ECON 490 folder, it is highly recommended to install a stable R-version. In this particular case, we will focus on R 4.1.2. We can do this by running:
+
+``` bash
+  conda install -c conda-forge r-base=4.1.2  
+```
+
+To use R interactively from this environment, we need to open R from the terminal. If you are using Windows, you can do this by typing `r.exe` or `start r`. If you are using MacOS, you can do this by typing `r`. You will notice that a message pops up, similar to when we open R from our desktop. You need to run:
+
+```  bash
+  install.packages('IRkernel')
+  IRkernel::installspec()
+  q()
+```
+
+The first two lines connect our R version with the Jupyter notebook. The last line closes R from the terminal because we're done. Now we should be able to change directories from the terminal by running `cd any_directory` and then running `jupyter notebook` to open the interactive web page needed to open, create and export Jupyter notebooks.
+
+## 1.4 Running the COMET Notebooks on Your Own Computer
+
+Now that we have installed the Stata kernel and successfully connected our own version of Stata to the notebooks, we may want to run the COMET notebooks locally on our computer.
+
+To do so, just follow some simple steps:
+
+1. **Download the notebooks from COMET.** 
+- On the top-right corner of this webpage, we can see the menu called **"LAUNCH COMET"**. Click on the down arrow to its right and then click on **"LAUNCH LOCALLY"**. 
+- A zipped folder will be automatically download to our computer. Unzip it, and within it locate a folder called `econ490`.
+-  That folder contains a subfolder `econ490-stata` with all Jupyter Notebooks concerning the Stata modules and a subfolder `econ490-r` with all the Jupyter Notebooks concerning the R modules. Move the whole `econ490` folder to where it is most convenient for you on your computer. You will need also some of the material contained in the `econ490-stata` folder.
+2. **Open the notebooks in Jupyter.** 
+- Open Anaconda Navigator and locate the Jupyter notebook tile. 
+- Click on the button "Launch" in the Jupyter notebook tile. A Jupyter file browser will open in a web browser tab. 
+- Click on the File Browser on your left (a folder icon) and locate your `econ490` folder. Now open any module you may want to work on!
+- Be careful! Always make sure that the R kernel is connected and ready to run. 
+  - We may check the status of our kernel by looking at the circle on the top-right of our Notebook. It should be of color white. 
+  - Moving our cursor on top of it, we should see the message `Kernel status: Idle`. 
+  - The first time we open a R notebook, it will take a couple of seconds for the R kernel to connect. While connecting, the circle will be gray with a tiny thunderbolt inside. 
+  - We can always interrupt or reconnect the kernel by clicking on the "Kernel" menu on the top bar.
+
+<div class="alert alert-info">
+
+**Note:** We only have to do step 1 once on any computer. After that, we will only have to do step 2: open directly the notebooks in Jupyter. </div>
+
+
+We can also choose to run the R modules of the COMET notebooks online. To do so, go on the **"LAUNCH COMET"** button located on top-right corner of this webpage and then click **"LAUNCH ON JUPYTEROPEN"**. You will need to input your CWL credentials and then a Jupyter file browser will open in a web browser tab. Navigate through the folders in the `Files` tab: click on folder `docs`, then `econ_490`, and finally `econ490-r`. Now open any module you want to work on.
+
+
+<div class="alert alert-info">
+
+**Note:** Please speak with your instructor if you run into any issues with setting up JupyterLab. </div>
+

@@ -1,0 +1,560 @@
+---
+title: 3.2.1 - Advanced - Instrumental Variables
+author: COMET Team <br>
+date: 2024-06-10
+version: 0.1
+description: An introduction to estimating causal effects with instrumental variables on Jupyter and R.
+categories: [advanced, R, instrumental variables, causality, 2SLS, regression]
+format: 
+  html: default
+  ipynb:
+    jupyter:
+      kernelspec:
+        display_name: R
+        language: r
+        name: ir
+---
+
+## Prerequisites
+
+-   An intermediate understanding of Jupyter and R
+-   A theoretical understanding of linear regressions
+
+## Learning Outcomes
+
+After completing this notebook, you will be able to:
+
+-   Understand how instrumental variables solve omitted variable bias
+-   Choose appropriate instrumental variables
+-   Estimate causal effects with 2SLS estimators
+
+## References
+
+-   Baicker, K., Taubman, S. L., Allen, H. L., Bernstein, M., Gruber, J. H., Newhouse, J. P., Schneider, E. C., Wright, B. J., Zaslavsky, A. M., & Finkelstein, A. N. (2013). The Oregon Experiment: Effects of Medicaid on clinical outcomes. New England Journal of Medicine, 368(18), 1713–1722.
+-   Card, D. (1993). Using geographic variation in college proximity to estimate the return to schooling. National Bureau of Economic Research.
+-   Hanck, C., Arnold, M., Gerber, A., & Schmelzer, M. (n.d.). Introduction to econometrics with R \[E-book\]. University of Duisburg-Essen.
+-   Kleiber, Christian, and Achim Zeileis. 2008. Applied Econometrics with R. New York: Springer-Verlag.
+
+## Outline
+
+The notebooks *Instrumental Variables 1 and 2* are structured as follows:
+
+* Context: Oregon Health Insurance Experiment
+    - Introducing instrumental variables in the context of partial random assignment
+    - Laying out the theory of instrumental variables and their estimators
+* Example 2: College Proximity and Returns to Education
+    - Solving OVB with data from Card (1993)
+    - Applying IV estimators on R using the `AER` package
+    - Discussing the differences between OLS and IV estimates
+* Example 3: Tariffs on Animal and Vegetable Oils 
+    - Understanding the first application of instrumental variables in the context of endogeneity
+    - Modeling solutions to endogeneity in demand and supply relationships
+* Example 4: Pigouvian Taxes on Cigarettes 
+    - Extending IV regressions to multiple instruments
+    - Introducing statistical tests to quantify the validity of instruments
+
+## Context: Oregon Health Insurance Experiment
+
+Universal healthcare is one of the most widely debated topics in economic policy. Since 1965, the federal government of the United States provides free healthcare to American citizens through two different health insurance programs: Medicare and Medicaid. These programs cover medical costs of at-risk and some low-income Americans. In 2010, the federal government approved the Affordable Care Act, which let US states extend Medicaid to all low-income adults within their jurisdictions.
+
+The key question the states faced was: **should we extend health insurance to all low-income adults?**
+
+This decision required the states to assess the costs and benefits of extending health insurance to the uninsured. Crucially, they need to know how much (or whether at all) health insurance improves health outcomes of individuals.
+
+A first approach might be to estimate the effect of health insurance using a regression. For instance, we could regress health outcomes on insurance status. Unfortunately, this model would have *omitted variables bias (OVB)*. It is likely that the older and lower-income population currently covered by Medicare and Medicaid is less healthy than the average American. This would result in a misleading estimate. We need another approach.
+
+Ideally, we would want to randomly select people from the uninsured population, randomly assign health insurance to them, then compare the health outcomes of the two groups. This was what the State of Oregon did in 2008.
+
+### The experiment: solving the problem of partial random assignment
+
+From 2008 to 2011, the state of Oregon randomly assigned Medicaid coverage to 30,000 uninsured citizens through a lottery system. The lottery winners were offered full coverage of the Oregon Health Plan (OHP) Standard Medicaid, once they submitted some documentation. The state recorded the health outcomes of both the individuals that won and lost the lottery over the course of several years.
+
+Although this is close to our ideal, it's not a perfect randomly controlled trial (RCT). Lottery winners were only given free insurance if they submitted their documents and met some eligibility criteria[^1]. Many lottery winners either did not submit the required documents or turned out to be ineligible to the program. In the end, only about 25\% of the lottery winners eventually enrolled in OHP Standard.
+
+[^1]: To be eligible for OHP Standard, individuals must be 19-64 years old, an Oregon resident who is a US citizen or legal immigrant, ineligible for other public health insurance, and uninsured for the past six months. Individuals must also earn less than the federal poverty level, and have assets worth no more than US\$2,000.
+
+While the *possibility to apply for insurance* was randomly assigned by the lottery system, *insurance status* was not randomly assigned. This means that if health outcomes were related to the reason why they didn't fill out their forms, or were ineligible, we could still have OVB.
+
+Fortunately, there are ways around this "partial random assignment". We can (1) isolate the variation in insurance status created by the lottery and (2) calculate the effect of insurance status on health outcomes just for this isolated variation. This approach is called **instrumental variables**.
+
+### The theory
+
+We are interested in the effect of *insurance status* on *health outcomes.* We know:
+
+-   Lottery results are randomly assigned
+-   Winning the lottery increases the probability of insurance coverage
+-   Insurance coverage affects health outcomes
+
+We can use these facts to isolate the effect of health insurance. The key insight is that winning the lottery can only affect your health through its impact on your health insurance. This means that the following relationship must be true:
+
+$$
+\text{Effect of lottery on insurance} \cdot \text{Effect of insurance on health} = \text{Effect of lottery on health}
+$$
+
+> **Example**: Imagine that all of the lottery winners were automatically enrolled in the insurance program. That would mean that the probability of insurance status for lottery winners is 100\%. In this scenario, insurance status is determined *solely* by the lottery, so we have a traditional RCT. A comparison of health outcomes between those who won and those who lost the lottery (or those who have and those who don't have insurance) would be unbiased. This can be seen on the equation above: if the effect of lottery on insurance $=$ 1, then effect of lottery on health outcomes $=$ effect of insurance on health outcomes.
+
+Since lottery winners are not automatically enrolled in the insurance program, winning the lottery increases the probability of insurance coverage by less than 100\%. This means that insurance status is determined by both the lottery and other external variables (for example, maybe those who don't submit the application on time care less about their health). In this case, a simple comparison of health outcomes between individuals would yield a biased estimate.
+
+To get the true effect of insurance on health, we can rearrange the relationship.
+
+$$
+\text{Effect of insurance on health} = \frac{\text{Effect of lottery on health}}{\text{Effect of lottery on insurance}}
+$$
+
+Let's be a little more rigorous about what we mean by "effect". Since lottery is a binary variable (you either win or lose the lottery), we can rewrite the "effects" as the difference in averages for the lottery dummy turned on and off. We get a ratio of differences of conditional averages: the difference in health outcomes conditional on lottery result divided by the difference in insurance status conditional on lottery result.
+
+$$
+    \text{Effect of insurance on health} = \frac{\text{Average health of winners} - \text{Average health of losers}}{\text{Average insurance of winners} - \text{Average insurance of losers}}
+$$
+
+That seems like something we can calculate. This difference in averages should adjust our estimates to reflect the "partial random assignment" situation. The effect of insurance on health equals the effect of the lottery results on health *adjusted for the probability that lottery winners enroll in the insurance program*.
+
+> **Think deeper**: Why can we interpret the effect of lottery on insurance as the probability that lottery winners enroll in the insurance program?
+
+### Health insurance example with simulated data
+
+Let's calculate the effect of insurance on health with a very simple simulated dataset.
+
+`simulated_health_data` has data on 1,000 uninsured individuals who participated in a lottery system for public health insurance coverage in a fictitious state. The variables coded are:
+
+-   `lot_win` dummy == 1 for lottery winners
+-   `insurance_status` dummy == 1 for enrolled in the insurance program
+-   `health_outcome` for an aggregate measure of health outcomes after 12 months of insurance enrollment (the higher, the better!)
+
+```{r, results=FALSE, message=FALSE}
+# load packages needed for the analysis
+library(tidyverse)
+library(AER)
+
+# load datasets
+source('advanced_instrumental_variables1_data1.r')
+source('advanced_instrumental_variables1_data2.r')
+```
+
+```{r}
+# set seed to ensure reproducibility
+set.seed(123)
+
+# inspect the data
+head(simulated_health_data)
+```
+
+Similar to the Oregon experiment, lottery winners are only enrolled in the insurance program if they submit a set of required documents. We can see that winning the lottery does not guarantee enrollment since there are individuals for whom `lot_win == 1` and `insurance_status == 0`.
+
+Let's find the share of individuals who won the lottery but did not enroll in the insurance program.
+
+```{r}
+share_enrolled <- simulated_health_data %>%
+                  filter(lot_win == 1) %>%    # filter for lottery winners
+                  summarize(share_enrolled = sum(insurance_status)/sum(lot_win))    # find % of winners who enrolled
+print(as.double(share_enrolled))
+```
+
+Only 65\% of those who win the lottery actually enroll in the insurance program. This adds bias to the randomization process and deems a simple difference in means (and consequently, an OLS estimate) an inappropriate estimate of the causal effect.
+
+Let's (1) calculate the OLS estimate as if this was a traditional RCT (2) calculate our adjusted estimate of the causal effect. Since we're working with simulated data, we can compare our estimates to the true underlying relationships.
+
+#### Calculating the OLS estimate
+
+Let's use the `lm()` function to calculate the OLS estimate as if this was a traditional RCT. We log-transform health outcomes to interpret the coefficient in percentage terms.
+
+```{r}
+#  run linear regression
+OLS_estimate <- lm(log(health_outcome) ~ insurance_status, data = simulated_health_data)
+
+# test significance of coefficients with robust standard errors
+coeftest(OLS_estimate, vcov=vcovHC)
+```
+
+The OLS estimate of the effect of insurance on health outcomes is very large: insured individuals have 21.5\% better health outcomes on average. This estimate supports the idea that there are large benefits in extending health insurance coverage to the population that is currently uninsured.
+
+#### Calculating our adjusted estimate
+
+Let's calculate the adjusted estimate that we derived in the previous section.
+
+First, we calculate the average values of insurance status and health outcomes conditional on lottery result. We store those values in a data frame called `conditional_means`.
+
+```{r}
+conditional_means <- simulated_health_data %>%
+                     group_by(lot_win) %>%    # group data based on lottery results
+                     summarize(avg_insurance_status = mean(insurance_status),    # calculate sample averages of status and outcomes
+                     avg_health_outcome = mean(log(health_outcome)))            
+conditional_means
+```
+
+Now, we divide the difference in conditional means of health outcomes by the difference in conditional means of insurance status.
+
+```{r}
+# calculate difference in conditional means of health outcomes
+effect_lot_health <- conditional_means[2,3] - conditional_means[1,3]
+
+# calculate difference in conditional means of insurance status
+effect_lot_insurance <- conditional_means[2,2] - conditional_means[1,2]
+
+# calculate adjusted estimate
+adjusted_estimate <- as.double(effect_lot_health/effect_lot_insurance)
+print(adjusted_estimate)
+
+```
+
+The estimated causal effect calculated with our adjusted estimate is approximately 5.7\% - just a fraction of the OLS estimate. 
+
+This stark difference suggests that there is OVB in our OLS estimate. Before we look at what's happening under the hood, let's formalize what we did in this example.
+
+### Formalizing instrumental variables
+
+We use **instrumental variables** (IVs) to isolate causal effects from models that might be plagued with omitted variable bias or endogeneity. IVs allow us to make causal inferences with observational data when OLS estimators are biased. 
+
+We were interested in estimating $\beta_1$ in the model below:
+
+$$
+Health_i = \beta_0 + \beta_1 Insurance_{i} + \epsilon_i
+$$
+
+We say that a variable $Z$ can be used as an instrumental variable for $Insurance$ only if it satisfies all of the following conditions:
+
+-   $Z$ is randomly assigned (or as good as randomly assigned)
+-   $Z$ has a causal effect on $Insurance$
+-   $Z$ affects the outcome variable $Health$ exclusively through $Insurance$ (that is, $Z$ does not have a direct effect on $Health$)
+
+It should be clear that lottery results can be used as an instrument since it is a variable that satisfies the three conditions: (1) is randomly assigned (2) has a causal effect on insurance status (3) only affects health outcomes through insurance status.
+
+### Formalizing the Wald estimator
+
+The **Wald estimator** uses instrumental variables to compute the causal effect of the variable of interest on the outcome. It does so through the relationship which we have derived in the context of the Oregon Health Insurance Experiment.
+
+As long as the three IV assumptions are met, the effect of the instrument on the variable of interest times the effect of the variable of interest on the outcome equals the effect of the instrument on the outcome. For an instrument $Z$, a treatment $D$, and an outcome $Y$:
+
+$$
+\text{Effect of } Z \text{ on } D \cdot \text{Effect of } D \text{ on } Y = \text{Effect of } Z \text{ on } Y
+$$
+
+Rearranging the equation gets us to the effect we're interested in calculating:
+
+$$
+\text{Effect of } D \text{ on } Y = \frac{\text{Effect of } Z \text{ on } Y}{\text{Effect of } Z \text{ on } D}
+$$
+
+When $Z$ is a binary variable, our relationship of interest can be written as a differences in conditional means:
+
+$$
+    \text{Effect of } D \text{ on } Y = \frac{\mathbb{E}[Y_{i} \mid Z_{i} = 1] - \mathbb{E}[Y_{i} \mid Z_{i} = 0]}{\mathbb{E}[D_{i} \mid Z_{i} = 1] - \mathbb{E}[D_{i} \mid Z_{i} = 0]}
+$$
+
+This is exactly what we did in our example with simulated data. Let's turn back to our analysis and compare our estimates to the true underlying relationships.
+
+### Back to the insurance example with simulated data
+
+Let's compare our OLS estimate (21.5\%) and Wald estimate (5.7\%) to the underlying relationships of the data.
+
+The following dataset `simulated_health_data_extended` includes the variable `income`, coded in thousands of dollars per year.
+
+```{r}
+# inspect the dataset
+head(simulated_health_data_extended)
+```
+
+In this (very simplified) simulated world, `income` was the only source of bias in our original model.
+
+If we had income data from the start, we could have solved the OVB by simply controlling for income on a regression of health outcomes on insurance status. Let's do that now.
+
+```{r}
+# run linear regression controlling for income
+extended_model <- lm(log(health_outcome) ~ insurance_status + log(income), data = simulated_health_data_extended)
+
+# test significance of coefficients with robust standard errors
+coeftest(extended_model, vcov=vcovHC)
+```
+
+The extended model shows that, controlling for income, the causal effect of insurance on outcomes is 5.8\% - very similar to our Wald estimate. Income is positively related to both health outcomes and insurance status, and is the main determinant of health outcomes in our fictitious state.
+
+The true causal effect of insurance on outcomes is actually 5\%[^2]. The difference between the Wald estimate, the extended model, and the true causal effect can be attributed to sampling variance.
+
+[^2]: We know because the data is simulated.
+
+This example shows that the Wald estimator can be used to solve OVB when we do not have data to control for the omitted variable in our model. That was only possible because we had an instrument that was (1) randomly assigned (2) causally related to the variable of interest (3) only affected the outcome through the variable of interest.
+
+#### From the Wald estimator to the 2SLS estimator
+
+The Wald estimator is useful to build the intuition around instrumental variables. However, researchers rarely use it in their research. Researchers typically use a much more flexible estimator, the **2SLS estimator**.
+
+The 2SLS estimator, which we will denote $\beta^{TSLS}_{1}$, is equivalent to the Wald estimator. For an instrument $Z$, a treatment $D$, and an outcome $Y$:
+
+$$
+    \text{Effect of } D \text{ on } Y = \frac{\mathbb{E}[Y_{i} \mid Z_{i} = 1] - \mathbb{E}[Y_{i} \mid Z_{i} = 0]}{\mathbb{E}[D_{i} \mid Z_{i} = 1] - \mathbb{E}[D_{i} \mid Z_{i} = 0]} = \beta^{TSLS}_{1}
+$$
+
+ To calculate $\beta^{TSLS}_{1}$, we have to run 2 regressions. The first regression is a regression of the treatment on the instrument, called the **first stage regression**. The second regression is a regression of the outcome on the fitted values of the first stage regression, called the **second stage regression**. Follow the step-by-step below.
+
+
+(1) Run the first stage regression:
+
+$$
+    D_{i} = \beta_{0} + \beta_{1}Z_{i} + v_{i}
+$$
+
+(2) Store the fitted values from the first stage regression $\widehat{D_{i}}$:
+
+$$
+    \widehat{D_{i}} = b_{0} + b_{1}Z_{i}
+$$
+
+where $b_{0}$, $b_{1}$ are the estimated coefficients of the first stage.
+
+(3) Run the second stage regression:
+
+$$
+    Y_{i} = \beta^{TSLS}_{0} + \beta^{TSLS}_{1}\widehat{D_{i}} + u_{i}
+$$
+
+The coefficient on our second stage regression $\beta^{TSLS}_{1}$ is the effect of interest: the causal effect of $D$ on $Y$.
+
+#### Calculating the 2SLS estimate
+
+Let's calculate the 2SLS estimate of the effect of insurance on health with our simulated health insurance data.
+
+(1) Run the first stage:
+
+```{r}
+# run the first stage regression
+health_st1 <- lm(insurance_status ~ lot_win, data = simulated_health_data)
+
+# test significance of coefficients with robust standard errors
+coeftest(health_st1, vcov=vcovHC)
+```
+
+Similar to our Wald estimate, the first stage indicates that winning the lottery increases the probability of insurance coverage by 65\%. The effect is significant at the 0.1\% significance level.
+
+> **Think deeper**: what would happen if the coefficient on `lot_win` was not significant?
+
+(2) Store the fitted values of the first stage:
+
+```{r}
+# store fitted values as a new column named `insurance_status_hat`
+simulated_health_data$insurance_status_hat <- health_st1$fitted.values
+
+# look at a subset of the updated dataset
+head(simulated_health_data)
+```
+
+(3) Run the second stage:
+
+```{r}
+# run the second stage regression
+health_st2 <- lm(log(health_outcome) ~ insurance_status_hat, data = simulated_health_data)
+
+# test significance of coefficients with robust standard errors
+coeftest(health_st2, vcov=vcovHC)
+```
+
+Our 2SLS estimate is 5.7\% - exactly equal to our Wald estimate. Let's take a moment to understand why this works.
+
+#### Making sense of the 2SLS estimate
+
+Remember that the problem with just running a simple OLS when there is OVB is that the *variable of interest is correlated to the error term* of the model: $Cov(Insurance_{i}, \epsilon_{i})\neq 0$.
+
+When we run the first stage, we effectively decompose the treatment into two parts: the error term and the variation explained by the instrument (the fitted values). Since the instrument is randomly assigned (or as good as randomly assigned) and the fitted values are driven solely by the instrument, *the fitted values are necessarily not correlated to the error term*: $Cov(\widehat{Insurance_{i}}, \epsilon_{i}) = 0$.
+
+Problem solved. We throw away the bad variation of the treatment (the error term of the first stage) and run a regression of the outcome on the good variation of the treatment (the fitted values of the first stage). The estimated coefficient of this regression is our 2SLS estimate, an unbiased estimate of the causal effect.
+
+It is important to remember that this only works when the instrument satisfies the three criteria:
+
+(1) Random assignment: the instrument is as good as randomly assigned
+(2) Relevance: the instrument has a causal effect on the variable of interest
+(3) Exogeneity: the instrument only affects the outcome through the variable of interest
+
+> At this point, you should have the background knowledge to understand most of what the researchers did to measure the effect of insurance on health in the Oregon Health Insurance Experiment. The Baicker (2013) study can be read for free on the [New England Journal of Medicine](https://www.nejm.org/doi/10.1056/NEJMsa1212321?url_ver=Z39.88-2003&rfr_id=ori:rid:crossref.org&rfr_dat=cr_pub%20%200www.ncbi.nlm.nih.gov). We recommend reading the "Special Article" as well as the "Analytic Specifications" section (pages 5-7) of the Supplementary Appendix.
+
+In the following example, we'll show how we can take advantage of the flexibility of the 2SLS estimator to use instruments that are not randomly assigned.
+
+## Example 2: College Proximity and Returns to Education
+
+An interesting topic in labor economics is understanding how education affects future earnings. Card (1993) investigates this relationship by calculating the economic returns to schooling with college proximity as an instrumental variable.
+
+In this example, we'll try to answer the same questions as Card (1993) with a simplified version of his dataset. Our dataset `cdist_data` contains the following variables for high school graduates:
+
+-   `distance` dummy == 1 for living close to 4-year college in 1966
+-   `momdad14` dummy == 1 for living with both parents at age 14
+-   `black` dummy == 1 for being black
+-   `south` dummy == 1 for living in the south in 1976
+-   `urban` dummy == 1 for living in urban area in 1976
+-   `wage` for wage in 1976
+-   `educ` for years of education in 1976
+-   `exper` for years of experience in 1976
+-   `fatheduc` for years of father's education
+
+```{r, message=FALSE}
+# view data
+head(as.data.frame(cdist_data))
+
+```
+
+
+### The selection problem
+
+The question we want to answer is: **what is the effect of an extra year of education on wages?**
+
+A simple regression of `wage` on `education` would generate a biased estimate of the causal effect because education is not randomly assigned across the surveyed. As Card (1993) put it, "individuals make their own schooling choices; depending on how these choices are made, measured earnings differences between workers with difference levels of schooling may over-state or under-state the true return to education." That is just another way of saying that the model contains selection bias.
+
+We have two potential solutions for this problem (1) solving the OVB with additional control variables (2) solving the OVB with an instrumental variable that is randomly assigned (or as good as randomly assigned). Let's try both approaches and compare them with the (biased) OLS estimate.
+
+#### Calculating the OLS estimate
+
+First, let's estimate the returns to education with simple regression of the form:
+
+$$
+\log(wage_i) = \beta_0 + \beta_1 education_i + u_i, 
+$$
+
+```{r}
+# run linear regression
+simple_OLS <- lm(log(wage) ~ educ, data=cdist_data)
+
+# test significance of coefficients with robust standard errors
+coeftest(simple_OLS, vcov=vcovHC)
+```
+
+The OLS estimate for the returns to education is a 5.2\% boost in earnings for every additional year of schooling.
+
+#### Controlling for observable differences
+
+Let's try adding controls. Remember from the linear regression section that we should try controlling for confounding variables: variables that affect earnings and/or education but are not affected by education. Let's follow Card (1993) and add the controls `momdad14`, `south`, `black`, `fatheduc`, `exper`, and `urban`.
+
+> Card (1993) runs additional specifications with `exper` as endogenous, but we'll limit our analysis to this single model.
+
+```{r}
+# run linear regression
+multiple_OLS <- lm(log(wage) ~ educ + momdad14 + south + black + fatheduc + exper + urban, data=cdist_data)
+
+# test significance of coefficients with robust standard errors
+coeftest(multiple_OLS, vcov=vcovHC)
+```
+
+When adding controls, the estimated returns to education increase to 7.3\% higher wages for every additional year of schooling.
+
+#### Using an instrumental variable to estimate the causal effect
+
+Let's estimate the returns to education using college proximity as an instrumental variable. The logic behind choosing this instrument is that students who live closer to colleges are more likely to pursue more education than those who live further away.
+
+The variable `distance` on our dataset maps whether the survey respondents live close to a 4-year college. Let's estimate the returns to education with the 2SLS estimator.
+
+(1) Run the first stage regression:
+
+```{r}
+# run the first stage
+dist_s1 <- lm(educ ~ distance , data=cdist_data)
+
+# test significance of coefficients with robust standard errors
+coeftest(dist_s1, vcov=vcovHC)
+```
+
+The fitted values of our first stage are given by: 
+$$
+\widehat{education_{i}}= 12.698 + 0.829 distance_{i}
+$$
+
+We find that students living close to a 4-year college pursue 0.83 years more of education than those who don't live close to a college. The effect is significant at the 0.1% significance level.
+
+(2) Store the fitted values from the first stage:
+
+We store the fitted values of our first stage regression, $\widehat{education_{i}}$ as the variable `educ_hat` in our dataset `cdist_data`.
+
+```{r}
+# store fitted values as a new column named `educ_hat`
+cdist_data$educ_hat <- dist_s1$fitted.values
+
+# view the appended dataset
+head(cdist_data)
+```
+
+(3) Run the second stage regression:
+
+$$
+\log(wage_{i}) = \beta_0 + \beta_1 \widehat{education_{i}} + u_i.
+$$
+
+```{r}
+# run the second stage
+dist_s2 <- lm(log(wage) ~ educ_hat, data=cdist_data)
+
+# test significance of coefficients with robust standard errors
+coeftest(dist_s2, vcov = vcovHC)
+```
+
+The 2SLS estimate for the returns to education is a staggering 18.8\% increase in wages for every additional year of schooling. This result suggests substantial returns to education; even higher than the range of 10-14\% found by Card (1993). More importantly, this estimate differs significantly from the 5-7\% range that we found with our OLS estimates.
+
+But we're not done yet. We need to take a closer look at our model, understand the shortcomings of our modeling choices, and try to fix them. Before doing that though, let's take a quick look at `ivreg()`.
+
+#### Estimating 2SLS directly with `ivreg()`
+
+The function `ivreg()` from the `AER` package carries out 2SLS automatically. It follows the same structure as `lm()`, with the added feature of specifying instruments with a vertical bar after the regression formula. Let's run `ivreg()` on our college distance data.
+
+```{r}
+# run 'ivreg()' regression
+dist_ivreg <- ivreg(log(wage) ~ educ | distance, data = cdist_data)
+
+# test significance of coefficients with robust standard errors
+coeftest(dist_ivreg, vcov = vcovHC)
+```
+
+Notice that `ivreg()` gives us the same result as running the first and second stages independently: an additional year of education is associated with a 18.8\% increase in wages. However, `ivreg()` gives us larger standard errors. This might be a problem for hypothesis testing... More on this later.
+
+> Although we report our main results with `ivreg()`, running first stage regressions is useful for testing assumptions about instrument relevance. We discuss this on *Instrumental Variables 2*.
+
+### Analyzing the results
+
+Now that we have estimated the returns to education with OLS, multiple regression, and 2SLS, let's think critically about the estimated coefficients and reflect about any possible shortcomings of our modeling choices. Use the following questions to guide your reflection:
+
+-   Are we confident that our multiple regression specification solves the selection problem? Are there any important effects that we have failed to control? If yes, what is the probable direction of the bias?
+
+-   Is college proximity a good instrument? If not, what assumptions does it fail to meet? Is there any way that we could improve our IV approach?
+
+The answers to some of these questions can be found on [Card (1993)](https://davidcard.berkeley.edu/papers/geo_var_schooling.pdf). Read through the paper to find out how he solves the selection problem.
+
+### Adding controls to the IV regression
+
+We have a problem with our instrument: college proximity is not randomly assigned. It is possible that distance from a 4-year college is correlated to the error term of the model (for example, marginalized groups living far from colleges could be less likely to both attend college and work high-paying jobs). 
+
+To fix this we need to control for variables which undermine our instrument (for example, ethnicity) in the IV regression. If we are able to control for all sources of variation that affect our outcome directly (or indirectly, through a variable that is not our instrument), the instrument will be "as good as randomly assigned"
+
+In our example, we need to control for all potential determinants of college proximity that also affect wages directly. Controlling for these potential sources of variation (`momdad14`, `south`, `black`, `fatheduc`, `exper`, `urban`), we can be more confident (although not 100\% confident) that our instrument satisfies the three IV conditions.
+
+Let's run our extended IV regression with `ivreg()`:
+
+> Note that `ivreg()` requires users to specify the control variables on both sides of the vertical bar.
+
+```{r}
+# run 'ivreg()' regression with controls
+dist_ivreg <- ivreg(log(wage) ~ educ + momdad14 + south + black + fatheduc + exper + urban | distance + momdad14 + south + black + fatheduc + exper + urban, data = cdist_data)
+
+# test significance of coefficients with robust standard errors
+coeftest(dist_ivreg, vcov = vcovHC)
+```
+
+Our estimate is a 14.2\% increase in earnings for every additional year of education. This is well within the range of 10-14\% found by Card (1993). 
+
+### Local average treatment effect (LATE)
+
+Our 2SLS estimate with controls is twice as large as our multiple regression estimate. If we're controlling for so many variables in the multiple regression, what is driving such a big difference in estimates?
+
+It is possible that the **treatment on the treated (TOT)** and **local average treatment effect (LATE)** are different for our subjects. 
+
+When we use traditional regression methods to estimate causal effects, we use the entire (within group) variation of the treatment to calculate the causal effect. This is what we call treatment on the treated.
+
+When we use instrumental variables, we isolate the variation of the treatment driven by the instrument. If the instrument does not affect the entire population equally, we could systematically exclude observations with economic meaning from our calculation. We have three types of individuals in the college distance dataset:
+
+1. Those who would go to college regardless of where they live: the *always-takers*.
+2. Those who wouldn't go to college regardless of where they live: the *never-takers*.
+3. Those who would go to college only if they live close to a 4-year college: the *compliers*.
+
+Although both always-takers and compliers are treated, an IV approach only uses the variation of compliers to estimate the causal effect. That makes sense: since the instrument doesn't affect the choice of individuals type 1 and 2 of going to college, their instrument-driven variation must necessarily be zero. We call the causal effect on compliers the local average treatment effect.
+
+It is likely that the compliers in our dataset are lower-income students, who would only go to college if they could live with their parents and not pay housing costs. If that is true, then the difference in results between the multiple regression and the IV regression could be driven by differences in the TOT and LATE (and not just OVB). 
+
+Our larger LATE could suggest that the returns to education for the poor are higher than the returns to education for the rich, a finding that could influence the decisions that both agents and policymakers make about education spending. 
+
+### A note on standard errors
+
+Previously, we noted that standard errors from manually estimated 2SLS and `ivreg()` are different. It is important to note that ***the correct standard errors are those calculated by*** `ivreg()`.
+
+Standard errors from manually calculated 2SLS do not adjust for the added uncertainty inherent to IVs: the fact that we use predictions from the first stage regression as regressors in the second stage regression. The IV standard erros fix for this additional uncertainty by adding a term for the correlation between the instrument and the treatment. This makes IV standard errors from `ivreg()` larger and more accurate than `lm()` standard errors.

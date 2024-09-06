@@ -1,0 +1,439 @@
+---
+title: '15 - Panel Data Regressions'
+author: Marina Adshade, Paul Corcuera, Giulia Lo Forte, Jane Platt
+date: 2024-05-29
+description: In this notebook, we go over panel data. We look into what it is, how to run regressions with panel data, as well as fixed and random-effects models. We finish by looking at some common mistakes when using panel data.
+categories: [econ 490, pystata, panel data, regression, fixed-effects, random-effects, heteroskedasticity, serial correlation, causality]
+format:
+  html: default
+  ipynb:
+    jupyter:
+        kernelspec:
+            display_name: python3
+            language: python
+            name: Python3
+---
+
+## Prerequisites
+
+1. Run OLS Regressions.
+
+## Learning Outcomes
+
+1. Prepare data for time series analysis. 
+2. Run panel data regressions.
+3. Create lagged variables.
+4. Understand and work with fixed-effects.
+5. Correct for heteroskedasticity and serial correlation.
+
+## 15.0 Intro
+
+This module uses the [Penn World Tables](https://www.rug.nl/ggdc/productivity/pwt/?lang=en) which measure income, input, output, and productivity, covering 183 countries between 1950 and 2019. Before beginning this module, download this data in the specified Stata format.
+
+```{python}
+import stata_setup
+stata_setup.config('C:\Program Files\Stata18/','se')
+```
+
+```{python}
+>>> import sys
+>>> sys.path.append('/Applications/Stata/utilities') # make sure this is the same as what you set up in Module 01, Section 1.3: Setting Up the STATA Path
+>>> from pystata import config
+>>> config.init('se')
+```
+
+## 15.1 What is Panel Data?
+
+In economics, we typically have data consisting of many units observed at a particular point in time. This is called cross-sectional data. There may be several different versions of the data set that are collected over time (monthly, annually, etc.), but each version includes an entirely different set of individuals. 
+
+For example, let's consider a Canadian cross-sectional data set: *General Social Survey Cycle 31: Family, 2017*. In this data set, the first observation is a 55 year old married woman who lives in Alberta with two children. When the *General Social Survey Cycle 25: Family, 2011* was collected six years earlier, there were probably similar women surveyed, but it is extremely unlikely that this exact same woman was included in that data set as well. Even if she was included, we would have no way to match her data over the two years of the survey. 
+
+Cross-sectional data allows us to explore variation between individuals at one point in time but does not allow us to explore variation over time for those same individuals. 
+
+Time-series data sets contain observations over several years for only one unit, such as country, state, province, etc. For example, measures of income, output, unemployment, and fertility for Canada from 1960 to 2020 would be considered time-series data. Time-series data allows us to explore variation over time for one individual unit (e.g. Canada), but does not allow us to explore variation between individual units (i.e. multiple countries) at any one point in time.
+
+Panel data allows us to observe the same unit across multiple time periods. For example, the [Penn World Tables](https://www.rug.nl/ggdc/productivity/pwt/?lang=en) is a panel data set that measures income, output, input, and productivity, covering 183 countries from 1950 to the near present. There are also microdata panel data sets that follow the same people over time. One example is the Canadian National Longitudinal Survey of Children and Youth (NLSCY), which followed the same children from 1994 to 2010, surveying them every two years as they progressed from childhood to adulthood. 
+
+Panel data sets allow us to answer questions that we cannot answer with time-series and cross-sectional data. They allow us to simultaneously explore variation over time for individual countries (for example) and variation between individuals at one point in time. This approach is extremely productive for two reasons:
+
+1. Panel data sets are large, much larger than if we were to use data collected at one point in time.
+2. Panel data regressions control for variables that do not change over time and are difficult to measure, such as geography and culture.
+
+In this sense, panel data sets allow us to answer empirical questions that cannot be answered with other types of data such as cross-sectional or time-series data. 
+
+Before we move forward exploring panel data sets in this module, we should understand the two main types of panel data:
+
+- A **Balanced Panel** is a panel data set in which we observe *all* units over *all* included time periods. Suppose we have a data set following the school outcomes of a select group of $N$ children over $T$ years. This is common in studies which investigate the effects of early childhood interventions on relevant outcomes over time. If the panel data set is balanced, we will see $T$ observations for each child corresponding to the $T$ years they have been tracked. As a result, our data set in total will have $n = N*T$ observations.
+- An **Unbalanced Panel** is a panel data set in which we do _not_ observe all units over all included time periods. Suppose in our data set tracking select children's education outcomes over time, and that some children drop out of the study. This panel data set would be an unbalanced panel because it would necessarily have $n < N*T$ observations, since the children who dropped out would not have observations for the years they were no longer in the study.
+
+We learned the techniques to create a balanced panel in [Module 7](https://comet.arts.ubc.ca/docs/Researc/econ490-pystata/07_Within_Group.html). Essentially, all that is needed is to create a new data set that includes only the years for which there are no missing values. 
+
+## 15.2 Preparing Our Data for Panel Analysis
+
+The first step in any panel data analysis is to identify which variable is the panel variable and which variable is the time variable. The panel variable is the identifier of the units that are observed over time. The second step is indicating that information to Stata. 
+
+We are going to use the Penn World Data (discussed above) in this example. In that data set, the panel variable is either _country_  or _countrycode_, and the time variable is _year_.
+
+```{python}
+%%stata
+
+clear*
+*cd ""
+use pwt1001, clear
+describe country countrycode year
+```
+
+When the decribe command executed, did you see that the variable _year_ is an integer (i.e. a number like 2020) and that _country_ or _countrycode_ are string variables (i.e. they are words like "Canada")? Specifying the panel and time variables requires that both of the variables we are using are coded as numeric variables, and so our first step is to create a new numeric variable that represents the country variable. 
+
+To do this, we can use the `encode` command that we saw in [Module 6](https://comet.arts.ubc.ca/docs/Research/econ490-stata/06_Creating_Variables.html).
+
+```{python}
+%%stata
+
+encode countrycode, gen(ccode) 
+
+label var ccode "Numeric code that represents the country"
+```
+
+We can see in our data editor that this command created a unique code for each country and saved it in a variable that we have named _ccode_. For example, in the data editor we can see that Canada was given the code 31 and Brazil was given the code 25.
+
+Now we are able to proceed with specifying both our panel and time variables by using the command `xtset`. With this command, we first list the panel variable and then the time variable, followed by the interval of observation.
+
+```{python}
+%%stata
+
+xtset ccode year, yearly
+```
+
+We can tell that we have done this correctly when the output indicates that the "Time variable" is "year". 
+
+Within our panel data set, our use of this command above states that we observe countries (indicated by country codes) over many time periods that are separated into year groupings (delta = 1 year, meaning that each country has an observation for each year, specified by the *yearly* option). The option for periodicity of the observations is helpful. For instance, if we wanted each country to have an observation for every two years instead of every year, we would specify delta(2) as our periodicity option to `xtset`.
+
+Always make sure to check the output of `xtset` carefully to see that the time variable and panel variable have been properly specified.
+
+## 15.3 Basic Regressions with Panel Data
+
+For now, we are going to focus on the skills we need to run our own panel data regressions. In section 15.6, there are more details about the econometrics of panel data regressions that may help with the understanding of these approaches. Please make sure you understand that theory before beginning your own research. 
+
+Now that we have specified the panel and time variables we are working with, we can begin to run regressions using our panel data. For panel data regressions we simply replace `regress` witht the command `xtreg`. 
+
+Let's try this out by regressing the natural log of GDP per capita on the natural log of human capital. We have included the `describe` to help us understand the variables we are using in this exercise. 
+
+```{python}
+%%stata
+
+describe rgdpe pop hc
+
+generate lngdp = ln(rgdpo/pop)
+generate lnhc = ln(hc)
+
+xtreg lngdp lnhc
+```
+
+The coefficients in a panel regression are interpreted similarly to those in a basic OLS regression. Because we have taken the natural log of our variables, we can interpret the coefficient on each explanatory variable as being a $\beta$ % increase in the dependent variable associated with a 1% increase in the explanatory variable. 
+
+Thus, in the regression results above, a 1% increase in human capital leads to a roughly 2% increase in real GDP per capita. That's a huge effect, but then again this model is almost certainly misspecified due to omitted variable bias. Namely, we are likely missing a number of explanatory variables that explain variation in both GDP per capita and human capital, such as savings and population growth rates.
+
+One thing we know is that GDP per capita can be impacted by the individual characteristics of a country that do not change much over time. For example, it is known that distance from the equator has an impact on the standard of living of a country; countries that are closer to the equator are generally poorer than those farther from it. This is a time-invariant characteristic that we might want to control for in our regression. Similarly, we know that GDP per capita could be similarly impacted in many countries by a shock at one point in time. For example, a worldwide global recession would affect the GDP per capita of all countries at a given time such that values of GDP per capita in this time period are uniformly different in all countries from values in other periods. That seems like a time-variant characteristic (time trend) that we might want to control for in our regression. Fortunately, with panel data regressions, we can account for these sources of endogeneity. Let's look at how panel data helps us do this.
+
+### 15.3.1 Fixed-Effects Models
+
+We refer to shocks that are invariant based on some variable (e.g. household level shocks that don't vary with year or time-specific shocks that don't vary with household) as **fixed-effects**. For instance, we can define household fixed-effects, time fixed-effects, and so on. Notice that this is an assumption on the error terms, and as such, when we include fixed-effects to our specification they become part of the model we assume to be true. 
+
+When we ran our regression of log real GDP per capita on log human capital from earlier, we were concerned about omitted variable bias and endogeneity. Specifically, we were concerned about distance from the equator positively impacting both human capital and real GDP per capita, in which case our measure of human capital would be correlated with our error term, preventing us from interpreting our regression result as causal. We are now able to add country fixed-effects to our regression to account for this and come closer to determining the pure effect of human capital on GDP growth. There are two ways to do this. Let's look at the more obvious one first.
+
+**Approach 1**: create a series of country dummy variables and include them in the regression. For example, we would have one dummy variable called "Canada" that would be equal to 1 if the country is Canada and 0 if not. We would have dummy variables for all but one of the countries in this data set to avoid perfect collinearity. Rather than defining all of these dummies manually and including them in our `regress` command, we can simply add `i.varname` into our regression. Stata will then manually create all of the country dummy variables for us.
+
+```{python}
+%%stata
+
+xtreg lngdp lnhc i.ccode
+```
+
+The problem with this approach is that we end up with a huge table containing the coefficients of every country dummy, none of which we care about. We are interested in the relationship between GDP and human capital, not the mean values of GDP for each country relative to the omitted one. Luckily for us, a well-known result is that controlling for fixed-effects is equivalent to adding multiple dummy variables. This leads us into the second approach to including fixed-effects in a regression.
+
+**Approach 2**: We can alternatively apply fixed-effects to the regression by adding `fe` as an option on the regression.
+
+```{python}
+%%stata
+
+xtreg lngdp lnhc, fe
+```
+
+We obtained the same coefficient and standard errors on our `lnhc` explanatory variable using both approaches!
+
+### 15.3.2 Random-Effects Models
+
+One type of model we can also run is a **random-effects model**. The main difference between a random and fixed-effects model is that, with the random-effects model, differences across countries are assumed to be random. This allows us to treat time-invariant variables such as latitude as control variables. To run a random-effects model, just add `re` as an option in `xtreg` like below.
+
+```{python}
+%%stata
+
+xtreg lngdp lnhc, re
+```
+
+As we can see, with this data and choice of variables, there is little difference in results between all of these models. 
+
+This, however, will not always be the case. The test to determine if you should use the fixed-effects model (fe) or the random-effects model (re) is called the Hausman test. 
+
+To run this test in Stata, start by running a fixed-effects model and ask Stata to store the estimation results under then name "fixed":
+
+```{python}
+%%stata
+
+xtreg lngdp lnhc, fe
+
+estimates store fixed 
+```
+
+Next, run a random-effects model and again ask Stata to store the estimation results as "random":
+
+```{python}
+%%stata
+
+xtreg lngdp lnhc, re 
+
+estimates store random
+```
+
+Then, run the command for the Hausman test, which compares the two sets of estimates:
+
+```{python}
+%%stata
+
+hausman fixed random
+```
+
+As we can see, the results of this test suggest that we would reject the null hypothesis that the random-effects model is preferred, and thus we should adopt a fixed-effects model. 
+
+### 15.3.3 What if We Want to Control for Multiple Fixed-Effects? 
+
+Let's say we have run a panel data regression with fixed-effects, and we think that no more needs to be done to control for factors that are constant across our cross-sectional variables (i.e. countries) at any one point in time (i.e. years). However, for very long series (for example those over 20 years), we will want to check that time dummy variables are not also needed. 
+
+The Stata command `testparm` tests whether the coefficients on three or more variables are equal to zero. When used after a fixed-effects panel data regression that includes time dummies, `testparm` will tell us if the dummies are equal to 0. If they are equal to zero, then no time-fixed-effects are needed. If they are not, we will want to include them in all of our regressions. 
+
+As we have already learned, we can add `i.year` to include a new dummy variable for each year and include that in our regression. Now, let's test to see if that is necessary in the fixed-effects regression by running the command for `testparm`.
+
+```{python}
+%%stata
+
+xtreg lngdp lnhc i.year
+
+testparm i.year
+```
+
+Stata runs a joint test to see if the coefficients on the dummies for all years are equal to 0. The null hypothesis on this test is that they are equal to zero. As the test statistic is less than 0.05, we can reject the null hypothesis and will want to include the year dummies in our analysis. 
+
+## 15.4 Creating New Panel Variables
+
+Panel data also provides us with a new source of variation: variation over time. This means that we have access to a wide variety of variables we can include. For instance, we can create lags (variables in previous periods) and leads (variables in future periods). Once we have defined our panel data set using the `xtset` command (which we did earlier) we can create the lags using `Lnumber.variable` and the leads using `Fnumber.variable`.
+
+For example, let's create a new variable that lags the natural log of GDP per capita by one period.
+
+```{python}
+%%stata
+
+generate lag1_lngdp = L1.lngdp
+```
+
+If we wanted to lag this same variable ten periods, we would write it as such:
+
+```{python}
+%%stata
+
+generate lag10_lngdp = L10.lngdp
+```
+
+We can include lagged variables directly in our regression if we believe that past values of real GDP per capita influence current levels of real GDP per capita.
+
+```{python}
+%%stata
+
+xtreg lngdp L1.lngdp L10.lngdp lnhc i.year, fe
+```
+
+While we included lags from the previous period and 10 periods back as examples, we can use any period for our lags. In fact, including lag variables as controls for recent periods such as one lag back and two lags back is the most common choice for inclusion of past values of independent variables as controls.
+
+Finally, these variables are useful if we are trying to measure the growth rate of a variable. Recall that the growth rate of a variable X is just equal to $ln(X_{t}) - ln(X_{t-1})$ where the subscripts indicate time. 
+
+For example, if we want to now include the natural log of the population growth rate in our regression, we can create that new variable by taking the natural log of the population growth rate $ln(pop_{t}) - ln(pop_{t-1})$
+
+```{python}
+%%stata
+
+generate lnn = ln(ln(pop)-ln(L1.pop))
+```
+
+Another variable that might also be useful is the natural log of the growth rate of GDP per capita.
+
+```{python}
+%%stata
+
+generate dlngdp=ln(lngdp - L1.lngdp)
+```
+
+Let's put this all together in a regression and see what results we get:
+
+```{python}
+%%stata
+
+xtreg dlngdp L1.lngdp lnhc lnn i.year, fe
+```
+
+## 15.5 Is our Panel Data Regression Properly Specified?
+While there are the typical concerns with interpreting the coefficients of regressions (i.e. multicollinearity, inferring causality), there are some topics which require special treatment when working with panel data.
+
+### 15.5.1 Heteroskedasticity
+
+As always, when running regressions, we must consider whether our residuals are heteroskedastic (not constant for all values of $X$). To test our panel data regression for heteroskedasticity in the residuals, we need to calculate a modified Wald statistic. Fortunately, there is a Stata package available for installation that will make this test very easy for us to conduct. To install this package into your version of Stata, simply type:
+
+```{python}
+%%stata
+
+ssc install xttest3
+```
+
+Let's now test this with our original regression, the regression of log real GDP per capita on log human capital with the inclusion of fixed-effects.
+
+```{python}
+%%stata
+
+xtreg lngdp lnhc, fe
+xttest3
+```
+
+The null hypothesis is homoskedasticity (or constant variance of the error term). From the output above, we can see that we reject the null hypothesis and conclude that the residuals in this regression are heteroskedastic.
+
+The best method for dealing with heteroskedasticity in panel data regression is by using generalized least squares, or GLS. There are a number of techniques to estimate GLS equations in Stata, but the recommended approach is the Prais-Winsten method. 
+
+This is easily implemented by replacing the command `xtreg` with `xtpcse` and including the option `het`.
+
+```{python}
+%%stata
+
+xtpcse lngdp lnhc, het
+```
+
+### 15.5.2 Serial Correlation
+In time-series setups where we only observe a single unit over time (no cross-sectional dimension) we might be worried that a linear regression model like
+
+$$ Y_t = \alpha + \beta X_t + \varepsilon_t $$
+
+can have errors that not only are heteroskedastic (i.e. that depend on observables $X_t$) but can also be correlated across time. For instance, if $Y_t$ was income, then $\varepsilon_t$ may represent income shocks (including transitory and permanent components). The permanent income shocks are, by definition, very persistent over time. This would mean that $\varepsilon_{t-1}$ affects (and thus is correlated with) shocks in the next period $\varepsilon_t$. This problem is called serial correlation or autocorrelation, and if it exists, the assumptions of the regression model (i.e. unbiasedness, consistency, etc.) are violated. This can take the form of regressions where a variable is correlated with lagged versions of the same variable.
+
+To test our panel data regression for serial correlation, we need to run a Woolridge test. Fortunately, there are multiple packages in Stata available for installation that make this test automatic to conduct. Run the command below to see some of these packages.
+
+```{python}
+%%stata
+
+search xtserial
+```
+
+We can choose any one of these packages and follow the (brief) instructions to install it. Once it's installed, we can conduct the Woolridge test for autocorrelation below.
+
+```{python}
+%%stata
+
+xtserial lngdp lnhc
+```
+
+The null hypothesis is that there is no serial correlation between residuals. From the output, we can see that we reject the null hypothesis and conclude the variables are correlated with lagged versions of themselves. One method for dealing with this is by using the same Prais-Winsten method to estimate a GLS equation. This is easily implemented by replacing the command `xtreg` with `xtpcse` and including the option `corr(ar1)`.
+
+```{python}
+%%stata
+
+xtpcse lngdp lnhc, het corr(ar1) 
+```
+
+Note that we have continued to use the `het` option to account for heteroskedasticity in our standard errors. We can also see that our results have not drifted significantly from what they were originally when running our first, most simple regression of log GDP per capita on log human capital.
+
+<div class="alert alert-block alert-warning">
+    
+**Warning:** The Prais-Winsten approach does not control for panel and time fixed-effects. You will want to use `testparm` to test both the need for year fixed-effects and, in the example we have been using here, country fixed-effects. Now that we have used `encode` to create a new country variable that is numeric, we can include country dummies simply by including `i.ccode` into our regression. </div>
+
+### 15.5.3 Granger Causality 
+
+In the regressions that we have been running in this example, we have found that the level of human capital is correlated with the level of GDP per capita. But have we proven that having high human capital causes countries to be wealthier? Or is is possible that wealthier countries can afford to invest in human capital? This is known as the issue of **reverse causality**, and arises when our independent variable determines our dependent variable. 
+
+The Granger Causality test allows use to unpack some of the causality in these regressions. While understanding how this test works is beyond the scope of this notebook, we can look at an example using this data.
+
+The first thing we need to do is ensure that our panel is balanced. In the Penn World Tables, there are no missing values for real GDP and for population, but there are missing values for human capital. We can balance our panel by simply dropping all of the observations that do not include that measure.
+
+```{python}
+%%stata
+
+drop if hc==.
+```
+
+Next, we can run the test that is provided by Stata for Granger Causality: `xtgcause`. We need to install this package before we begin using the same approach you used with `xtserial` above.
+
+Now let's test the causality between GDP and human capital!
+
+```{python}
+%%stata
+
+xtgcause lngdp lnhc
+```
+
+From our results, we can reject the null hypothesis that high levels of wealth in countries causes higher levels of human capital. The evidence seems to suggest that high human capital causes countries to be wealthier. 
+
+Please speak to your instructor, supervisor, or TA if you need help with this test. 
+
+## 15.6 How is Panel Data Helpful?
+
+In typical cross-sectional settings, it is hard to defend the selection on observables assumption (otherwise known as conditional independence). However, panel data allows us to control for unobserved time-invariant heterogeneity. 
+
+Consider the following example. Household income  $y_{jt}$ at time $t$ can be split into two components: 
+
+$$
+y_{jt} = e_{jt} + \Psi_{j}
+$$
+
+where $\Psi_{j}$ is a measure of unobserved household-level determinants of income, such as social programs targeted towards certain households. 
+    
+Consider what happens when we compute each $j$ household's average income, average value of $e$, and average value of $\Psi$ across time $t$ in the data:
+
+$$
+\bar{y}_{J}= \frac{1}{\sum_{j,t}   \mathbf{1}\{ j = J \}  } \sum_{j,t}  y_{jt} \mathbf{1}\{ j = J \}
+$$
+
+$$
+\bar{e}_{J}= \frac{1}{\sum_{j,t}   \mathbf{1}\{ j = J \}  } \sum_{j,t}  e_{jt} \mathbf{1}\{ j = J \}
+$$
+
+$$
+\bar{\Psi}_{J} =  \Psi_{J}
+$$
+
+Notice that the mean of $\Psi_{j}$ does not change over time for a fixed household $j$. Hence, we can subtract the two household level means from the original equation to get: 
+   
+$$
+y_{jt} - \bar{y}_{j} = e_{jt} - \bar{e}_{j}  + \underbrace{ \Psi_{j} - \bar{\Psi}_{j}  }_\text{equals zero!}
+$$
+
+Therefore, we are able to get rid of the unobserved heterogeneity in household determinants of income via "de-meaning"! This is called a within-group or fixed-effects transformation. If we believe these types of unobserved errors/shocks are creating endogeneity, we can get rid of them using this powerful trick. In some cases, we may alternatively choose to do a first-difference transformation of our regression specification. This entails subtracting the regression in one period not from it's expectation across time, but from the regression in the previous period. In this case, time-invariant characteristics are similarly removed from the regression since they are constant across all periods $t$.
+
+## 15.7 Wrap Up
+
+In this module, we've learned how to address linear regression in the case where we have access to two dimensions: cross-sectional variation and time variation. The usefulness of time variation is that it allows us to control for time-invariant components of the error term which may be causing endogeneity. We also investigated different ways for addressing problems such as heteroskedasticity and autocorrelation in our standard errors when working specifically with panel data. In the next module, we will cover a popular research design method: difference-in-differences.
+
+## 15.8 Wrap-up Table
+
+|Command| Function|
+|-------|---------|
+|`xtset panelvar timevar, interval`| It tells Stata that we are working with panel data, as well as which variables are our panel variable, time variable, and what at what interval the data was recorded.|
+|`xtreg depvar indepvar`| It runs a panel regression. We can add options to this, such as `fe` for fixed-effects, and `re` for random-effects.|  
+|`hausman model1 model2`| It performs the Hausman test on `model1` and `model2` to determine which more accurately models our data.|  
+|`testparm i.varname`| It evaluates whether multiple coefficients are equal to zero.|
+|`Lnumber.variable`| It creates a lagged variable.|
+|`Fnumber.variable`| It creates a lead variable.|
+|`xttest3`| It calculates a modified Wald statistic to test for heteroskedasticity.|
+|`xtpcse depvar indepvar, het`| It calculates a GLS regression to deal with heteroskedasticity, following the Prais-Winsten method. We can add `corr(ar1)` to account for serial correlation.|
+|`xtserial depvar indepvar`| It conducts a Woolridge test for autocorrelation.| 
+|`xtgcause depvar indepvar`| It conducts a Granger Causality test for reverse causality.| 
+
+## References
+
+[Formatting and managing dates](https://www.youtube.com/watch?v=SOQvXICIRNY&t=149s) <br>
+[Time-series operators (lags)](https://www.youtube.com/watch?v=ik8r4WvrPkc&t=224s)
+

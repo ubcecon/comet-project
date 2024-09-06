@@ -1,0 +1,731 @@
+---
+title: "3.5 - Advanced - Word Embeddings Tutorial Solutions (python)"
+jupyter: python3
+---
+
+<h1 align='center'>It Starts with a Research Question...</h1>
+<img src='Schmidt Fig 1.png' width="66%" height="66%">
+
+# Word2Vec
+
+This lesson is designed to explore features of word embeddings produced through the word2vec model. The questions we ask in this lesson are guided by Ben Schmidt's blog post <a href = "http://bookworm.benschmidt.org/posts/2015-10-30-rejecting-the-gender-binary.html">Rejecting the Gender Binary</a>.
+
+The primary corpus we wil use consists of the <a href="http://txtlab.org/?p=601">150 English-language novels</a> made available by the <em>.txtLab</em> at McGill University. We also look at a <a href="http://ryanheuser.org/word-vectors-1/">Word2Vec model trained on the ECCO-TCP corpus</a> of 2,350 eighteenth-century literary texts made available by Ryan Heuser. (Note that the number of terms in the model has been shortened by half in order to conserve memory.)
+
+For further technical background on Word2Vec's mechanics, I suggest this <a href="https://chromium.googlesource.com/external/github.com/tensorflow/tensorflow/+/refs/heads/0.6.0/tensorflow/g3doc/tutorials/word2vec/index.md">brief tutorial</a> by Google, especially the sections "Motivation," "Skip-Gram Model," and "Visualizing."
+
+### Tutorial Agenda
+<ul>
+<li>Vector-Space Model of Language</li>
+<li>Import & Pre-Processing</li>
+<li>Word2Vec</li>
+<ul><li>Training</li>
+<li>Embeddings</li>
+<li>Visualization</li>
+</ul>
+<li>Saving/Loading Models</li>
+</ul>
+<li>Topic Models</li>
+</ul>
+
+# 0. Vector-Space Model of Language
+In the first day of this workshop, we explored the strange way that computers read text: by splitting it into tokens and tallying their frequencies. A novel or album review is reduced to a series of word counts. Since then, we have used simple arithmetic and statistics to identify patterns across those tallies. However, it is often useful to consider these patterns from another perspective: geometry.
+
+Each text can be described as a series of word counts. What if we treated those like coordinates in space?
+
+### Prep for visualization
+
+```{python}
+#| tags: []
+%pylab inline
+matplotlib.style.use('ggplot')
+```
+
+### Create a DTM with a Few Pseudo-Texts
+
+```{python}
+#| tags: []
+# dataframes!
+import pandas
+
+# Construct dataframe
+columns = ['eggs','sausage','bacon']
+indices = ['Novel A', 'Novel B', 'Novel C']
+dtm = [[50,60,60],[90,10,10], [20,70,70]]
+dtm_df = pandas.DataFrame(dtm, columns = columns, index = indices)
+
+# Show dataframe
+dtm_df
+```
+
+### Visualize
+
+```{python}
+#| tags: []
+# Plot our points
+scatter(dtm_df['eggs'], dtm_df['sausage'])
+
+# Make the graph look good
+xlim([0,100]), ylim([0,100])
+xlabel('eggs'), ylabel('sausage')
+```
+
+### Vectors
+
+At a glance, a couple of points are lying closer to one another. We used the word frequencies of just two words in order to plot our texts in a two-dimensional plane. The term frequency "summaries" of <i>Novel A</i> & <i>Novel C</i> are pretty similar to one another: they both share a major concern with "eggs", whereas <i>Novel B</i> seems to focus primarily on "sausage."
+
+This raises a question: how can we operationalize our intuition that spatial distance expresses topical similarity?
+
+<img src='Dot-Product.png' >
+
+The most common measurement of distance between points is their <a href="https://en.wikipedia.org/wiki/Cosine_similarity">Cosine Similarity</a>. Imagine that we draw an arrow from the origin of the graph -- point (0,0) -- to the dot representing each text. This arrow is called a <i>vector</i>. The Cosine Similarity between two vectors measures how much they overlap with one another. Values for the cosine similarity between two vectors fall between 0 and 1, so they are easily interpreted and compared.
+
+### Cosine Distance
+
+```{python}
+#| tags: []
+# Although we want the Cosine Distance, it is mathematically
+# simpler to calculate its opposite: Cosine Similarity
+
+from sklearn.metrics.pairwise import cosine_similarity
+```
+
+```{python}
+#| tags: []
+# So we will subtract the similarities from 1
+
+cos_sim = cosine_similarity(dtm_df)
+```
+
+```{python}
+#| tags: []
+# And we'll make it a little easier to read
+
+np.round(cos_sim, 2)
+```
+
+```{python}
+#| tags: []
+#Compare the distance between novels
+
+filelist = ['txtlab_Novel450_English/EN_1850_Hawthorne,Nathaniel_TheScarletLetter_Novel.txt',
+            'txtlab_Novel450_English/EN_1851_Hawthorne,Nathaniel_TheHouseoftheSevenGables_Novel.txt',
+            'txtlab_Novel450_English/EN_1920_Fitzgerald,FScott_ThisSideofParadise_Novel.txt',
+            'txtlab_Novel450_English/EN_1922_Fitzgerald,FScott_TheBeautifulandtheDamned_Novel.txt',
+            'txtlab_Novel450_English/EN_1811_Austen,Jane_SenseandSensibility_Novel.txt',
+            'txtlab_Novel450_English/EN_1813_Austen,Jane_PrideandPrejudice_Novel.txt']
+
+novel_names = ['Hawthorne: Scarlet Letter',
+           'Hawthorne: Seven Gables',
+           'Fitzgerald: This Side of Paradise',
+           'Fitzgerald: Beautiful and the Damned',
+           'Austen: Sense and Sensibility',
+           'Austen: Pride and Prejudice']
+
+text_list = []
+
+for file in filelist:
+    with open(file, 'r', encoding = 'utf-8') as myfile:
+        text_list.append(myfile.read())
+
+            
+
+#import the function CountVectorizer
+from sklearn.feature_extraction.text import CountVectorizer
+
+cv = CountVectorizer(stop_words = 'english', min_df = 3, binary=True)
+
+novel_dtm = cv.fit_transform(text_list).toarray()
+feature_list = cv.get_feature_names_out()
+dtm_df_novel = pandas.DataFrame(novel_dtm, columns = feature_list, index = novel_names)
+dtm_df_novel
+```
+
+```{python}
+#| tags: []
+cos_sim_novel = cosine_similarity(dtm_df_novel)
+np.round(cos_sim_novel, 2)
+```
+
+```{python}
+#| tags: []
+cos_df = pandas.DataFrame(cos_sim_novel, columns = novel_names, index = novel_names)
+cos_df
+```
+
+```{python}
+#| tags: []
+#visualizing differences
+
+from sklearn.manifold import MDS
+
+# two components as we're plotting points in a two-dimensional plane
+# "precomputed" because we provide a distance matrix
+# we will also specify `random_state` so the plot is reproducible.
+
+#transform cosine similarity to cosine distance
+cos_dist = 1 - cosine_similarity(dtm_df_novel)
+
+mds = MDS(n_components=2, dissimilarity="precomputed", random_state=1)
+
+pos = mds.fit_transform(cos_dist)  # shape (n_components, n_samples)
+xs, ys = pos[:, 0], pos[:, 1]
+
+for x, y, name in zip(xs, ys, novel_names):
+    plt.scatter(x, y)
+    plt.text(x, y, name)
+
+plt.show()
+```
+
+The above method has a broad range of applications, such as unsupervised clustering. Common techniques include <a href = "https://en.wikipedia.org/wiki/K-means_clustering">K-Means Clustering</a> and <a href="https://en.wikipedia.org/wiki/Hierarchical_clustering">Heirchical Dendrograms</a>. These attempt to identify groups of texts with shared content, based on these kinds of distance measures.
+
+Here's an example of a dendrogram based on these six novels:
+
+```{python}
+#| tags: []
+from scipy.cluster.hierarchy import ward, dendrogram
+linkage_matrix = ward(cos_dist)
+
+dendrogram(linkage_matrix, orientation="right", labels=novel_names)
+
+plt.tight_layout()  # fixes margins
+
+plt.show()
+```
+
+### Vector Semantics
+
+We can also turn this logic on its head. Rather than produce vectors representing texts based on their words, we will produce vectors for the words based on their contexts.
+
+```{python}
+#| tags: []
+# Turn our DTM sideways
+
+dtm_df_novel.T.head()
+```
+
+```{python}
+#| tags: []
+# Find the Cosine Distances between pairs of word-vectors
+
+cos_sim_words = cosine_similarity(dtm_df_novel.T)
+```
+
+```{python}
+#| tags: []
+# In readable format
+
+np.round(cos_sim_words, 2)
+```
+
+Theoretically you could visualize and cluster these as well - but this takes a lot of computational power!
+
+We'll thus turn to the machine learning version: word embeddings
+
+### Word2Vec
+
+This last cell indicates that "sausage" and "bacon" perfectly align with one another across texts. If we saw this in a real-world example, we might interpret it to mean that the words share some kind of semantic or thematic relationship. In fact, this method is precisely one that humanists have used in order to find interesting linguistic patterns. (See Ted Underwood's blog post, <a href = "https://tedunderwood.com/2011/10/16/lsa-is-a-marvellous-tool-but-humanists-may-no-use-it-the-way-computer-scientists-do/">LSA is a marvellous tool, but...</a>.)
+
+Recently, however, a more sophisticated technique for finding semantic relationships between words has enjoyed great popularity: Word2Vec
+
+Word2Vec draws from the logic of the concordance that we saw on the first day of the workshop. In the example above, a word (row) is described by its frequency within an entire novel (column). The word2vec algorithm tries to describe a given word in terms of the ones that appear immediately to the right and left in actual sentences. More precisely it learns how to <i>predict</i> the context words.
+
+<img src = "Skip-gram diagram.png">
+
+Without going too deeply into the algorithm, suffice it to say that it involves a two-step process. First, the input word gets compressed into a dense vector. Second, the vector gets decoded into the set of context words. Keywords that appear within similar contexts will have similar vector representations in between steps. This vector is referred to as a <i>word embedding</i>.
+
+Since the word embedding is a vector, we can perform tests like cosine similarity and other kinds of operations. Those operations can reveal many different kinds of relationships between words, as we shall see.
+
+<img src = "w2v-Analogies.png">
+
+# 1. Import & Pre-Processing
+
+### Import Packages
+
+```{python}
+#| tags: []
+# Data Wrangling
+
+import os
+import numpy as np
+import pandas
+from scipy.spatial.distance import cosine
+from sklearn.metrics import pairwise
+from sklearn.manifold import MDS, TSNE
+```
+
+```{python}
+#| tags: []
+# Natural Language Processing
+
+
+import nltk
+nltk.download('punkt')
+from nltk.tokenize import word_tokenize, sent_tokenize
+```
+
+```{python}
+#| tags: []
+# New libarary (not in Anaconda: gensim)
+import gensim
+```
+
+```{python}
+#| tags: []
+# Custom Tokenizer for Classroom Use
+
+def fast_tokenize(text):
+    
+    # Get a list of punctuation marks
+    from string import punctuation
+    
+    lower_case = text.lower()
+    
+    # Iterate through text removing punctuation characters
+    no_punct = "".join([char for char in lower_case if char not in punctuation])
+    
+    # Split text over whitespace into list of words
+    tokens = no_punct.split()
+    
+    return tokens
+```
+
+### Corpus Description
+English-language subset of Andrew Piper's novel corpus, totaling 150 novels by British and American authors spanning the years 1771-1930. These texts reside on disk, each in a separate plaintext file. Metadata is contained in a spreadsheet distributed with the novel files.
+
+### Metadata Columns
+<ol><li>Filename: Name of file on disk</li>
+<li>ID: Unique ID in Piper corpus</li>
+<li>Language: Language of novel</li>
+<li>Date: Initial publication date</li>
+<li>Title: Title of novel</li>
+<li>Gender: Authorial gender</li>
+<li>Person: Textual perspective</li>
+<li>Length: Number of tokens in novel</li></ol>
+
+## Import Metadata
+
+```{python}
+#| tags: []
+# Import Metadata into Pandas Dataframe
+
+meta_df = pandas.read_csv('resources/txtlab_Novel450_English.csv', encoding = 'utf-8')
+```
+
+```{python}
+#| scrolled: true
+#| tags: []
+# Check Metadata
+
+meta_df.head()
+```
+
+## Import Corpus
+
+```{python}
+#| tags: []
+# Set location of corpus folder
+
+fiction_folder = 'txtlab_Novel450_English/'
+```
+
+```{python}
+#| tags: []
+import os
+
+# Create an empty list to store the text of each novel
+novel_list = []
+
+# Iterate through filenames in 'fiction_folder'
+for filename in os.listdir(fiction_folder):
+    file_path = os.path.join(fiction_folder, filename)
+    
+    try:
+        # Attempt to read the novel text as a string using utf-8 encoding
+        with open(file_path, 'r', encoding='utf-8') as file_in:
+            this_novel = file_in.read()
+        
+        # Add novel text as a single string to the master list
+        novel_list.append(this_novel)
+    
+    except UnicodeDecodeError as e:
+        # Handle encoding errors by skipping the problematic file
+        print(f"UnicodeDecodeError: Unable to read '{filename}' - Skipping this file.")
+        continue
+
+# Now 'novel_list' contains the text of all readable novels.
+```
+
+```{python}
+#| tags: []
+# Inspect first item in novel_list
+
+novel_list[0][:500]
+```
+
+## Pre-Processing
+Word2Vec learns about the relationships among words by observing them in context. This means that we want to split our texts into word-units. However, we  want to maintain sentence boundaries as well, since the last word of the previous sentence might skew the meaning of the next sentence.
+
+Since novels were imported as single strings, we'll first use <i>sent_tokenize</i> to divide them into sentences, and second, we'll split each sentence into its own list of words.
+
+```{python}
+#| tags: []
+# Split each novel into sentences
+
+sentences = [sentence for novel in novel_list for sentence in sent_tokenize(novel)]
+```
+
+```{python}
+#| tags: []
+# Inspect first sentence
+
+sentences[0]
+```
+
+```{python}
+#| tags: []
+# Split each sentence into tokens
+
+words_by_sentence = [fast_tokenize(sentence) for sentence in sentences]
+```
+
+```{python}
+#| tags: []
+# Remove any sentences that contain zero tokens
+
+words_by_sentence = [sentence for sentence in words_by_sentence if sentence != []]
+```
+
+```{python}
+#| scrolled: true
+#| tags: []
+# Inspect first sentence
+
+words_by_sentence[0]
+```
+
+# 2. Word2Vec
+
+### Word Embedding
+Word2Vec is the most prominent word embedding algorithm. Word embedding generally attempts to identify semantic relationships between words by observing them in context.
+
+Imagine that each word in a novel has its meaning determined by the ones that surround it in a limited window. For example, in Moby Dick's first sentence, “me” is paired on either side by “Call” and “Ishmael.” After observing the windows around every word in the novel (or many novels), the computer will notice a pattern in which “me” falls between similar pairs of words to “her,” “him,” or “them.” Of course, the computer had gone through a similar process over the words “Call” and “Ishmael,” for which “me” is reciprocally part of their contexts.  This chaining of signifiers to one another mirrors some of humanists' most sophisticated interpretative frameworks of language.
+
+The two main flavors of Word2Vec are CBOW (Continuous Bag of Words) and Skip-Gram, which can be distinguished partly by their input and output during training. Skip-Gram takes a word of interest as its input (e.g. "me") and tries to learn how to predict its context words ("Call","Ishmael"). CBOW does the opposite, taking the context words ("Call","Ishmael") as a single input and tries to predict the word of interest ("me").
+
+In general, CBOW is is faster and does well with frequent words, while Skip-Gram potentially represents rare words better.
+
+### Word2Vec Features
+<ul>
+<li>Size: Number of dimensions for word embedding model</li>
+<li>Window: Number of context words to observe in each direction</li>
+<li>min_count: Minimum frequency for words included in model</li>
+<li>sg (Skip-Gram): '0' indicates CBOW model; '1' indicates Skip-Gram</li>
+<li>Alpha: Learning rate (initial); prevents model from over-correcting, enables finer tuning</li>
+<li>Iterations: Number of passes through dataset</li>
+<li>Batch Size: Number of words to sample from data during each pass</li>
+</ul>
+
+Note: Script uses default value for each argument
+
+## Training
+
+```{python}
+#| scrolled: true
+#| tags: []
+# Train word2vec model from txtLab corpus
+
+model = gensim.models.Word2Vec(words_by_sentence, vector_size=100, window=5, \
+                               min_count=25, sg=1, alpha=0.025, epochs=5, batch_words=10000)
+```
+
+## Embeddings
+
+```{python}
+#| scrolled: true
+#| tags: []
+# Return dense word vector
+
+model.wv.get_vector('whale')
+```
+
+## Vector-Space Operations
+
+### Similarity
+Since words are represented as dense vectors, we can ask how similiar words' meanings are based on their cosine similarity (essentially how much they overlap). <em>gensim</em> has a few out-of-the-box functions that enable different kinds of comparisons.
+
+```{python}
+#| tags: []
+# Find cosine distance between two given word vectors
+
+model.wv.similarity('pride','prejudice')
+```
+
+```{python}
+#| tags: []
+# Find nearest word vectors by cosine distance
+
+model.wv.most_similar('pride')
+```
+
+```{python}
+#| tags: []
+# Given a list of words, we can ask which doesn't belong
+
+# Finds mean vector of words in list
+# and identifies the word further from that mean
+
+model.wv.doesnt_match(['pride','prejudice', 'whale'])
+```
+
+### Multiple Valences
+A word embedding may encode both primary and secondary meanings that are both present at the same time. In order to identify secondary meanings in a word, we can subtract the vectors of primary (or simply unwanted) meanings. For example, we may wish to remove the sense of <em>river bank</em> from the word <em>bank</em>. This would be written mathetmatically as <em>RIVER - BANK</em>, which in <em>gensim</em>'s interface lists <em>RIVER</em> as a positive meaning and <em>BANK</em> as a negative one.
+
+```{python}
+#| tags: []
+# Get most similar words to BANK, in order
+# to get a sense for its primary meaning
+
+model.wv.most_similar('bank')
+```
+
+```{python}
+#| tags: []
+# Remove the sense of "river bank" from "bank" and see what is left
+
+model.wv.most_similar(positive=['bank'], negative=['river'])
+```
+
+### Analogy
+Analogies are rendered as simple mathematical operations in vector space. For example, the canonic word2vec analogy <em>MAN is to KING as WOMAN is to ??</em> is rendered as <em>KING - MAN + WOMAN</em>. In the gensim interface, we designate <em>KING</em> and <em>WOMAN</em> as positive terms and <em>MAN</em> as a negative term, since it is subtracted from those.
+
+```{python}
+#| tags: []
+# Get most similar words to KING, in order
+# to get a sense for its primary meaning
+
+model.wv.most_similar('king')
+```
+
+```{python}
+#| tags: []
+# The canonic word2vec analogy: King - Man + Woman -> Queen
+
+model.wv.most_similar(positive=['woman', 'king'], negative=['man'])
+```
+
+### Gendered Vectors
+Can we find gender a la Schmidt (2015)? (Note that this method uses vector projection, whereas Schmidt had used rejection.)
+
+```{python}
+#| scrolled: true
+#| tags: []
+# Feminine Vector
+
+model.wv.most_similar(positive=['she','her','hers','herself'], negative=['he','him','his','himself'])
+```
+
+```{python}
+#| tags: []
+# Masculine Vector
+
+model.wv.most_similar(positive=['he','him','his','himself'], negative=['she','her','hers','herself'])
+```
+
+## Visualization
+
+```{python}
+#| tags: []
+# Dictionary of words in model
+
+model.wv.key_to_index
+```
+
+```{python}
+#| tags: []
+# Visualizing the whole vocabulary would make it hard to read
+
+len(model.wv.key_to_index)
+```
+
+```{python}
+#| tags: []
+# For interpretability, we'll select words that already have a semantic relation
+
+her_tokens = [token for token,weight in model.wv.most_similar(positive=['she','her','hers','herself'], \
+                                                       negative=['he','him','his','himself'], topn=50)]
+```
+
+```{python}
+#| scrolled: true
+#| tags: []
+# Inspect list
+
+her_tokens[:15]
+```
+
+```{python}
+#| tags: []
+# Get the vector for each sampled word
+
+vectors = [model.wv.get_vector(word) for word in her_tokens] 
+```
+
+```{python}
+#| tags: []
+# Calculate distances among texts in vector space
+
+dist_matrix = pairwise.pairwise_distances(vectors, metric='cosine')
+dist_matrix
+```
+
+```{python}
+#| tags: []
+# Multi-Dimensional Scaling (Project vectors into 2-D)
+
+mds = MDS(n_components = 2, dissimilarity='precomputed')
+embeddings = mds.fit_transform(dist_matrix)
+```
+
+```{python}
+#| tags: []
+# Make a pretty graph
+
+_, ax = plt.subplots(figsize=(10,10))
+ax.scatter(embeddings[:,0], embeddings[:,1], alpha=0)
+for i in range(len(vectors)):
+    ax.annotate(her_tokens[i], ((embeddings[i,0], embeddings[i,1])))
+```
+
+```{python}
+#| tags: []
+# For comparison, here is the same graph using a masculine-pronoun vector
+
+his_tokens = [token for token,weight in model.wv.most_similar(positive=['he','him','his','himself'], \
+                                                       negative=['she','her','hers','herself'], topn=50)]
+vectors = [model.wv.get_vector(word) for word in his_tokens]
+dist_matrix = pairwise.pairwise_distances(vectors, metric='cosine')
+mds = MDS(n_components = 2, dissimilarity='precomputed')
+embeddings = mds.fit_transform(dist_matrix)
+_, ax = plt.subplots(figsize=(10,10))
+ax.scatter(embeddings[:,0], embeddings[:,1], alpha=0)
+for i in range(len(vectors)):
+    ax.annotate(his_tokens[i], ((embeddings[i,0], embeddings[i,1])))
+```
+
+Q. What kinds of semantic relationships exist in the diagram above?
+
+Are there any words that seem out of place?
+
+# 3. Saving/Loading Models
+
+```{python}
+#| tags: []
+# Save current model for later use
+
+model.wv.save_word2vec_format('resources/word2vec.txtlab_Novel150_English.txt')
+#model.save_word2vec_format('resources/word2vec.txtlab_Novel150_English.txt') # deprecated
+```
+
+```{python}
+#| tags: []
+# Load up models from disk
+
+# Model trained on Eighteenth Century Collections Online corpus (~2500 texts)
+# Made available by Ryan Heuser: http://ryanheuser.org/word-vectors-1/
+
+ecco_model = gensim.models.KeyedVectors.load_word2vec_format('resources/word2vec.ECCO-TCP.txt')
+#ecco_model = gensim.models.Word2Vec.load_word2vec_format('resources/word2vec.ECCO-TCP.txt') # deprecated
+```
+
+```{python}
+#| tags: []
+# What are similar words to BANK?
+
+ecco_model.most_similar('bank')
+```
+
+```{python}
+#| tags: []
+# What if we remove the sense of "river bank"?
+
+ecco_model.most_similar(positive=['bank'], negative=['river'])
+```
+
+## Exercises!
+
+```{python}
+#| tags: []
+## EX. Use the most_similar method to find the tokens nearest to 'car' in either model.
+##     Do the same for 'motorcar'.
+
+## Q.  What characterizes these two words inthe corpus? Does this make sense?
+
+model.wv.most_similar('car')
+```
+
+```{python}
+#| tags: []
+model.wv.most_similar('motorcar')
+```
+
+```{python}
+#| tags: []
+## EX. How does our model answer the analogy: MADRID is to SPAIN as PARIS is to __________
+
+## Q.  What has our model learned about nation-states?
+
+
+model.wv.most_similar(positive=['paris', 'spain'], negative = ['madrid'])
+```
+
+```{python}
+#| tags: []
+## EX. Perform the canonic Word2Vec addition again but leave out a term:
+##     Try 'king' - 'man', 'woman' - 'man', 'woman' + 'king'
+
+## Q.  What do these indicate semantically?
+
+model.wv.most_similar(positive= ['woman'], negative=['man'])
+```
+
+```{python}
+#| tags: []
+## EX. Heuser's blog post explores an analogy in eighteenth-century thought that
+##     RICHES are to VIRTUE what LEARNING is to GENIUS. How true is this in
+##     the ECCO-trained Word2Vec model? Is it true in the one we trained?
+
+##  Q. How might we compare word2vec models more generally?
+```
+
+```{python}
+#| tags: []
+# ECCO model: RICHES are to VIRTUE what LEARNING is to ??
+
+ecco_model.most_similar(positive=['learning', 'virtue'], negative=['riches'])
+```
+
+```{python}
+#| scrolled: true
+#| tags: []
+# txtLab model: RICHES are to VIRTUE what LEARNING is to ??
+model.wv.most_similar(positive=['learning', 'virtue'], negative=['riches'])
+```
+
+# 4. Open Questions
+At this point, we have seen a number of mathemetical operations that we may use to explore word2vec's word embeddings. These enable us to answer a set of new, interesting questions dealing with semantics, yet there are many other questions that remain unanswered.
+
+For example:
+<ol>
+<li>How to compare word usages in different texts (within the same model)?</li>
+<li>How to compare word meanings in different models? compare whole models?</li>
+<li>What about the space “in between” words?</li>
+<li>Do we agree with the Distributional Hypothesis that words with the same contexts share their meanings?</li>
+<ol><li>If not, then what information do we think is encoded in a word’s context?</li></ol>
+<li>What good, humanistic research questions do analogies shed light on?</li>
+<ol><li>shades of meaning?</li><li>context similarity?</li></ol>
+</ol>
+
+
+

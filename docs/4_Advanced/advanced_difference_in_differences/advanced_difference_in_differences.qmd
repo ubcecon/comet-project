@@ -1,0 +1,850 @@
+---
+title: '3.1 - Advanced - Difference in Differences'
+categories: [advanced, R, difference in differences, t-test, comparison measure estimator, before-after estimator, regression, triple difference estimator, cross-section data, parallel trends]
+format: 
+    html: default
+    ipynb:
+        jupyter:
+            kernelspec:
+                display_name: R
+                language: r
+                name: ir
+---
+
+
+This notebook will cover:
+
+1. Difference-in-Differences and when it is appropriate.
+2. Consequences of misspecification.
+3. The Event Study estimator.
+4. The Triple Difference estimator.
+5. Using Repeated Cross-Section data.
+6. Failure of Parallel Trends.
+
+This notebook assumes you are familiar with and draws on concepts covered in:
+
+1. Introduction to Jupyter.
+2. Introduction to R.
+3. Introduction to Data.
+4. Expectations and Summary Statistics.
+4. Conditional Expectations and the $t$-Test.
+5. Regression Analysis.
+
+
+```{r}
+#| vscode: {languageId: r}
+library(tidyverse)
+library(stargazer)
+library(broom)
+```
+
+## Difference-in-Differences
+
+To demonstrate how DID works and the consequences of misspecification, I require data where I know the true parameter values. Therefore this again necessitates using simulated data rather than real-life data.
+
+### Generating Panel-Structured Data
+
+Panel-Structured data have both an unit and a time index. The features that matter are that there should be a common time trend component and an additional time trend component specific only to the "treated" group. For our purposes, it can be more helpful to think of the "treated" group as simply the "group of interest" who may have been differentially affected by something that changed between the "before" and the "after" period(s). The minimum number of time periods you require to run a DID estimator is $2$, but the definition of a "period" is not constrained to "usual" time units like months and years. For example, if you have the privilege of working with linked census data, then your period may be decadal or quinquennial, while if you work with stock market data your period may be as fine as minutes or seconds.
+
+Note also that panel-structured data is not restricted to a unit-by-time structure. It is also possible to have a group-by-unit panel structured data. Examples include twins in a family unit, students in a class, patients and their primary physicians, _et cetera_. In this case, `i` below indexes the group instead of the unit and `T` indexes the unit within the group instead of time.
+
+```{r}
+#| vscode: {languageId: r}
+set.seed(998)
+sim.data <- tibble(i = c(1:10000), hgt = rnorm(10000, 1.68, 0.09), u = rnorm(10000, 0, 1))
+sim.data <- sim.data %>% mutate(diet = if_else(rnorm(10000, 0, 1) + u < 0, 0, 1))
+sim.data <- rbind(
+    sim.data %>% mutate(Treatment = 0, e = rnorm(10000, 0, 1) + u) %>% mutate(wgt = 28 * hgt ^ 2 + e),
+    sim.data %>% mutate(Treatment = 1, e = rnorm(10000, 0, 1) + u) %>% mutate(wgt = 2 + 28 * hgt ^ 2 - 3 * diet + e)
+)
+```
+
+### Summary Statistics
+
+A quick overview of the synthetic data. To an approximation, this data set tries to simulate a height and weight data set. `hgt` is short for height (measured in meters; m), `wgt` for weight (measured in kilograms; kg), `diet` implies we are considering the effect of a diet. As is intuitive, evaluating the effect of a diet is an appropriate case for DID because diets take time to show their effects. We also clearly need height as a control because all else equal, a healthy but taller person should weigh more than a healthy but shorter person. `i` and `T` are our person and time indexes.
+
+```{r}
+#| vscode: {languageId: r}
+summary(sim.data)
+```
+
+## Difference-in-Differences Estimator
+
+Recap that DID is the following model. We estimate
+
+$$
+    \theta = \mathbb{E}[Y_{i} \mid \underbrace{G_{i} = 1, T_{i} = 1}_{D_{i} = 1}] - \mathbb{E}[Y_{i} \mid \underbrace{G_{i} = 1, T_{i} = 0}_{D_{i} = 0}].
+$$
+
+This is a model for when we have a treatment implemented in between two periods where we observe the units. However as before there will be bias without further adjustments to the method. The main bias with estimators that make use of the temporal dimension of the data is that na&iuml;ve estimators conflate the true effect with time trends.
+
+To give an intuition, suppose we want to measure the effect of drinking milk daily on height growth in young children. The problem is that young children are developing and naturally grow taller regardless of their diet (unless they are severely malnourished). Therefore a na&iuml;ve estimator conflates this natural time trend with the real effect of the target diet and can spuriously estimate a positive effect of drinking milk when it could very well be the case that the true effect is zero or even negative.
+
+Mathematically, we see the bias in the PO model by
+
+$$
+    \theta = \underbrace{\mathbb{E}[Y_{1,i}(1) \mid T_{i} = 1] - \mathbb{E}[Y_{1,i}(0) \mid T_{i} = 1]}_{ATET} + \underbrace{\mathbb{E}[Y_{1,i}(0) \mid T_{i} = 1] - \mathbb{E}[Y_{1,i}(0) \mid T_{i} = 0]}_{Bias}.
+$$
+
+The bias is clearly coming from the unobserved time trend. How do we deal with it given that the comparison estimator already implicitly makes use of a time period indicator? The answer is we postulate the existence of a counterfactual group for which we do indeed observe them being untreated in both periods, but their time trend is identical to the group of interest:
+
+$$
+    \mathbb{E}[Y_{0,i}(0) \mid T_{i} = 1] - \mathbb{E}[Y_{0,i}(0) \mid T_{i} = 0] = \mathbb{E}[Y_{1,i}(0) \mid T_{i} = 1] - \mathbb{E}[Y_{1,i}(0) \mid T_{i} = 0]
+$$
+
+where
+
+$$
+    \mathbb{E}[Y_{0,i}(0) \mid T_{i} = 1] - \mathbb{E}[Y_{0,i}(0) \mid T_{i} = 0] = \mathbb{E}[Y_{i} \mid \underbrace{G_{i} = 0, T_{i} = 1}_{D_{i} = 0}] - \mathbb{E}[Y_{i} \mid \underbrace{G_{i} = 0, T_{i} = 0}_{D_{i} = 0}].
+$$
+
+With this observed control group we can now estimate:
+
+$$
+    ATET = \left( \mathbb{E}[Y_{i} \mid G_{i} = 1, T_{i} = 1] - \mathbb{E}[Y_{i} \mid G_{i} = 1, T_{i} = 0] \right) - \left( \mathbb{E}[Y_{i} \mid G_{i} = 0, T_{i} = 1] - \mathbb{E}[Y_{i} \mid G_{i} = 0, T_{i} = 0] \right).
+$$
+
+This is estimatable because all this data is observed.
+
+### Difference-in-Differences with $t$-Tests
+
+Before we talk about the regression method of estimating DID models, let's talk about the much simpler method of doing a plain comparison estimate. Recall that the model is
+
+$$
+    ATET = \left( \mathbb{E}[Y_{i} \mid G_{i} = 1, T_{i} = 1] - \mathbb{E}[Y_{i} \mid G_{i} = 1, T_{i} = 0] \right) - \left( \mathbb{E}[Y_{i} \mid G_{i} = 0, T_{i} = 1] - \mathbb{E}[Y_{i} \mid G_{i} = 0, T_{i} = 0] \right)
+$$
+
+which we can rewrite as
+
+$$
+    ATET = \mathbb{E}[Y_{i,1} - Y_{i,0} \mid G_{i} = 1] - \mathbb{E}[Y_{i,1} - Y_{i,0} \mid G_{i} = 0].
+$$
+
+This tells us precisely how to estimate the ATET using the DID estimator using a simple $t$-test:
+
+1. Generate $\Delta Y_{i} = Y_{i,1} - Y_{i,0}$.
+2. Test $\overline{\Delta Y_{i}} \mid_{G_{i} = 1}$ versus $\overline{\Delta Y_{i}} \mid_{G_{i} = 0}$.
+
+```{r}
+#| vscode: {languageId: r}
+diff.data <- sim.data %>% filter(Treatment == 1) - sim.data %>% filter(Treatment == 0) %>% mutate(diet = 0)
+```
+
+```{r}
+#| vscode: {languageId: r}
+list(
+    t.test(
+        diff.data %>% filter(diet == 1) %>% select(wgt),
+        diff.data %>% filter(diet == 0) %>% select(wgt),
+        var.equal = TRUE
+    )
+) %>% 
+    map_df(tidy) %>%
+    print
+```
+
+### Interpreting the Results
+
+Recall that the simple $t$-test method does not use controls, so this level of accuracy is unexpected. Note, in general the DID estimator without controls does not yield the same results as the DID estimator with controls when applied to real-world data.
+
+The estimate is simply interpreted as the estimated ATET. The diet decreases the weight of the group undertaking the diet by $2.97$ kg. In your own cases, what the treatment, outcome, treated group, and units are depends on your question and data.
+
+### Na&iuml;ve Comparison Measure Estimator
+
+I will first present several wrong ways to use panel data and show empirically why you should not be doing these things if your interest is in the ATET. One way is to estimate a comparison measure for the "after" period only:
+
+$$
+    \theta_{after} = \mathbb{E}[Y_{i} \mid \underbrace{G_{i} = 1, T_{i} = 1}_{D_{i} = 1}] - \mathbb{E}[Y_{i} \mid \underbrace{G_{i} = 0, T_{i} = 1}_{D_{i} = 0}].
+$$
+
+This is of course going to be biased because you can see that in the PO model this corresponds to
+
+$$
+    \theta_{after} = \underbrace{\mathbb{E}[Y_{1,i}(1) \mid T_{i} = 1] - \mathbb{E}[Y_{1,i}(0) \mid T_{i} = 1]}_{ATET} + \underbrace{\mathbb{E}[Y_{1,i}(0) \mid T_{i} = 1] - \mathbb{E}[Y_{0,i}(0) \mid T_{i} = 1]}_{Bias}.
+$$
+
+This corresponds to the selection bias as we have been studying it for much of this course. However, if we assume that the size of this bias remains constant throughout time---which intuitively is exactly what the parallel trends assumption says---then we get rid of the selection bias precisely by further subtracting the "before" period comparison measure.
+
+```{r}
+#| vscode: {languageId: r}
+summary(
+    lm(
+        wgt ~ hgt + diet,
+        data = filter(sim.data, Treatment == 1)
+    )
+)
+```
+
+### Na&iuml;ve Before-After Estimator
+
+The second wrong way is to do exactly what was described at the start of this section,
+
+$$
+    \theta = \mathbb{E}[Y_{i} \mid \underbrace{G_{i} = 1, T_{i} = 1}_{D_{i} = 1}] - \mathbb{E}[Y_{i} \mid \underbrace{G_{i} = 1, T_{i} = 0}_{D_{i} = 0}].
+$$
+
+Of course, by now you know where the problem with this estimator lies.
+
+```{r}
+#| vscode: {languageId: r}
+summary(
+    lm(
+        wgt ~ hgt + Treatment,
+        data = filter(sim.data, diet == 1)
+    )
+)
+```
+
+### Na&iuml;ve Linear Estimator Without Interaction Terms
+
+A third way to estimate the ATET wrongly is to do a na&iuml;ve linear estimator of the form
+
+$$
+    Y_{i} = b_{0} + b_{1} T_{i} + b_{2} D_{i} + e_{i}.
+$$
+
+Why would this be biased? One way to think about this is that this regression implies
+
+\begin{align*}
+    b_{2} & = \mathbb{E}[Y_{i} \mid D_{i} = 1, T_{i} = 1] - \mathbb{E}[Y_{i} \mid D_{i} = 0, T_{i} = 1] \\
+    & = \mathbb{E}[Y_{i} \mid D_{i} = 1, T_{i} = 0] - \mathbb{E}[Y_{i} \mid D_{i} = 0, T_{i} = 0] \\
+    & = \mathbb{E}[Y_{i} \mid D_{i} = 1] - \mathbb{E}[Y_{i} \mid D_{i} = 0] \\
+    & = \mathbb{E}[Y_{1,i}(1)] - \mathbb{E}[Y_{0,i}(0)] \\
+    & = \underbrace{\mathbb{E}[Y_{1,i}(1)] - \mathbb{E}[Y_{1,i}(0)]}_{ATET} + \underbrace{\mathbb{E}[Y_{1,i}(0)] - \mathbb{E}[Y_{0,i}(0)]}_{Bias}.
+\end{align*}
+
+This points to a selection bias intuition. If you believe there is no unobserved selection into treatment, then this model is correct. In most cases this is not true.
+
+This may then prompt the question: intuitively the saturated model solves this problem and you have learnt in lectures that it does. Why? The idea again goes back to the parallel trends assumption. We assume that the selection bias is constant over time. As such, the "before" period observation where both groups are untreated provides an estimate of the selection bias, which we can then remove from this biased estimator to obtain the unbiased estimate of the ATET.
+
+This intuition should not also reveal something very interesting to those paying attention: the DID estimator circumvents selection bias entirely. You do not need an experimental set-up without selection bias to use DID!
+
+```{r}
+#| vscode: {languageId: r}
+summary(
+    lm(
+        wgt ~ hgt + Treatment + diet,
+        data = sim.data
+    )
+)
+```
+
+### Difference-in-Differences using Linear Regression
+
+The linear regression model of DID is how most DID models are estimated in the academic literature. We estimate a model that is saturated in the time and group variables,
+
+$$
+    Y_{i} = \alpha + \gamma T_{i} + \beta G_{i} + \delta T_{i} \times G_{i} + \epsilon_{i}.
+$$
+
+This gives us
+
+\begin{align*}
+    \mathbb{E}[Y_{i} \mid T_{i} = 1, G_{i} = 1] & = \alpha + \gamma + \beta + \delta \\
+    \mathbb{E}[Y_{i} \mid T_{i} = 1, G_{i} = 0] & = \alpha + \gamma \\
+    \mathbb{E}[Y_{i} \mid T_{i} = 0, G_{i} = 1] & = \alpha + \beta \\
+    \mathbb{E}[Y_{i} \mid T_{i} = 0, G_{i} = 0] & = \alpha.
+\end{align*}
+
+This yields the time trend as $\gamma$ and the time-invariant selection bias as $\beta$. $\delta$ is the unbiased estimator of the ATET and our parameter of interest.
+
+```{r}
+#| vscode: {languageId: r}
+summary(
+    lm(
+        wgt ~ hgt + Treatment * diet,
+        data = sim.data
+    )
+)
+```
+
+### Comparing Estimators
+
+The following table shows all the misspecified models and the correct specification. (1) is the na&iuml;ve comparison estimator, (2) is the before-after estimator, (3) is the linear model estimator without the interaction term, (4) is the fully specified model, and (5) is what the $t$-test implicitly estimates.
+
+Again, note that (4) and (5) will in general not produce the same ATET estimate in most real-world data sets.
+
+```{r}
+#| vscode: {languageId: r}
+model1 <- lm(wgt ~ hgt + diet, data = filter(sim.data, Treatment == 1))
+model2 <- lm(wgt ~ hgt + Treatment, data = filter(sim.data, diet == 1))
+model3 <- lm(wgt ~ hgt + Treatment + diet, data = sim.data)
+model4 <- lm(wgt ~ hgt + Treatment * diet, data = sim.data)
+model5 <- lm(wgt ~ Treatment * diet, data = sim.data)
+
+stargazer(model1, 
+          model2, 
+          model3, 
+          model4, 
+          model5, 
+          type = 'text',
+          df = FALSE,
+          omit.stat = c('F'))
+```
+
+## Heterogeneity Over Time: the Event Study Estimator
+
+The logic of DID can be extended to the case where we observe multiple post-treatment periods. If we think that the ATET is heterogeneous over time, we can estimate an ATET for each period observed. This gives rise to the Event Study estimator. It is so named because this is often used to study the effect of a specific event---usually policy changes and natural disasters---and trace out its effects over many periods. While there is currently an active literature looking at problems with this estimator, we concern ourselves primarily with the simplest case where the treatment occurs only once and we observe the treated group and a counterfactual never-treated group for several periods before and after the event.
+
+### Load Data
+
+By convention, for a panel-structured data with more than two periods, period $0$ is when the treatment is implemented and all other period numbers refer to the number of periods after (before if negative) treatment implementation.
+
+```{r}
+#| vscode: {languageId: r}
+set.seed(999)
+sim.data <- tibble(i = c(1:10000), hgt = rnorm(10000, 1.68, 0.09), u = rnorm(10000, 0, 1))
+sim.data <- sim.data %>% mutate(diet = if_else(rnorm(10000, 0, 1) + u < 0, 0, 1))
+sim.data <- rbind(
+    sim.data %>% mutate(Treatment = -3, e = rnorm(10000, 0, 1) + u) %>% mutate(wgt = - 1.2 + 28 * hgt ^ 2 + e),
+    sim.data %>% mutate(Treatment = -2, e = rnorm(10000, 0, 1) + u) %>% mutate(wgt = - .5 + 28 * hgt ^ 2 + e),
+    sim.data %>% mutate(Treatment = -1, e = rnorm(10000, 0, 1) + u) %>% mutate(wgt = 28 * hgt ^ 2 + e),
+    sim.data %>% mutate(Treatment = 0, e = rnorm(10000, 0, 1) + u) %>% mutate(wgt = .3 + 28 * hgt ^ 2 + 1.2 * diet + e),
+    sim.data %>% mutate(Treatment = 1, e = rnorm(10000, 0, 1) + u) %>% mutate(wgt = .5 + 28 * hgt ^ 2 + .8 * diet + e),
+    sim.data %>% mutate(Treatment = 2, e = rnorm(10000, 0, 1) + u) %>% mutate(wgt = .9 + 28 * hgt ^ 2 + .1 * diet + e),
+    sim.data %>% mutate(Treatment = 3, e = rnorm(10000, 0, 1) + u) %>% mutate(wgt = 1.1 + 28 * hgt ^ 2 - .5 * diet + e),
+    sim.data %>% mutate(Treatment = 4, e = rnorm(10000, 0, 1) + u) %>% mutate(wgt = 1.4 + 28 * hgt ^ 2 - 1.5 * diet + e)
+)
+```
+
+### Wrongly Using the Difference-in-Differences Estimator
+
+Intuitively, of course the plain DID estimator is a misspecification if we believe that the ATET is heterogeneous over time. We know what the wrongly estimated ATET will be using the Law of Iterated Expectations:
+
+$$
+    \mathbb{E}[\Delta_{i} \mid G_{i} = 1] = \mathbb{E}_{T}[\mathbb{E}[\Delta_{i} \mid G_{i} = 1, T] \mid G_{i} = 1].
+$$
+
+Hence, as in this simulated data set, if the time trend of the treatment effect is not monotonic, we can have unexpected results by misspecifying a case of truly heterogeneous treatment effects using the homogeneous treatment effect estimator.
+
+```{r}
+#| vscode: {languageId: r}
+sim.data %>%
+    mutate(T = if_else(Treatment > -1, 1, 0)) %>%
+    lm(wgt ~ hgt + Treatment * diet, data = .) %>%
+    summary
+```
+
+### Event Study with $t$-Tests
+
+The $t$-Test version of the Event Study estimator is straightforward. Because what we are essentially interested in is
+
+$$
+    ATET(t) = \left( \mathbb{E}[Y_{i} \mid G_{i} = 1, T_{i} = t] - \mathbb{E}[Y_{i} \mid G_{i} = 1, T_{i} = -1] \right) - \left( \mathbb{E}[Y_{i} \mid G_{i} = 0, T_{i} = t] - \mathbb{E}[Y_{i} \mid G_{i} = 0, T_{i} = -1] \right)
+$$
+
+which we can rewrite as
+
+$$
+    ATET(t) = \mathbb{E}[Y_{i,t} - Y_{i,-1} \mid G_{i} = 1] - \mathbb{E}[Y_{i,t} - Y_{i,-1} \mid G_{i} = 0],
+$$
+
+it implies that what we want to do is simply to first restrict our data set to the periods $t$ and $-1$, then use the regular DID estimator on this subset, and repeat this exercise for all periods before and after $-1$.
+
+```{r}
+#| vscode: {languageId: r}
+c(0:4) %>% 
+    lapply(
+        function (t) t.test(
+            sim.data %>% filter(Treatment == t & diet == 1) %>% select(wgt) - sim.data %>% filter(Treatment == -1 & diet == 1) %>% select(wgt), 
+            sim.data %>% filter(Treatment == t & diet == 0) %>% select(wgt) - sim.data %>% filter(Treatment == -1 & diet == 0) %>% select(wgt), 
+            var.equal = TRUE
+        )
+    ) %>%
+    map_df(tidy) %>%
+    print
+```
+
+### Interpreting the Results
+
+The $t$-test analogue of the Event Study estimator also highlights intuitively how we need to think about and interpret the estimator. The ATET estimate for each period is interpreted with respect to the base period, which in this case is the period just before the treatment is implemented. In this case,
+
+1. The diet actually increases the weight of those on the diet by $1.12$ kg on average in the period they start the diet.
+2. The diet still increases the weight of those on the diet by $0.748$ kg on average relative to before starting the diet after $1$ period (let's say, months).
+3. The effect of the diet $2$ months after starting the diet is approximately zero relative to before the diet.
+4. The effect of the diet turns negative after $3$ months relative to before the diet, with those on diet losing $0.571$ kg on average.
+5. Those on the diet lose $1.55$ kg on average after $4$ months on the diet relative to before starting the diet.
+
+### Event Study with Linear Regression
+
+With linear regression, the Event Study method is even simpler. Factorise your time variable and set $-1$ as the base level using `relevel`, then estimate the model. `R` takes care of all the necessary interactions for us.
+
+```{r}
+#| vscode: {languageId: r}
+sim.data %>%
+    mutate(Treatment = relevel(factor(Treatment, levels = c(-3, -2, -1, 0, 1, 2, 3, 4)), ref = 3)) %>%
+    lm(wgt ~ hgt + Treatment * diet, data = .) %>%
+    summary
+```
+
+## Heterogeneity Over Groups: the Triple Difference Estimator
+
+You have seen one way to discuss the Triple Differences estimator. Here I present another.
+
+Suppose we are interested in not only the ATET, but also how the ATET differs across certain groups of interest. An example is whether certain policies help to close the gender wage gap: what this implicitly asks is whether
+
+$$
+    ATET(female) > ATET(male).
+$$
+
+Provided that we have panel data, again there is a method that helps to illuminate this kind of heterogeneity: the Triple Difference estimator. What the Triple Difference estimator is interested in is implicitly
+
+$$
+    ATET(k) = \left( \mathbb{E}[Y_{i} \mid G_{i} = 1, K = k, T_{i} = 1] - \mathbb{E}[Y_{i} \mid G_{i} = 1, K = k, T_{i} = 0] \right) - \left( \mathbb{E}[Y_{i} \mid G_{i} = 0, K = k, T_{i} = 1] - \mathbb{E}[Y_{i} \mid G_{i} = 0, K = k, T_{i} = 0] \right),
+$$
+
+where $k$ is a group of interest that is not the basis for selection into treatment for which we think $ATET(k) \ne ATET$ and we would like to estimate $ATET(k)$ specifically. As in the lecture notes, while we can in principle estimate heterogeneous treatment effects by simply estimating a DID model for each sub-group, this assumes a fully heterogeneous model where it may not actually be warranted, is inefficient as you are not using the full sample, and it is difficult---though not impossible, but the methods are beyond this level of study---to test if the differences are actually statistically significant.
+
+Hence, taking the usual route of adding yet another interaction term to the model to obtain the heterogeneous treatment effects of interest yields the Triple Differences estimator. This gives an intuition as to what Triple Differences are good for:
+
+1. Triple Differences tells you if a treatment has additional effects on specific sub-groups.
+2. Triple Differences is also useful if what you are interested in is the pure effect of the treatment and would like to partial out all other confounding effects of time and group using an argument similar to the parallel trends assumption.
+
+### Load Data
+
+The data requirements for Triple Differences is similar to that of DID, except you also require another grouping axis that exhibits variation over the treatment assignment indicator. In other words, it cannot be the case that that grouping variable is collinear with the treatment assignment indicator---then how exactly are you supposed to separate the effect of the group from the effect of the treatment?
+
+```{r}
+#| vscode: {languageId: r}
+set.seed(999)
+sim.data <- tibble(i = c(1:10000), u = rnorm(10000, 0, 1))
+sim.data <- sim.data %>% mutate(sex = rnorm(10000, 0, 1) + u, diet = rnorm(10000, 0, 1))
+sim.data <- sim.data %>% mutate(diet = if_else(diet < 0, 0, 1), sex = factor(if_else(sex < 0, 'male', 'female'), levels = c('male', 'female')))
+sim.data <- sim.data %>% mutate(hgt = rnorm(10000, 1.69, .1))
+sim.data <- rbind(sim.data %>% mutate(Treatment = 0), sim.data %>% mutate(Treatment = 1)) 
+sim.data <- sim.data %>% mutate(e = rnorm(20000, 0, 1) + u)
+sim.data <- sim.data %>% mutate(wgt = 26.4 * hgt * hgt + 1.7 * Treatment - 2.55 * (sex == 'female') - 1.3 * Treatment * (sex == 'female') - 2 * Treatment * diet - 1.2 * Treatment * diet * (sex == 'female') + e) 
+```
+
+### Wrongly Using the Difference-in-Differences Estimator
+
+The Law of Iterated Expectations can again be used to tell us that if the treatment effect is really heterogeneous, then ignoring that heterogeneity is going to yield a biased estimator that is the weighted mean of all the treatment effects,
+
+$$
+    \mathbb{E}[\Delta_{i} \mid G_{i} = 1] = \mathbb{E}_{K}[\mathbb{E}[\Delta_{i} \mid G_{i} = 1, K] \mid G_{i} = 1].
+$$
+
+In this case, it may look like there was a mistake because $-2.5$ is less than either $-2$ or $-1.2$, but recall from the Regressions notebook that the proper way to interpret coefficients under interaction terms tells us that in fact the effect of the diet on the two sexes are $-2$ and $-3.2$ respectively. Therefore the biased estimate of $-2.5$ adheres to the Law of Iterated Expectations well. 
+
+```{r}
+#| vscode: {languageId: r}
+sim.data %>%
+    lm(wgt ~ hgt + Treatment * diet, data = .) %>%
+    summary
+```
+
+### Triple Difference Intuition with $t$-Tests
+
+Before we move into regression analysis, which can be harder to interpret, look at some $t$-test results to get a bearing on your intuitions. Each row corresponds to one of the sexes. The first column of the table is the heterogeneous weight loss estimate of each sex. Then, the Triple Difference estimator is simply the difference in the two weight loss estimates. The estimate corresponds to the coefficient on the triple interaction term in our data simulation code, as expected, and can be interpreted in one of two ways. The first is outlined in the notes, corresponding to the true treatment effect after partialling out group effects as well. The second is outlined here, corresponding to the additional weight loss due to the diet on females compared to males.
+
+```{r}
+#| vscode: {languageId: r}
+list(
+    t.test(
+        sim.data %>% filter(sex == 'female' & Treatment == 1 & diet == 1) %>% select(wgt) - sim.data %>% filter(sex == 'female' & Treatment == 0 & diet == 1) %>% select(wgt), 
+        sim.data %>% filter(sex == 'female' & Treatment == 1 & diet == 0) %>% select(wgt) - sim.data %>% filter(sex == 'female' & Treatment == 0 & diet == 0) %>% select(wgt), 
+        var.equal = TRUE
+    ),
+    t.test(
+        sim.data %>% filter(sex == 'male' & Treatment == 1 & diet == 1) %>% select(wgt) - sim.data %>% filter(sex == 'male' & Treatment == 0 & diet == 1) %>% select(wgt), 
+        sim.data %>% filter(sex == 'male' & Treatment == 1 & diet == 0) %>% select(wgt) - sim.data %>% filter(sex == 'male' & Treatment == 0 & diet == 0) %>% select(wgt), 
+        var.equal = TRUE
+    )
+) %>%
+    map_df(tidy) %>%
+    print
+```
+
+### Triple Difference with Linear Regression
+
+This shows the Triple Difference estimator as discussed in the note. In `R`, the interaction operator `*` can be chained and therefore it is relatively simple to set up the Triple Difference estimator. `R` takes care of populating all the interaction terms.
+
+```{r}
+#| vscode: {languageId: r}
+sim.data %>%
+    lm(wgt ~ hgt + sex * Treatment * diet, data = .) %>%
+    summary
+```
+
+### Comparing Misspecified Estimators under Triple Differences
+
+The following two tables shows how various ways of misspecifying the model when the true CEF corresponds to the heterogeneous ATET/Triple Difference case results in biased estimates. You are encouraged to figure out if you can compute the biased estimates theoretically yourself to check your understanding of how the DID model works in general.
+
+```{r}
+#| vscode: {languageId: r}
+model1 <- lm(wgt ~ hgt + Treatment * diet, data = sim.data)
+model2 <- lm(wgt ~ hgt + Treatment * diet, data = sim.data %>% filter(sex == 'female'))
+model3 <- lm(wgt ~ hgt + Treatment * diet, data = sim.data %>% filter(sex == 'male'))
+model4 <- lm(wgt ~ hgt + Treatment * diet * sex, data = sim.data)
+
+stargazer(model1, 
+          model2, 
+          model3, 
+          model4, 
+          type = 'text',
+          df = FALSE,
+          omit.stat = c('F'))
+```
+
+```{r}
+#| vscode: {languageId: r}
+model1 <- lm(wgt ~ hgt + Treatment * sex, data = sim.data)
+model2 <- lm(wgt ~ hgt + Treatment * sex, data = sim.data %>% filter(diet == 1))
+model3 <- lm(wgt ~ hgt + Treatment * sex, data = sim.data %>% filter(diet == 0))
+model4 <- lm(wgt ~ hgt + diet * sex, data = sim.data)
+model5 <- lm(wgt ~ hgt + diet * sex, data = sim.data %>% filter(Treatment == 1))
+model6 <- lm(wgt ~ hgt + diet * sex, data = sim.data %>% filter(Treatment == 0))
+model7 <- lm(wgt ~ hgt + Treatment * diet * sex, data = sim.data)
+
+
+stargazer(model1, 
+          model2, 
+          model3, 
+          model4, 
+          model5, 
+          model6, 
+          model7, 
+          type = 'text',
+          df = FALSE,
+          omit.stat = c('F'))
+```
+
+## Using Repeated Cross-Section Data
+
+Return to the DID model for a bit,
+
+$$
+    ATET = \left( \mathbb{E}[Y_{i} \mid G_{i} = 1, T_{i} = 1] - \mathbb{E}[Y_{i} \mid G_{i} = 1, T_{i} = 0] \right) - \left( \mathbb{E}[Y_{i} \mid G_{i} = 0, T_{i} = 1] - \mathbb{E}[Y_{i} \mid G_{i} = 0, T_{i} = 0] \right).
+$$
+
+Nothing in this equation indicates that the individuals at $T = 1$ has to be the same as the individuals at $T = 0$. The implication is that it is possible to do DID with repeated cross-section data. Recap, repeated cross-section data is simply data where you have collected data from samples in multiple periods, but the sample in each period is a different sample. Unlike panel data, while you have a time index in the data there are no longitudinal observations at the unit level.
+
+The model in theory suggests two ways to run DID. I will discuss each in turn.
+
+### Generating Repeated Cross-Section Data
+
+Data for repeated cross-section data is similar to panel data, except that instead of generating the unit first and then reusing the units over time you simply generate a new set of units in each time period.
+
+```{r}
+#| vscode: {languageId: r}
+set.seed(1000)
+sim.data <- rbind(
+    tibble(i = c(1:10000), Treatment = 0, hgt = rnorm(10000, 1.68, 0.09), u = rnorm(10000, 0, 1)),
+    tibble(i = c(1:10000), Treatment = 1, hgt = rnorm(10000, 1.68, 0.09), u = rnorm(10000, 0, 1))
+)
+sim.data <- sim.data %>% mutate(diet = if_else(rnorm(20000, 0, 1) + u < 0, 0, 1), e = rnorm(20000, 0, 1) + u)
+sim.data <- sim.data %>% mutate(wgt = 2 * T + 28 * hgt ^ 2 - 3 * T * diet + e)
+```
+
+### DID on Repeated Cross-Section using OLS
+
+This is straightforward. As long as the sample in each period are independent, representative samples and you know which group in the "before" period would be given the treatment if you could observe them in the "after" period, then DID using OLS works the same way as in the panel data case.
+
+```{r}
+#| vscode: {languageId: r}
+sim.data %>%
+    lm(wgt ~ hgt + Treatment * diet, data = .) %>%
+    summary
+```
+
+### DID using a $2 \times 2$ Table
+
+What I refer to as the $2 \times 2$ table is:
+
+| | $G = 0$ | $G = 1$ | |
+| ---: | :---: | :---: | :---: |
+| $T = 0$ | $\mu_{Y}(0,0)$ | $\mu_{Y}(1,0)$ | $\mu_{Y}(1,0) - \mu_{Y}(0,0)$ |
+| $T = 1$ | $\mu_{Y}(0,1)$ | $\mu_{Y}(1,1)$ | $\mu_{Y}(1,1) - \mu_{Y}(0,1)$ |
+| | $\mu_{Y}(0,1) - \mu_{Y}(0,0)$ | $\mu_{Y}(1,1) - \mu_{Y}(1,0)$ | $ATET$ |
+
+The principal problem is not in the point estimates. These are straightforward. The estimates for the central four cells are simply the four conditional means of the outcome variable. Then the estimates for the marginal cells are simply either row-wise or column-wise differences between the conditional means and the estimate of the ATET is the DID estimator using the conditional mean estimates in place of the true conditional expectations.
+
+The main problem is the question: How do you know that the ATET estimate is statistically significant? In other words, you want to test
+
+\begin{align*}
+    H_{0} & : \left( \mu_{Y}(1,1) - \mu_{Y}(1,0) \right) - \left( \mu_{Y}(0,1) - \mu_{Y}(0,0) \right) = 0 \\
+    H_{1} & : \left( \mu_{Y}(1,1) - \mu_{Y}(1,0) \right) - \left( \mu_{Y}(0,1) - \mu_{Y}(0,0) \right) \ne 0.
+\end{align*}
+
+Recall the following:
+
+$$
+    Var(\overline{X} + \overline{Y}) = Var(\overline{X}) + Var(\overline{Y}) + 2 Cov(\overline{X},\overline{Y}).
+$$
+
+Note that this switching of notation from $\mu$ (representing the true population-level conditional expectation) to $\overline{X}$ (representing our sample analogue estimator of the population-level expectations) is not a mistake. $\mu$ has a variance of zero because it is the true population parameter. On the other hand $\overline{X}$ has a variance because it is a function of a random sample. A function of random variables is itself a random variable (think about adding two random variables---is it now non-random?), therefore it makes sense to talk about its distributional properties. Now, if the data for $X$ and $Y$ are independent, then
+
+$$
+    Var(\overline{X} + \overline{Y}) = Var(\overline{X}) + Var(\overline{Y}).
+$$
+
+If the data was collected well, in many cases we can assume that $\overline{Y}\mid_{G=0,T=0}$, $\overline{Y}\mid_{G=0,T=1}$, $\overline{Y}\mid_{G=1,T=0}$, and $\overline{Y}\mid_{G=1,T=1}$, are indeed independent. Which then implies that the SE of the estimator should just be
+
+$$
+    SE\left( \left( \overline{Y}\mid_{G=1,T=1} - \overline{Y}\mid_{G=1,T=0} \right) - \left( \overline{Y}\mid_{G=0,T=1} - \overline{Y}\mid_{G=0,T=0} \right) \right) = \sqrt{ Var\left(\overline{Y}\mid_{G=0,T=0}\right) + Var\left(\overline{Y}\mid_{G=0,T=1}\right) + Var\left(\overline{Y}\mid_{G=1,T=0}\right) + Var\left(\overline{Y}\mid_{G=1,T=1}\right) }.
+$$
+
+We can compute the second term. Each variance term is effectively just the squared SE of a conditional mean. Recall from the conditional expectations notebook that this is computed simply as `varmean = var(X[G = g & T = t], na.rm = TRUE) / sum(G = g & T = t & !is.na(X))`.
+
+Finally, we need a distribution. If you remember what you should have learnt about the $t$-test before, you would know that in only one case is the degrees of freedom the straightforward $df_{1} + df_{2} - 2$. In all other cases there is a specific formula that does not necessarily yield an integer DF. What do we then do here? You have two main options without going too deeply into theory unrelated to this course:
+
+1. Assume that something analogous works for your situation as well, so that you compute your DF as
+$$
+    df_{0,0} + df_{0,1} + df_{1,0} + df_{1,1} - 4.
+$$
+2. Ignore the DF and assume that you have sufficient variables (as a rule-of-thumb, do you have at least $50$ observations in each of the four groups?) so that you can assume that some Law of Large Numbers holds and therefore the distribution of the test statistic is approximately Normal.
+
+These give rise to the following procedure that should be roughly appropriate for this level:
+
+0. Compute $\overline{Y}\mid_{G=1,T=1}$, $\overline{Y}\mid_{G=1,T=0}$, $\overline{Y}\mid_{G=0,T=1}$, $\overline{Y}\mid_{G=0,T=0}$, $Var\left(\overline{Y}\mid_{G=0,T=0}\right)$, $Var\left(\overline{Y}\mid_{G=0,T=1}\right)$, $Var\left(\overline{Y}\mid_{G=1,T=0}\right)$, and $Var\left(\overline{Y}\mid_{G=1,T=1}\right)$.
+1. Compute $\theta = \left( \overline{Y}\mid_{G=1,T=1} - \overline{Y}\mid_{G=1,T=0} \right) - \left( \overline{Y}\mid_{G=0,T=1} - \overline{Y}\mid_{G=0,T=0} \right)$.
+2. Compute $s^{2} = \sqrt{ Var\left(\overline{Y}\mid_{G=0,T=0}\right) + Var\left(\overline{Y}\mid_{G=0,T=1}\right) + Var\left(\overline{Y}\mid_{G=1,T=0}\right) + Var\left(\overline{Y}\mid_{G=1,T=1}\right) }$.
+3. Compute $\frac{\theta}{s}$ and label it either $t$ or $z$.
+4. If you used the $t$ label, compute $N\mid_{G=0,T=0} + N\mid_{G=0,T=1} + N\mid_{G=1,T=0} + N\mid_{G=1,T=1} - 4$ where $N$ means number of non-missing observations.
+5. Compute the $p$ value for your test using either the $t$-distribution or the Standard Normal distribution, depending on whether you used the $t$ or $z$ label respectively.
+
+### Compute the $2 \times 2$ Table of Means
+
+```{r}
+#| vscode: {languageId: r}
+sim.res.mat <- matrix(
+    c(sim.data %>% filter(Treatment == 0 & diet == 0 & !is.na(wgt)) %>% .$wgt %>% mean, sim.data %>% filter(Treatment == 0 & diet == 1 & !is.na(wgt)) %>% .$wgt %>% mean, 0,
+      sim.data %>% filter(Treatment == 1 & diet == 0 & !is.na(wgt)) %>% .$wgt %>% mean, sim.data %>% filter(Treatment == 1 & diet == 1 & !is.na(wgt)) %>% .$wgt %>% mean, 0,
+      0, 0, 0),
+    nrow = 3,
+    ncol = 3,
+    byrow = TRUE
+)
+sim.res.mat[1,3] <- sim.res.mat[1,2] - sim.res.mat[1,1]
+sim.res.mat[2,3] <- sim.res.mat[2,2] - sim.res.mat[2,1]
+sim.res.mat[3,1] <- sim.res.mat[2,1] - sim.res.mat[1,1]
+sim.res.mat[3,2] <- sim.res.mat[2,2] - sim.res.mat[1,2]
+sim.res.mat[3,3] <- sim.res.mat[3,2] - sim.res.mat[3,1]
+rownames(sim.res.mat) <- c('before', 'after', 'diff time')
+colnames(sim.res.mat) <- c('no diet', 'diet', 'diff diet')
+print(sim.res.mat)
+```
+
+### Compute the Variances Associated with each Group
+
+```{r}
+#| vscode: {languageId: r}
+sim.var.mat <- matrix(
+    c(sim.data %>% filter(Treatment == 0 & diet == 0 & !is.na(wgt)) %>% .$wgt %>% var, sim.data %>% filter(Treatment == 0 & diet == 1 & !is.na(wgt)) %>% .$wgt %>% var,
+     sim.data %>% filter(Treatment == 1 & diet == 0 & !is.na(wgt)) %>% .$wgt %>% var, sim.data %>% filter(Treatment == 1 & diet == 1 & !is.na(wgt)) %>% .$wgt %>% var),
+    nrow = 2,
+    ncol = 2,
+    byrow = TRUE
+)
+rownames(sim.var.mat) <- c('before', 'after')
+colnames(sim.var.mat) <- c('no diet', 'diet')
+print(sim.var.mat)
+```
+
+### Compute the Counts in each Group
+
+```{r}
+#| vscode: {languageId: r}
+sim.n.mat <- matrix(
+    c(sim.data %>% filter(Treatment == 0 & diet == 0 & !is.na(wgt)) %>% .$wgt %>% length, sim.data %>% filter(Treatment == 0 & diet == 1 & !is.na(wgt)) %>% .$wgt %>% length,
+     sim.data %>% filter(Treatment == 1 & diet == 0 & !is.na(wgt)) %>% .$wgt %>% length, sim.data %>% filter(Treatment == 1 & diet == 1 & !is.na(wgt)) %>% .$wgt %>% length),
+    nrow = 2,
+    ncol = 2,
+    byrow = TRUE
+)
+rownames(sim.n.mat) <- c('before', 'after')
+colnames(sim.n.mat) <- c('no diet', 'diet')
+print(sim.n.mat)
+```
+
+### Compute the Test Statistic
+
+```{r}
+#| vscode: {languageId: r}
+sim.theta <- sim.res.mat[3,3] / sqrt(sum(sim.var.mat / sim.n.mat))
+print(sim.theta)
+```
+
+### Compute the $p$-Value
+
+```{r}
+#| vscode: {languageId: r}
+print(
+    list(
+        'z-test' = 2 * pnorm(abs(sim.theta), 0, 1, lower.tail = FALSE),
+        't-test' = 2 * pt(abs(sim.theta), sum(sim.n.mat), lower.tail = FALSE)
+    )
+)
+```
+
+### Comparison Against Linear Regression
+
+```{r}
+#| vscode: {languageId: r}
+sim.data %>%
+    lm(wgt ~ Treatment * diet, data = .) %>%
+    summary
+```
+
+### Summary for Repeated Cross-Section
+
+Clearly, you can compute the DID estimator manually with repeated cross-section data and it yields estimates of similar quality to what OLS provides. If doing it manually is your preference, go ahead. Otherwise, you should also take away from this section that OLS works just as well for repeated cross-section data. The presentation of the manual method is really just to show you in detail how the underlying statistics of this estimator works.
+
+## When Parallel Trends Fails
+
+The key and only assumption for DID is parallel trends,
+
+$$
+    \mathbb{E}[Y_{0,i}(0) \mid T_{i} = 1] - \mathbb{E}[Y_{0,i}(0) \mid T_{i} = 0] = \mathbb{E}[Y_{1,i}(0) \mid T_{i} = 1] - \mathbb{E}[Y_{1,i}(0) \mid T_{i} = 0].
+$$
+
+What happens if this fails? Notice what happens to the bias when you compute the DID estimator,
+
+$$
+    \theta - ATET = \underbrace{\left( \mathbb{E}[Y_{1,i}(0) \mid T_{i} = 1] - \mathbb{E}[Y_{1,i}(0) \mid T_{i} = 0] \right)}_{\text{Time Trend for $G_{i} = 1$}} - \underbrace{\left( \mathbb{E}[Y_{0,i}(0) \mid T_{i} = 1] - \mathbb{E}[Y_{0,i}(0) \mid T_{i} = 0] \right)}_{\text{Time Trend for $G_{i} = 0$}}.
+$$
+
+When parallel trends is not satisfied, there is no longer any guarantee that the trends for the two groups are in the same direction, such that DID reduces the bias in the estimator. In fact, if the two groups intuitively trend in opposite directions, DID exacerbates the bias. Can you think of situations where your treated and never-treated groups naturally trend in different directions over time?
+
+### Load Data
+
+I will now simulate some data to simulate the case where parallel trends fails.
+
+```{r}
+#| vscode: {languageId: r}
+set.seed(998)
+sim.data <- tibble(i = c(1:10000), hgt = rnorm(10000, 1.63, 0.08), u = rnorm(10000, 0, 1))
+sim.data <- sim.data %>% mutate(diet = if_else(rnorm(10000, 0, 1) + u < 0, 0, 1))
+sim.data <- rbind(
+    sim.data %>% mutate(Treatment = 0, e = rnorm(10000, 0, 1) + u) %>% mutate(wgt = 28 * hgt ^ 2 + e),
+    sim.data %>% mutate(Treatment = 1, e = rnorm(10000, 0, 1) + u, hgt = if_else(diet == 1, hgt - .1, hgt + .1)) %>% mutate(wgt = 2 + 28 * hgt ^ 2 - 3 * diet + e)
+)
+summary(sim.data)
+```
+
+### The $t$-Test Fails
+
+Intuitively, because the divergence in time trends is due to unaccounted for changes in other covariates, the $t$-test will be badly biased because it is not considering the possibility that other confounding factors may change differently between the groups over time. This again reflects the core intuition of the parallel trends assumption: the selection bias in treatment assignment has to be constant over time.
+
+In this case, because the time trends of the diet and non-diet group move in opposite directions, the simple DID (first row) is more biased than either the na&iuml;ve comparison measure (second row) or the before-after estimator (third row).
+
+```{r}
+#| vscode: {languageId: r}
+diff.data <- sim.data %>% filter(Treatment == 1) - sim.data %>% filter(Treatment == 0) %>% mutate(diet = 0)
+```
+
+```{r}
+#| vscode: {languageId: r}
+list(
+    t.test(
+        diff.data %>% filter(diet == 1) %>% select(wgt),
+        diff.data %>% filter(diet == 0) %>% select(wgt),
+        var.equal = TRUE
+    ),
+    t.test(
+        sim.data %>% filter(Treatment == 1, diet == 1) %>% select(wgt),
+        sim.data %>% filter(Treatment == 1, diet == 0) %>% select(wgt),
+        var.equal = TRUE
+    ),
+    t.test(
+        sim.data %>% filter(Treatment == 1, diet == 1) %>% select(wgt),
+        sim.data %>% filter(Treatment == 0, diet == 1) %>% select(wgt),
+        var.equal = TRUE
+    )
+) %>% 
+    map_df(tidy) %>%
+    print
+```
+
+### The Regression Method Still Works
+
+As you will see below, the regression method with controls still obtains the desired estimate. In fact, if you are paying attention, the OLS estimator gets the correct estimate despite misspecifying the form which height enters the model. This really gets to the heart of how closely linked regression methods (not just linear regression) and the CEF are. Notice that the regression model with controls is really estimating this:
+
+$$
+    ATET = \left( \mathbb{E}[Y_{i} \mid X_{i}, G_{i} = 1, T_{i} = 1] - \mathbb{E}[Y_{i} \mid X_{i}, G_{i} = 1, T_{i} = 0] \right) - \left( \mathbb{E}[Y_{i} \mid X_{i}, G_{i} = 0, T_{i} = 1] - \mathbb{E}[Y_{i} \mid X_{i}, G_{i} = 0, T_{i} = 0] \right).
+$$
+
+If controls $X_{i}$ are good enough proxies for the true reasons (or are the true reasons themselves) for divergence in time trends between the treated and never-treated groups, then the conditional version of the parallel trends assumption will be satisfied:
+
+$$
+    \mathbb{E}[Y_{0,i}(0) \mid X_{i}, T_{i} = 1] - \mathbb{E}[Y_{0,i}(0) \mid X_{i}, T_{i} = 0] = \mathbb{E}[Y_{1,i}(0) \mid X_{i}, T_{i} = 1] - \mathbb{E}[Y_{1,i}(0) \mid X_{i}, T_{i} = 0].
+$$
+
+This brings out the intuition for doing DID estimation with regression models. What you seek to control for is not selection bias---remember that DID has no problem with time-invariant selection bias. Instead, controls in the DID model should remove differences in the time trends of the treated and never-treated groups. This is what you need discuss when setting up your DID model and justifying the controls used.
+
+```{r}
+#| vscode: {languageId: r}
+model1 <- lm(wgt ~ hgt + diet, data = filter(sim.data, Treatment == 1))
+model2 <- lm(wgt ~ hgt + Treatment, data = filter(sim.data, diet == 1))
+model3 <- lm(wgt ~ hgt + Treatment + diet, data = sim.data)
+model4 <- lm(wgt ~ hgt + Treatment * diet, data = sim.data)
+model5 <- lm(wgt ~ Treatment * diet, data = sim.data)
+
+stargazer(model1, 
+          model2, 
+          model3, 
+          model4, 
+          model5, 
+          type = 'text',
+          df = FALSE,
+          omit.stat = c('F'))
+```
+
+## Exercise #: Difference-in-Differences in your Project
+
+### Load Your Data
+
+```{r}
+#| vscode: {languageId: r}
+library(haven)
+```
+
+```{r}
+#| vscode: {languageId: r}
+my.data <- 'load your data'
+```
+
+```{r}
+#| vscode: {languageId: r}
+my.data <- 'clean your data'
+```
+
+```{r}
+#| vscode: {languageId: r}
+my.data %>% data.frame %>% stargazer(type = 'text')
+```
+
+### Plan and Run some DD Models
+
+```{r}
+#| vscode: {languageId: r}
+my.model.1 <- 'write your model' %>% lm(, data = my.data)
+my.model.1 %>% summary
+```
+
+```{r}
+#| vscode: {languageId: r}
+my.model.2 <- 'write another model' %>% lm(, data = my.data)
+my.model.2 %>% summary
+```
+
+```{r}
+#| vscode: {languageId: r}
+my.model.3 <- 'write as many models as you would like to estimate' %>% lm(, data = my.data)
+my.model.3 %>% summary
+```
+
+### Tabulate All Models
+
+```{r}
+#| vscode: {languageId: r}
+stargazer(
+    my.model.1,
+    my.model.2,
+    my.model.3,
+    type = 'html',
+    out = 'prj_dd_out.html',
+    out.header = TRUE
+)
+```
+

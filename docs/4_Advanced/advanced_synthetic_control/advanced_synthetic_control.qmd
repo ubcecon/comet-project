@@ -1,0 +1,865 @@
+---
+title: "3.10 - Advanced - Synthetic Control"
+author: COMET Team <br> _Avi Woodward-Kelen_
+date: 24 August 2024
+description: An introduction to estimating causality through the use of synthetic control. Synthetic control is the process by which we create a counterfactual to the unit we actually observed. 
+categories: [econ 425, econ 495, econ 499, synthetic control, regression, ols, causality, p-value, event study, difference in differences, advanced, R]
+format: 
+  html: default
+  ipynb:
+    jupyter:
+      kernelspec:
+        display_name: R
+        language: r
+        name: ir
+---
+
+
+## Outline
+
+### Prerequisites
+
+-   Intermediate Econometrics (equivalent to ECON 326)
+-   Panel Data
+-   Difference in Differences
+
+### Learning Outcomes
+
+-   Develop a strong intuition behind the synthetic control method of analysis,
+-   Develop an understanding of the econometric theory behind synthetic control,
+-   Be able to use synthetic control to estimate the causal effect of a policy change in case study contexts, and
+-   Apply methods of inference when sample sizes are very small.
+
+### References
+
+-   Abadie, A., Diamond, A., & Hainmueller, J. (2010). Synthetic Control Methods for Comparative Case Studies: Estimating the Effect of California’s Tobacco Control Program. Journal of the American Statistical Association, 105(490), 493–505. https://doi.org/10.1198/jasa.2009.ap08746
+
+-   Abadie, A., Diamond, A., & Hainmueller, J. (2015). Comparative Politics and the Synthetic Control Method. American Journal of Political Science, 59(2), 495–510. https://doi.org/10.1111/ajps.12116
+
+-   Cunningham, S. (2021). Causal inference: The mixtape. Yale university press. https://mixtape.scunning.com/10-synthetic_control
+
+-   Hainmueller, Jens, 2014, "Replication data for: Comparative Politics and the Synthetic Control Method", https://doi.org/10.7910/DVN/24714, Harvard Dataverse, V2, UNF:5:AtEF45hDnFLetMIiv9tjpQ== [fileUNF] 
+
+-   Mendez, C. (n.d.). *Basic synthetic control tutorial*. carlos-mendez. https://carlos-mendez.quarto.pub/r-synthetic-control-tutorial/ 
+
+
+```{r}
+#install.packages("foreign")
+#install.packages("Synth")
+#install.packages("tidyverse")
+#install.packages("haven")
+#install.packages("SCtools")
+#install.packages("skimr")
+```
+
+```{r}
+library(foreign)
+library(Synth)
+library(haven)
+library(tidyverse)
+library(SCtools)
+library(skimr)
+```
+
+
+```{r}
+oecd_data <- read.dta("datasets/repgermany.dta")
+#NB: using foreign::read.dta() instead of read_dta() is strangely important here because portions of the `synth()` package we will be using only accept numerical and character strings, and read_dta() will gives columns a dbl type which is unsupported.
+```
+
+```{r}
+source("advanced_synthetic_control_functions.r") #minor data cleaning
+```
+
+
+## Part 1: What is Synthetic Control and Why Use It?
+
+The purpose of synthetic control is to make comparative case study analyses more rigerous. Three major issues which have traditionally plagued comparative case studies are a) the presence of confounders, b) a lack of a control group which shares parallel trends, and c) the selection of the control group.
+
+Suppose improvements in vehicle safety design and AI-assisted driving is leading to fewer road fatalities every year. Nevertheless, in order to improve road safety, Vancouver's city council decides to amend municipal bylaws such that the new speed limit is 30km/h throughout the city. 
+
+Researchers want to know what sort of impact that had, but the trend line for Canada's national road fatalities is not similar to that of Vancouver's. Moreover, behavior changes slowly and there's an element of randomness to the number of people killed in car crashes every year; so even if everything else was held equal there might not be a sharp enough change in the trendline to do a simple comparison with pre-bylaw Vancouver.
+
+In such a situation, should the researchers compare Vancouver to Burnaby, because that's the nearest city? Or perhaps we should compare it to Toronto or to Seattle because those cities could arguably have more in common with Vancouver? Thus the concern arises that whatever control group the researchers choose will be abitrary - and potentially misleading. 
+
+How do we get around this? **The essence of synthetic control is to define a "synthetic control group" as the weighted average of all available control units which best approximates the relevant characteristics of the treatment group.** The set of available control units are also called the "donor pool".
+
+What does that mean? Suppose the characteristics of a city most relevant to the number of road fatalities are `average age of drivers`, `car ownership per capita`, `average speed driven`, and `alcohol consumption per capita`. Vancouver might be substantially different from Burnaby, Toronto, and Seattle on all of these metrics - but by assigning each variable and each city a specific weight in your analysis you can often get extremely close to replicating a "Synthetic Vancouver" which is highly representative of the real city. 
+
+For instance, an extremely rudimentary (and arbitrary) version synthetic control would be to assign a weight of 1/4th to Burnaby, 1/2 to Toronto, and 1/4th to Seattle (as well as applying weights to each of the characteristics noted above); and then comparing this rudimentary synthetic Vancouver to real Vancouver. The sophisticated version is to have R run an optimization program which, in a manner analagous to a simple regression, finds the optimal weights for each city and each characteristic by minimizing the distance between real Vancouver and synthetic Vancouver in the pre-treatment period (i.e. before the bylaw change). We then compare how synthetic Vancouver would have faired (based on the earlier weights) to how things actually turned out in Vancouver.
+
+Some famous examples of synthetic control include the effect of terrorism on GDP in the Basque region of Spain, California's tobacco control laws, the impact of Texan prison construction on the number of people imprisoned, and the results of German reunification after the Berlin Wall fell - the last of which will be the example we work through together.
+
+**Think Deeper**: What sorts of bias might still creep in?
+
+## Part 2: Synthetic Control Theory & Practice
+
+### Counterfactual Estimation
+
+In a perfect world we would be measuring the true effect of a policy by randomly assigning individuals/cities/countries to control and treatment groups. Then, we would look at the difference in outcomes between units with (1) and without (0) treatment after the intervention has occured. 
+
+$$
+\alpha = Y_{post}(1) - Y_{post}(0)
+$$
+
+but in the context of a case study $Y_{post}(0)$ doesn't exist! Instead if we want to find the effect we're going to need some way to estimate what it might have been like.
+
+$$
+\begin{align*}
+    \hat{\alpha_t} &= Y_{t,post}(1) - \hat{Y}_{t,post}(0) \\
+      &= Y_{1,t}^{real} - Y_{1,t}^{synthetic}
+\end{align*}
+$$
+
+How do we estimate $Y_{1,t}^{synthetic}$? Well, let:
+
+-   $Y_{jt}$ be the outcome variable for unit $j$ of $J+1$ units at time $t$
+-   The treatment group be $j=1$
+-   Treatment intervention occurs at $T_0$
+-   $\omega_i$ represents the weights for unit $j$
+
+Then define
+
+$$
+\hat{Y}_{t,post}(0) \equiv \sum_{j=2}^{J+1}{\omega_i^* Y_{jT}}
+$$
+
+This says that our counterfactual value is the optimally weighted average of all the other units, which raises the question of "how to optimally weight said units?" The answer is by *minimizing the distance between the units' covariates in the pre-treatment period* (subject to the restriction that weights must be non-negative and must sum to one).  
+
+
+$$
+\omega^* = \text{min}_{\{\omega_j\}_{j=1}^{J}} \sum_{t=1}^{T_0}({Y_{1t}}-\sum_{j=2}^{J+1}\omega_jY_{jt})^2 \text{ s.t. } \sum_{j=2}^{J+1} \omega_j = 1, \text{ and } \omega_j \geq 0
+$$
+
+And taking the average of this gives us what is known as the Mean Squared Prediction Error (MSPE). 
+
+$$
+MSPE = \frac{1}{T_0} \sum_{t=1}^{T_0}({Y_{1t}}-\sum_{j=2}^{J+1}\omega_jY_{jt})^2
+$$
+
+The MSPE tells us how good a fit we have between the synthetic control and the treated group during the pre-treatment period; and this will be core to how we build and analyze our model as well as our inference tests. 
+
+::: {.callout-note collapse="true"}
+# Extend Your Knowledge: Matrix Algebra and Econometrics
+We can (and do) actually minimize the function across multiple observed variables in the pre-treatment period by choosing 
+
+$$
+{\{\omega^*}\} = \text{arg min}_{\vec{W}} ||\vec{X_1} - \vec{X_0}\vec{W}|| = \sqrt{(X_1 - X_0W)'V(X_1 - X_0W)}
+$$ 
+
+For those who have a background in linear algebra and who want to dig deeper, the following references provide increasingly sophisticated backgrounders on the process
+
+-   Cunningham, S. (2021). Causal inference: The mixtape. Yale university press. https://mixtape.scunning.com/10-synthetic_control#formalization 
+-   Abadie, A., Diamond, A., & Hainmueller, J. (2015). Comparative Politics and the Synthetic Control Method. American Journal of Political Science, 59(2), 495–510. https://doi.org/10.1111/ajps.12116
+-   Abadie, A. (2021). Using Synthetic Controls: Feasibility, Data Requirements, and Methodological Aspects. Journal of Economic Literature, 59(2), 391–425. https://doi.org/10.1257/jel.20191450
+
+:::
+
+
+Finally, in the context of synthetic control we will typically estimate the Average Treatment effect on the Treated (ATT) over time.
+
+$$
+\begin{aligned}
+    ATT_t &= \frac{1}{T_1 - T_0} \sum_{t=T_0+1}^{T_1} \alpha_t \\
+      &= \frac{1}{T_1 - T_0}\sum_{t=T_0+1}^{T_1}({Y_{1t}}-\sum_{j=2}^{J+1}\omega_jY_{jt})
+\end{aligned}
+$$
+
+### Implementation
+
+First things first, let's take a peek at our data:
+
+```{r}
+head(oecd_data)
+```
+
+```{r}
+glimpse(oecd_data)
+```
+
+```{r}
+skim(oecd_data)
+```
+
+Where:
+
+-   `gdp`: GDP per capita, PPP adjusted in 2002 USD
+-   `invest`: average investment rate for a given decade 
+-   `schooling`: percentage of secondary school attained in the total population aged 25 and older
+-   `industry` share of value added to GDP by industrial processes
+-   `infrate` annual rate of inflation (base year 1995)
+-   `trade` is an index of openness to international trade, exports + imports as a percentage of GDP 
+
+We have data available from 1960 to 2003, and we will split this into two major sections: **pre-treatment** (1960 to 1990) and **post-treatment** (1990-2003). During the pre-treatment phase we will be establishing our synthetic West Germany, and in the post-treatment we will see how it performs. 
+
+We will *also* be splitting **pre-treatment** into two periods: a *training period* (1971 to 1980) during which we find the values of our explainatory variables; and a *validation period* (1980-1990) in which we optimize the weights based on the explainatory variables found during the previous period.^[Quick counters will notice that there are actually *three* sub-periods within the pre-treatment period (1960-1971). We're going to revisit this period when we get to placebo studies, but until then it is yet another way to visually identify whether or not our model does a good job.] This is known as the process of cross-validation and it helps prevent us from overfitting our model.^[The exact years chosen here are somewhat arbitrary, so feel free to experiment with the dates on your own.]
+
+While cross-validation is not strictly necessary, it is good practice. Moreover, it is sort of confusing to try and figure out both the rationale and the syntax without a little bit of hand-holding. So, we'll do it together.
+
+::: {.callout-warning collapse="true"}
+# Under Tips & Tricks at the bottom of the notebook there is a non-cross-validated (simpler) version of synthetic control
+
+I chose to teach synthetic control with cross-validation because
+
+1) It is a good way to make sure you're not overfitting the data (which is a real risk in synthetic control studies), and
+
+2) Without a tutorial on how cross-validation works and what it looks like it is quite difficult both to intuit how to do it yourself and to read/understand other people's code when *they* are doing it.
+
+The downside is that it makes the creation and display of graphs and tables significantly more complicated, as I think you'll see if you skip to the bottom of the notebook.
+
+:::
+
+Order of operations (with cross-validation) is
+
+-   `dataset` -> `dataprep(training_period)`-> `synth(training_period)`
+-   `dataset` -> `dataprep(validation_period)` -> `synth(training_period & validation_period)` -> `output (graphs, tables, etc.)`
+
+```{r}
+#although our data is already cleaned we need to put it in a format that the `synth()` package understands, using the `dataprep()` command
+
+training_data <- dataprep(
+  
+  foo = oecd_data, #the dataset to be prepared... don't ask why it's called foo.
+  
+  predictors = c("gdp", "trade", "infrate"), #predictors of the outcome variable (GDP).  
+  
+  dependent = "gdp", #outcome variable we want
+  
+  #special.predictors() is used for variables which require special rules (e.g. allows us to choose the time periods and which measure of central tendency to use), or when observations are only present in certain years.
+  special.predictors = list(
+            list("industry", 1971:1980, c("mean")),
+            list("schooling",c(1970,1975), c("mean")),
+            list("invest70" ,1980, c("mean"))
+           ),
+  
+  unit.variable = "index", #tells the package which column is the unit of observation. It must be either the numerical value of the column (i.e. `unit.variable = 1` is an acceptable alternative), or the name of the column in string form as I have done.
+
+  treatment.identifier = 7, #the index value in the dataset for West Germany (our treatment group)
+  
+  controls.identifier = unique(oecd_data$index)[-7], #all country indexes other than West Germany 
+
+  unit.names.variable = "country", #This is the column in the dataset which contains the names of the units. It must be either the numerical value of the column (i.e. `unit.names.variable = 2` is an acceptable alternative), or the name of the column in string form as I have done. 
+
+  time.variable = "year", #tells the package which column is the time variable. It must be either the numerical value of the column (i.e. `time.variable = 3` is an acceptable alternative), or the name of the column in string form as I have done.
+  
+  time.predictors.prior = 1971:1980, #This is the training period! The mean of the predictors() argument above will be calculated over this span.
+  
+  time.optimize.ssr = 1981:1990, #This is the validation period! It is here where we designate the time frame on which we want to optimize weights for the synthetic West Germany. 
+  
+  time.plot = 1960:2003 #This is the time period we'll be plotting the data for.
+         )
+```
+
+
+Now that you've prepared the data we're going to optimize weights for our potential control countries by minimizing the sum of squared residuals (SSR). This is a multivariate optimization problem such as you may be familiar with from calculus... luckily for us, we don't have to do it by hand! We do it with the `synth()` command. 
+
+```{r}
+training_model <- synth(data.prep.obj = training_data)
+```
+
+In case it's not clear (it isn't) `synth()` has generated optimized weights, `solution.v` and `solution.w`, for the variables and the countries respectively. 
+
+
+Great. Next, we need to create the dataset for the validation period. Once that is done, we will apply our training model to it - the result of which is our main model. 
+
+This is cross-validation in action! And it may seem like we're sort of doing the same thing over and over again...because we are (but notice that the years are changing!)
+
+
+```{r}
+main_data <- dataprep(
+  foo = oecd_data,
+  predictors    = c("gdp","trade","infrate"),
+  dependent     = "gdp",
+  special.predictors = list(
+    list("industry" ,1981:1990, c("mean")),
+    list("schooling",c(1980,1985), c("mean")),
+    list("invest80" ,1980, c("mean"))
+  ),
+  unit.variable = "index",
+  unit.names.variable = 2,
+  treatment.identifier = 7,
+  controls.identifier = unique(oecd_data$index)[-7],
+  time.variable = "year",
+  time.predictors.prior = 1981:1990, #take explainatory variable averages from the validation period
+  time.optimize.ssr = 1960:1989, #optimize across the entire pre-treatment period
+  time.plot = 1960:2003
+)
+```
+
+```{r}
+#apply training model weights to the main model
+main_model <- synth(
+  data.prep.obj = main_data,
+  custom.v = as.numeric(training_model$solution.v) #This is the cross-validation in action! This line specifies that, although we are optimizing across the whole period, we are doing so using weights derived from the training_model rather than the ones from the main model. 
+  )
+```
+
+
+Okay, phew, that was a lot of work! I hope it wasn't a waste of time, what if we actually could have just done a DiD between West Germany and the OECD avarage? 
+
+Let's look at a pretty picture, you've earned it.  
+
+```{r}
+Text.height <- 23000
+Cex.set <- .8
+plot(1960:2003,main_data$Y1plot,
+     type="l",ylim=c(0,33000),col="black",lty="solid",
+     ylab ="per-capita GDP (PPP, 2002 USD)",
+     xlab ="year",
+     xaxs = "i", yaxs = "i",
+     lwd=2
+     )
+lines(1960:2003,aggregate(oecd_data[,c("gdp")],by=list(oecd_data$year),mean,na.rm=T)[,2]
+      ,col="black",lty="dashed",lwd=2) # mean 2
+abline(v=1990,lty="dotted")
+legend(x="bottomright",
+       legend=c("West Germany","rest of the OECD sample")
+      ,lty=c("solid","dashed"),col=c("black","black")
+      ,cex=.8,bg="white",lwd=c(2,2))
+arrows(1987,Text.height,1989,Text.height,col="black",length=.1)
+text(1982.5,Text.height,"reunification",cex=Cex.set)
+```
+
+
+Oh thank God they aren't the same! That would have been quite the plot twist, eh?
+
+Now let's look at how our synthetic West Germany compares to the real deal. 
+
+
+```{r}
+synthY0 <- (main_data$Y0%*%main_model$solution.w)
+plot(1960:2003,main_data$Y1plot,
+     type="l",ylim=c(0,33000),col="black",lty="solid",
+     ylab ="per-capita GDP (PPP, 2002 USD)",
+     xlab ="year",
+     xaxs = "i", yaxs = "i",
+     lwd=2
+     )
+lines(1960:2003,synthY0,col="black",lty="dashed",lwd=2)
+abline(v=1990,lty="dotted")
+legend(x="bottomright",
+       legend=c("West Germany","synthetic West Germany")
+      ,lty=c("solid","dashed"),col=c("black","black")
+      ,cex=.8,bg="white",lwd=c(2,2))
+arrows(1987,Text.height,1989,Text.height,col="black",length=.1)
+text(1982.5,Text.height,"reunification",cex=Cex.set)
+```
+
+Now that sure looks like common trends to me! They're practically on top of each other until 1990. 
+
+"But", you might be asking, "can we do better than the eyeball test?"
+
+We sure can!
+
+```{r}
+synth.tables <- synth.tab(
+                          dataprep.res = main_data,
+                          synth.res = main_model,
+                          round.digit = 2
+                          )
+synth.tables
+```
+
+
+As you can hopefully see from `tab.pred`, this function compares the pre-treatment predictor values for the treated unit to the synthetic control unit, and to all the units in the sample^[You can think of it as being roughly analagous to a balance table in an RCT.]. `tab.w` gives us the weights for each country in the donor pool, and `tab.v` the weights for each variable. Finally, `tab.loss` gives us the loss function.
+
+Similarly to DiD analyses, we can also visualize this in terms of the gap that exists between the real and synthetic versions.
+
+```{r}
+gap <- main_data$Y1-(main_data$Y0%*%main_model$solution.w) # the difference between the treated unit and the synthetic control at a specific point in time
+```
+
+```{r}
+plot(1960:2003,gap,
+     type="l",ylim=c(-4500,4500),col="black",lty="solid",
+     ylab =c("gap in per-capita GDP (PPP, 2002 USD)"),
+     xlab ="year",
+     xaxs = "i", yaxs = "i",
+     lwd=2
+     )
+abline(v=1990,lty="dotted")
+abline(h=0,lty="dotted")
+arrows(1987,1000,1989,1000,col="black",length=.1)
+text(1982.5,1000,"reunification",cex=Cex.set)
+```
+
+::: {.callout-tip collapse="false"}
+# This method of looking at the gaps will become important later when we try to decide whether or not we can assign statistical significance to a post-treatment change. 
+:::
+
+Before we get to that, let's take a look at the size of the effect of reunification. 
+
+```{r}
+#ATT_t is the average size of `gap` between 1990 and 2003
+mean(gap[31:44, 1])
+```
+
+
+Ouch! West Germans had their per capita GDP reduced by an average of US$1,600 per year after reunification. 
+
+```{r}
+#fraction of ATT_t to West German GDP in 1990
+round(
+  mean(gap[31:44, 1]) / oecd_data$gdp[oecd_data$country == "West Germany" & oecd_data$year == 1990],
+  2
+)
+```
+
+Relative to national income in 1990, that's an 8% average reduction!
+
+## Statistical Inference
+
+Okay, so we have our "balance table", we have our common trends, and we have a large effect size. But how can we know if this is a statistically significant change? Unlike in traditional methods of estimation and inference we cannot easily draw upon the law of large numbers and the central limit theorem to save us. Not to belabor the point but we *literally* only have two observations per year, neither of which were randomly assigned to treatment or control, and no particularly good reason to think that such events would be independent and identically distributed.
+
+Recall that to test for significance in a random experiment what we do is randomly assign treatment to untreated units, collect data on the two groups, calculate coefficients, and then collecte those coefficients into a well behaved distribution in order to infer things about said coefficients.
+
+This is probably where the conceptual framework of synthetic control differs most profoundly from the traditional statistical methods you're familiar with. To get around these problems we'll use so-called "placebo studies" which "iteratively apply the synthetic control method to each [country] in the donor pool and obtain a distribution of placebo effects" (Cunningham, 2021). 
+
+Let's unpack what that means. First and foremost, it means **there will be no confidence intervals and p-values will not reflect how unlikely a result would be to occur under the null hypothesis**. Instead, our efforts will be focused on
+
+a) trying to falsify our findings, and
+
+b) trying to figure out how extreme the treatment effect on our treated group is, *relative to other members of the donor pool*. 
+
+By doing these two things we will attempt to uncover whether the effect was a statistical fluke or perhaps merely prediction error on the part of the model. 
+
+## Part 3: Placebo Studies, Significance Tests, Distribution, and Robustness 
+
+At the core of how we will attempt to falsify our findings is the basic assumption that if you found a similarly sized effect in cases where German reunification never happened (i.e. in a different year or in a different country) that this would severely undermine the validity of the supposed effect of German reunification we just found. Working through this process of falsification is what we call "placebo studies", which can broadly be broken down into "in-time placebos" and "in-space placebos". 
+
+### In-time Placebos
+
+Running an in-time placebo is no different than running the original synthetic control model, except that the dates change. For example, how would our model fair if German reunification had taken place 15 years earlier, in 1975?
+
+As before, we will cross-validate our model by choosing variable means and optimal weights across different time periods. Let the placebo training period be 1960-1964, the placebo validation period be 1965-1975, and the placebo treatment occur in 1975.  
+
+
+```{r}
+# data prep for placebo_training model
+placebo_time_training_data <-
+  dataprep(
+    foo = oecd_data,
+    predictors    = c("gdp","trade","infrate"),
+    dependent     = "gdp",
+    unit.variable = "index",
+    time.variable = "year",
+    special.predictors = list(
+      list("industry",1971, c("mean")),
+      list("schooling",c(1960,1965), c("mean")),
+      list("invest60" ,1980, c("mean"))
+    ),
+    treatment.identifier = 7,
+    controls.identifier = unique(oecd_data$index)[-7],
+    time.predictors.prior = 1960:1964,
+    time.optimize.ssr = 1965:1975,
+    unit.names.variable = 2,
+    time.plot = 1960:1990
+  )
+
+# fit placebo_time_training model
+placebo_time_training_model <- synth(
+  data.prep.obj=placebo_time_training_data)
+```
+
+```{r}
+# data prep for placebo_main model
+placebo_time_main_data <-
+  dataprep(
+    foo = oecd_data,
+    predictors    = c("gdp","trade","infrate"),
+    dependent     = "gdp",
+    unit.variable = 1,
+    time.variable = 3,
+    special.predictors = list(
+      list("industry" ,1971:1975, c("mean")),
+      list("schooling",c(1970,1975), c("mean")),
+      list("invest70" ,1980, c("mean"))
+    ),
+    treatment.identifier = 7,
+    controls.identifier = unique(oecd_data$index)[-7],
+    time.predictors.prior = 1965:1975,
+    time.optimize.ssr = 1960:1975,
+    unit.names.variable = 2,
+    time.plot = 1960:1990
+  )
+
+# fit main model
+placebo_time_main_model <- synth(
+  data.prep.obj=placebo_time_main_data,
+  custom.v=as.numeric(placebo_time_training_model$solution.v)
+)
+```
+
+
+```{r}
+Cex.set <- 1
+plot(1960:1990,placebo_time_main_data$Y1plot,
+     type="l",ylim=c(0,33000),col="black",lty="solid",
+     ylab ="per-capita GDP (PPP, 2002 USD)",
+     xlab ="year",
+     xaxs = "i", yaxs = "i",
+     lwd=2
+     )
+lines(1960:1990,(placebo_time_main_data$Y0%*%placebo_time_main_model$solution.w),col="black",lty="dashed",lwd=2)
+abline(v=1975,lty="dotted")
+legend(x="bottomright",
+       legend=c("West Germany","synthetic West Germany")
+      ,lty=c("solid","dashed"),col=c("black","black")
+      ,cex=.8,bg="white",lwd=c(2,2))
+arrows(1973,20000,1974.5,20000,col="black",length=.1)
+text(1967.5,20000,"placebo reunification",cex=Cex.set)
+```
+
+Okay, good. Just like in the real world, [nothing happened in 1975](https://en.wikipedia.org/wiki/1975#Events). This is a good sign for our model! If an effect is visible, given that nothing should have happened, that would have implied there were factors other than the reunification which caused synthetic West Germany to diverge from West Germany.
+
+### In-space Placebos
+
+
+In-space placebo studies are a little more strange to consider, and as I think you'll see, they are how we try to estimate if the effect of the intervention on our treatment group is extreme relative to other members in the donor pool. 
+
+The center piece of in-space placebos is the amount of prediction error in our treatment unit, our synthetic unit, and the units from the donor pool. This is obtained by repeatedly applying the same process of synthetic control that we did with West Germany to each other unit in the donor pool (i.e. France, Japan, Spain, etc.). 
+
+Thinking back to our earlier discussion of the MSPE, we're now going to take its square root for each unit (now the RMSPE)^[Taking the square root scales the values and makes it a little easier to interpret.] both before and after the intervention supposedly took place in 1990. By doing so, this gives us a tractable way to measure the magnitude of the gap in our outcome variable between each country and its synthetic counterpart.
+
+To be clear, a large post-treatment RMSPE does not necessarily indicate a large effect of the intervention if the pre-treatment RMSPE is also large. However, if the post-treatment RMSPE is large *and* the pre-treatment RMSPE is small, then that is a strong indication that the intervention had an effect.
+
+Once you've calculated the RMSPE in each period, the most straightforward way to decide what constitutes a large or small effect is to take the ratio
+
+$$
+\frac{RMSPE_{post,j}}{RMSPE_{pre,j}}
+$$
+
+Once that's done, rank the fractions in descending order (highest to lowest) and let 
+
+$$
+p \equiv \frac{RANK}{TOTAL}
+$$
+
+Lets do this now. 
+
+```{r}
+# create a dataframe to store the gaps between the actual and synthetic versions of each country in the donor pool
+storegaps <- matrix(NA, 
+                    length(1960:2003),
+                    length(unique(oecd_data$index))-1
+                    )
+rownames(storegaps) <- 1960:2003
+i <- 1
+country_index <- unique(oecd_data$index)
+```
+
+```{r, output=FALSE}
+#looping over control units from the donor pool
+for(k in unique(oecd_data$index)[-7]){ # excluding index=7 because that is West Germany
+
+  placebo_space_training_data <- dataprep(
+  foo = oecd_data,
+  predictors = c("gdp", "trade", "infrate"),
+  dependent = "gdp",
+  unit.variable = "index",
+  time.variable = "year",
+  special.predictors = list(
+            list("industry", 1971:1980, c("mean")),
+            list("schooling",c(1970,1975), c("mean")),
+            list("invest70" ,1980, c("mean"))
+           ),
+  treatment.identifier = k, #kth placebo unit being treated
+  controls.identifier = country_index[-which(country_index==k)], #when kth placebo unit is being treated it cannot also be a control
+  time.predictors.prior = 1971:1980,
+  time.optimize.ssr = 1981:1990,
+  unit.names.variable = "country",
+  time.plot = 1960:2003
+  )
+
+  placebo_space_training_model <- synth(data.prep.obj=placebo_space_training_data)
+  
+
+placebo_space_main_data <-
+    dataprep(
+      foo = oecd_data,
+      predictors    = c("gdp","trade","infrate"),
+      dependent     = "gdp",
+      unit.variable = 1,
+      time.variable = 3,
+      special.predictors = list(
+        list("industry" ,1981:1990, c("mean")),
+        list("schooling",c(1980,1985), c("mean")),
+        list("invest80" ,1980, c("mean"))
+      ),
+      treatment.identifier = k,
+      controls.identifier = country_index[-which(country_index==k)],
+      time.predictors.prior = 1981:1990,
+      time.optimize.ssr = 1960:1989,
+      unit.names.variable = 2,
+      time.plot = 1960:2003
+    )
+
+
+placebo_space_main_model <- synth(
+   data.prep.obj=placebo_space_main_data,
+   custom.v=as.numeric(placebo_space_training_model$solution.v) #cross-validation
+  )
+
+ storegaps[,i] <-  
+   placebo_space_main_data$Y1-
+   (placebo_space_main_data$Y0%*%placebo_space_main_model$solution.w)
+ i <- i + 1
+} # close loop over control units
+```
+
+```{r}
+oecd_data <- oecd_data[order(oecd_data$index,oecd_data$year),] #sorting our primary df
+colnames(storegaps) <- unique(oecd_data$country)[-7] #filling columns with donor group names
+
+storegaps <- cbind(gap,storegaps) #adding & then naming a column for West Germany to the df
+colnames(storegaps)[1] <- c("West Germany")
+```
+
+```{r}
+# compute ratio of post-reunification RMSPE to pre-reunification RMSPE                                                  
+rmspe <- function(x){sqrt(mean(x^2))} #function to calculate RMSPE
+pre_treat <- apply(storegaps[1:30,],2,rmspe)
+post_treat <- apply(storegaps[31:44,],2,rmspe)
+
+dotchart(sort(post_treat/pre_treat),
+         xlab="Post-Period RMSE / Pre-Period RMSE",
+         pch=19)
+```
+
+
+As you can see, the ratio of post-treatment to pre-treatment RMSPE is quite high for West Germany, and significantly larger than for all other countries, which is another good indication that the reunification had a large effect. With our earlier definition of $p = \frac{RANK}{TOTAL}$ we can now calculate that $p = 1/17 \approx 0.059$. This $p$-value *not* how unlikely it would be to find this result under the null hypothesis - it answers the more subtle question of "if one were to pick a country at random from the sample, what are the chances of obtaining a ratio as high as this one?"
+
+Relatedly, we can also look at the distribution of the gaps between the actual and synthetic versions of each country in the donor pool. This is a way to see how much of an outlier our actually treated unit is from the placebo treated units.^[Recall: it's a best fit in the pre-treatment period so some amount of gap is to be expected. However, often you will have a handful of donor units whose synthetic versions of themselves are a terrible fit - usually because they're very unusual in their pre-treatment characteristics, which means no combination of samples from other units in the pool can reproduce the pre-treatment trends. In those cases, it is common to drop those observations from your in-place placebo distribution graph.] This is also known as building a *distribution* of the placebo effects.
+
+
+
+```{r}
+#Placebo Effect Distribution
+Cex.set <- .75
+plot(1960:2003,gap,
+     ylim=c(-4500,4500),xlab="year",
+     xlim=c(1960,2003),ylab="Gap in real GDPpc",
+     type="l",lwd=2,col="black",
+     xaxs="i",yaxs="i")
+
+# Add lines for control states
+for (i in 2:ncol(storegaps)) { lines(1960:2003,storegaps[1:nrow(storegaps),i],col="gray") }
+
+
+# Add grid
+abline(v=1990,lty="dotted",lwd=2)
+abline(h=0,lty="dashed",lwd=2)
+legend("topleft",legend=c("West Germany","control regions"),
+lty=c(1,1),col=c("black","gray"),lwd=c(2,1),cex=.8)
+arrows(1987,-2500,1989,-2500,col="black",length=.1)
+text(1983.5,-2500,"Reunification",cex=Cex.set)
+abline(v=1960)
+abline(v=2003)
+abline(h=-2)
+abline(h=2)
+```
+
+
+::: {.callout-tip collapse="false"}
+# Excluding Extreme MSPE Values
+
+As noted earlier, some papers make a point of excluding countries whose pre-treatment MSPE is substantially larger than the treated unit. This is a problem in the context of deriving a placebo distribution because - by definition - such units' pre-treatment trends cannot be adequately modeled. However, this is not an issue when taking ratios of post-treatment to pre-treatment MSPE because our inability to model these units is generally symmetric across both periods. 
+
+As a rule of thumb, a conservative cut-off is 2x the treated unit's MSPE, a moderate cut-off is 5x the treated unit, and a lenient cut-off is 20x the treated unit. (Abadie et al, 2010)
+
+Here is a piece of code that will exclude countries whose pre-treatment MSPE is more than 20 times the pre-treatment MSPE of West Germany.
+
+`mspe <- function(x){(mean(x^2))} #function to calculate MSPE`
+`outliers <- apply(storegaps[1:30,],2,mspe) > 20*mspe(storegaps[1:30,][,1])`
+`filtered_storegaps <- storegaps[, !outliers]`
+`print(outliers)`
+
+I encourage you to experiment with this code and see how it changes the placebo effect distribution graph.
+
+:::
+
+### Robustness Testing: Leave-one-out
+
+The next step in Placebo Studies is to do a leave-one-out test. This is a form of robustness check where we iteratively remove one country from the control group (starting with the least important) and re-run the model. This will tell us something about how sensitive our synthetic West Germany is to the idiosyncratic features of any particular country within the control group.
+
+```{r}
+#refresh ourselves on which countries have a positive weight in synthetic West Germany
+synth.tables$tab.w
+```
+
+In decreasing order of importance we have: Austria, the USA, Japan, Switzerland, and the Netherlands. 
+
+
+```{r, output=FALSE}
+#Leave-one-out distribution of the synthetic control for West Germany
+
+# loop over leave one outs
+storegaps <- 
+  matrix(NA,
+        length(1960:2003),
+        5)
+colnames(storegaps) <- c(1,3,9,11,12) #index values for countries with positive weight
+country <- unique(oecd_data$index)[-7]
+
+for(k in 1:5){
+
+# data prep for training model
+omit <- c(1,3,9,11,12)[k]  
+  robustness_training_data <-
+    dataprep(
+      foo = oecd_data,
+      predictors    = c("gdp","trade","infrate"),
+      dependent     = "gdp",
+      unit.variable = 1,
+      time.variable = 3,
+      special.predictors = list(
+        list("industry",1971:1980, c("mean")),
+        list("schooling"   ,c(1970,1975), c("mean")),
+        list("invest70" ,1980, c("mean"))
+      ),
+      treatment.identifier = 7,
+      controls.identifier = country[-which(country==omit)],
+      time.predictors.prior = 1971:1980,
+      time.optimize.ssr = 1981:1990,
+      unit.names.variable = 2,
+      time.plot = 1960:2003
+    )
+  
+  # fit training model
+  robustness_training_model <- synth(
+    data.prep.obj=robustness_training_data)
+  
+# data prep for main model
+robustness_main_data <-
+  dataprep(
+    foo = oecd_data,
+    predictors    = c("gdp","trade","infrate"),
+    dependent     = "gdp",
+    unit.variable = 1,
+    time.variable = 3,
+    special.predictors = list(
+      list("industry" ,1981:1990, c("mean")),
+      list("schooling",c(1980,1985), c("mean")),
+      list("invest80" ,1980, c("mean"))
+    ),
+    treatment.identifier = 7,
+    controls.identifier = country[-which(country==omit)],
+    time.predictors.prior = 1981:1990,
+    time.optimize.ssr = 1960:1989,
+    unit.names.variable = 2,
+    time.plot = 1960:2003
+  )
+  
+  # fit main model 
+  robustness_main_model <- synth(
+    data.prep.obj=robustness_main_data,
+    custom.v=as.numeric(robustness_training_model$solution.v)
+  )
+  storegaps[,k] <- (robustness_main_data$Y0%*%robustness_main_model$solution.w)
+} # close loop over leave one outs
+```
+
+```{r}
+Text.height <- 23000
+Cex.set <- .8
+plot(1960:2003,robustness_main_data$Y1plot,
+     type="l",ylim=c(0,33000),col="black",lty="solid",
+     ylab ="per-capita GDP (PPP, 2002 USD)",
+     xlab ="year",
+     xaxs = "i", yaxs = "i",lwd=2
+     )
+
+abline(v=1990,lty="dotted")
+arrows(1987,23000,1989,23000,col="black",length=.1)
+ for(i in 1:5){
+  lines(1960:2003,storegaps[,i],col="darkgrey",lty="solid")
+  }
+lines(1960:2003,synthY0,col="black",lty="dashed",lwd=2)
+lines(1960:2003,robustness_main_data$Y1plot,col="black",lty="solid",lwd=2)
+text(1982.5,23000,"reunification",cex=.8)
+legend(x="bottomright",
+       legend=c("West Germany",
+                "synthetic West Germany",
+                "synthetic West Germany (leave-one-out)")
+      ,lty=c("solid","dashed","solid"),
+      col=c("black","black","darkgrey")
+      ,cex=.8,bg="white",lwdc(2,2,1))
+```
+
+
+## Conclusion
+
+In this tutorial, we've walked through the process of the synthetic control method [using Abadie et al. (2015)'s excellent paper](https://doi.org/10.1111/ajps.12116) on German reunification as a template. If you want to dig into the replication package some more, you can find it [here](https://doi.org/10.7910/DVN/24714).
+
+In the process of working through this paper we've seen how to prepare the data, optimize weights, and cross-validate the model. We've also discussed how to assess the statistical significance of the estimated effect using placebo studies and leave-one-out tests.
+
+To recap, the synthetic control method is a powerful tool for estimating the effects of policy interventions when traditional methods are not feasible. It allows us to construct a counterfactual scenario by combining information from multiple control units, and to estimate the treatment effect by comparing the treated unit to its synthetic counterpart.
+
+I hope this tutorial has been helpful in understanding the synthetic control method and giving you the confidence to try it out in your 495/499 research paper. 
+
+::: {.callout-tip collapse="true"}
+
+# Tips & Tricks
+
+As I mentioned earlier much of the code gets overcomplicated by the process of cross-validation. You don't actually *need* to cross-validate the model with a `training_data`, a `training_model`, a `main_data`, and a `main_model` each time. You *can* just run the model on the full pre-treatment period.
+
+I chose to use cross-validation because
+
+1) It is a good way to make sure you're not overfitting the data (which is a real risk in synthetic control studies), and
+
+2) Without a tutorial on how cross-validation works and what it looks like it is quite difficult both to intuit how to do it yourself and to read/understand other people's code when *they* are doing it.
+
+The downside is that it makes the creation and display of graphs and tables significantly more complicated. So, let me give a quick run down on how you could simplify the code.
+
+
+```{r}
+#prepare the data. Primary difference here is that there's only one block and the years span the entire pre-treatment period 
+dataprep_out <-
+    dataprep(
+      foo = oecd_data,
+      predictors    = c("gdp","trade","infrate"),
+      dependent     = "gdp",
+      unit.variable = "index",
+      unit.names.variable = "country",
+      time.variable = "year",
+      special.predictors = list(
+        list("industry" ,1971:1990, c("mean")),
+        list("schooling",c(1970,1985), c("mean")),
+        list("invest80" ,1980, c("mean"))
+      ),
+      treatment.identifier = 7,
+      controls.identifier = c(1:6,8:17),
+      time.predictors.prior = 1960:1990,
+      time.optimize.ssr = 1960:1989,
+      time.plot = 1960:2003
+    )
+
+synth_out <- synth(data.prep.obj=dataprep_out)
+
+
+#plot the results
+path.plot(synth_out, dataprep_out, Ylab = "per-capita GDP (PPP, 2002 USD)", Xlab = "year", Main = NA)
+
+gaps.plot(synth_out, dataprep_out, Ylab = "Gap in real GDPpc", Xlab = "year", Ylim = c(-4500,4500), Main = NA)
+
+#placebo studies
+placebos <- generate.placebos(dataprep_out, synth_out, Sigf.ipop = 3)
+
+plot_placebos(placebos)
+
+mspe.plot(placebos)
+```
+
+
+
+:::
+
+
+
+## Further reading
+
+-   Abadie, A., & Gardeazabal, J. (2003). The Economic Costs of Conflict: A Case Study of the Basque Country. American Economic Review, 93(1), 113–132. https://doi.org/10.1257/000282803321455188
+
+-   Abadie, A. (2021). Using Synthetic Controls: Feasibility, Data Requirements, and Methodological Aspects. Journal of Economic Literature, 59(2), 391–425. https://doi.org/10.1257/jel.20191450
+
+-   Abadie, A., Diamond, A., & Hainmueller, J. (2011). Synth: An R Package for Synthetic Control Methods in Comparative Case Studies. Journal of Statistical Software, 42(13), 1–17. https://doi.org/10.18637/jss.v042.i13

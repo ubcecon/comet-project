@@ -1,0 +1,284 @@
+---
+title: "17 - R Workflow Guide"
+author: Marina Adshade, Paul Corcuera, Giulia Lo Forte, Jane Platt
+date: 2024-05-29
+description: This notebook is here to help us organize our files when conducting large-scale research. We talk about workflow management, coding style, and cloud storage. 
+categories: [econ 490, r, workflow, master, organization, scripts, commenting, OneDrive]
+format: 
+  html: default
+  ipynb:
+    jupyter: 
+      kernelspec:
+        display_name: R
+        language: r
+        name: ir
+---
+
+## Prerequisites
+
+1. Knowledge of the content of the previous modules: opening data sets, creating graphs, regression analysis. 
+
+## Learning Outcomes
+
+1. Develop foundational skills and practices for workflow management in research and data applications.
+2. Improve coding style, especially for collaborative settings.
+3. Use the secure file-hosting service UBC OneDrive to store, share, and synchronize folders.
+
+
+## 17.1 Introduction to Workflow Management
+
+Structuring our files and folders early on will save us a lot of time and effort throughout our research projects. This approach covered in this notebook will make it easier for us to keep track of our progress and reduce our workload later on. This approach will be particularly important if we are working in a group, with several co-authors on one project.
+
+In this module, we will discuss how to manage files and scripts as part of the research workflow. We will also cover how to stylize code to make it easy to read and replicate. While these are not strict rules, consider them guidelines for research and data management.
+
+## 17.2 Setting Up the Directory
+
+### 17.2.1 Using UBC Microsoft OneDrive
+
+Let's say that have been asked to create a series of folders that will hold all of the information for our project. There are good reasons for keeping those folders on UBC OneDrive. We might, for example, want to be able to access that information when we are away from your computer (for example, working in a lab). We might (legitimately!!) be concerned that all of our hard work will be lost if our computer is damaged or stolen. Finally, we might be working as part of a group - in which case file sharing will be necessary! Setting up OneDrive and installing the application on your own computer will resolve all of those issues. 
+
+[UBC Microsoft OneDrive](https://lthub.ubc.ca/guides/microsoft-onedrive-student-guide/) is a secure file-hosting service that allows us to store, share, and synchronize files and folders from any connected devices. You can learn how to store files on this service from the link provided above, here we are going to cover how to access these files directly from R on any computer. 
+
+To begin, we need to follow the instructions for our operating system to install the Microsoft OneDrive application on any computer that we want to work on. Once we have complete this process, we will see a new folder in our computer directory which contains all of the files in our OneDrive folder. It is likely labeled OneDrive itself by default. It is in this folder that we will create our RStudio Project file.
+
+### 17.2.2 Creating an RStudio project
+
+RStudio Projects are built-in features of RStudio that allow us to create a working directory for a project which we can launch whenever we want. In this way, the project allows us to refer to all of our files using relative and not absolute paths. This approach also prevents us from needing to set our directory every time we work on our project. In this sense, it is quite a valuable tool both from a collaboration and efficiency standpoint.
+
+To create an RStudio Project, first launch RStudio. Then navigate through __File__, __New Project__, __New Directory__, and then __New Project__. We can then choose the name of our project and select where we would like the project to be stored. To allow for the project to live on OneDrive (which is highly recommended), we select the OneDrive directory in our computer. Finally, we can create the project. If we access your OneDrive folder on our computer, we should then see a subfolder with our project name and a default .RProj object already inside, which looks like the one below.
+
+![RStudio Project Default Directory](img/fig1.PNG)
+
+Whenever we want to return to our project to work on it, we can simply click the .RStudio Project object above. We can also start a fresh session in RStudio and navigate to our project by selecting __File__, __Open Project__, and then following the specified instructions.
+
+### 17.2.3 Organization of the Main Folder
+
+Now that we have an RStudio Project directory in our computer, we can organize folders within this larger folder. This is important given that, over the course of a research project, we are likely to accumulate numerous files for our project, such as raw data files, scripts, tables, graphs, and figures. In fact, there are often many versions of each of these files.
+
+Within the main folder, we'll want to sort all of our files into sub-folders similar to the structure shown below:
+
+![Main directory structure](img/fig2.PNG)
+
+Each sub-folder consists of a specific category of files and is numbered to indicate the workflow:
+
+* **data:** contains all the data files;
+* **scripts:** contains all the R scripts used to process, clean and analyze the data files;
+* **tables:** contains all the regression tables, summary statistics, etc.;
+* **figures:** contains all the graphs and figures;
+* **literature:** contains papers and documents related to your literature review;
+* **paper:** contains word documents or LaTeX files relating to the written part of your paper;
+* **slides:** contains presentation slides.
+
+<div class="alert alert-block alert-info">
+    
+**Note:** We'll want to avoid spaces, special characters, or capital letters in our folder or file names. If we need to use spaces, we can use underscores `_` . We will also want to number our files to indicate our workflow. </div>
+
+### 17.2.4 Scripts Folder
+
+It's almost never a good idea to use one script for an entire project. Instead, we will want to create different scripts for different tasks and add descriptive labels to reflect our workflow. As mentioned in the previous section, we should prefix our files with numbers to align with the workflow sequence.
+
+![Scripts folder with example scripts](img/fig3.PNG)
+
+In the image above, the first script, `build_data.R`, cleans the raw data and generates core variables that will be used in subsequent scripts. The second script, `descriptive_statistics.R`, generates descriptive statistics and relevant figures. The third script, `results.R`, runs the final regressions and generates regression tables. The master script, `master_script.R`, runs all these other scripts. We will discuss its role in detail in a moment.
+
+<div class="alert alert-info">
+    
+Note: Some researchers prefer to use different scripts for different figures and tables, which is completely fine as long as the files are labeled well. If we want to generate different tables and figures within the same script, we should be sure to write them into separate code blocks within a script so that they can be easily distinguished. </div>
+
+### 17.2.5 Choosing Good File Names
+
+While you are welcome to use your own naming conventions, it can be helpful to prefix your file names with numbers to align with your workflow, post-fixed with version numbers. Version numbers could be `_v1`, `_v2` (i.e. "ECON490_script_v12.R") or they could be indicated by dates (i.e. "Thesis_script_230430.R"). 
+
+<div class="alert alert-block alert-info">
+    
+<b>Note:</b>  Following the yymmdd (year month date) format when using dates will automatically sort our files with the latest version at the top. Other date formats will not sort the files in the correct order and thus defeat the purpose of adding a post-fixed version number.</div>
+
+As we make progress with our project, we might find ourselves collecting many versions of the same files. As older versions become redundant, it is best to delete them or move them to a temp folder. Creating a temp folder for old scripts, tables, or documents can be helpful in keeping our main folders neat, especially if we are hesitant to delete them or if we are susceptible to digital hoarding (as many of us are).
+
+## 17.3 Working in the Directory
+
+### 17.3.1 Referring to Specific Files
+
+One advantage of using projects in RStudio is that our working directory is set automatically every time we launch our project. In this way, we do not need to set our directory first in order to refer to relative file paths (provided the files are in fact somewhere within our overarching project directory). For instance, if we want to load in a "fake_data.csv" data set in the data folder within a directory structured identically to the one above, we can simply use the following code:
+
+```{r}
+data <- read.csv("data/fake_data.csv")
+```
+
+We can access any of the folders listed above and any potential subfolders/files within them quite quickly using this approach. To check your current directory at any time, you can use the `getwd` function.
+
+### 17.3.2 Creating a README File
+
+In the main directory, it is also a good idea to include a README file, particularly if we will be sharing our projects with others. A README file is a text file which gives a general overview of the purpose of the project and how to best understand it. While some README files are quite long and lend themselves to a table of contents, yours will likely not need this feature. The file can simply include the following features:
+
+* A title;
+* A general description of the project's goal;
+* An acknowledgment of the sources of any data and how it was used;
+* Any other major features you think are important to include.
+
+The README file can also include a more detailed explanation of how all or some of the different folders and files within them contribute to the functioning of the project as a whole. In this way, anyone who reads it, as long as it is located in the main directory, can understand how the project folder is laid out and where to go to find the information they need. This is very helpful for classmates, teaching assistants, and professors.
+
+### 17.3.3 Creating a Master Script
+
+We may also want to create a master script. This script acts as a compiler and runs some, or all, of the scripts for our project. In its simplest form, it can include just a series of commands allowing the user to run various scripts. In greater detail, it can function in lieu of a README file and also include a general description of the project and the purpose of various scripts.
+
+In any case, a master script is useful for running various scripts at once, since it provides an alternative to simply combining the code in all of these scripts together into a single script. For example, imagine that we have a script which builds the model for our project, one which cleans our data, and one which produces tables of summary statistics. These are all detailed scripts which accomplish very different goals. To combine them all into a single script could be quite overwhelming. With a master script, however, we can run all of these scripts quickly while leaving them discretely separated in various files. In this way, the master script is like a compiler.
+
+For an example of a very brief master script for a project with few scripts, look at the template below.
+
+```{r}
+# Brief Project Description
+
+# running the script for loading and cleaning data
+source("scripts/build_data.R")
+
+# running the script for generating summary statistics
+source("scripts/descriptive_statistics.R")
+
+# running the script for generating results
+source("scripts/results.R")
+```
+
+It is important to note that R cannot read the singular backslashes inherent to file paths on Windows computers. While copying file paths is not a problem for Mac users (since R can read forward slashes just fine), the backslashes inherent to file paths for Windows users are a problem. For Windows users, one can either change all of the backslashes to forward slashes (as has been done throughout this notebook), or simply add a second backslash to all existing backslashes. Either option will allow code to run successfully.
+
+## 17.4 Best Practices for Writing Code
+
+There are three core practices that will make it easy to write, edit and understand code:
+
+1. Adding comments.
+2. Splitting up code into multiple lines.
+3. Indenting and spacing code.
+
+### 17.4.1 Commenting
+
+Leaving comments will not only help us remember what we have done, but it will help our group members, TAs, instructors, and supervisors understand our thought process. 
+
+There are three ways to comment in an R script:
+
+```{r}
+# comments on individual lines
+
+1 + 1 # comments on individual lines and after some code
+
+# comments on multiple lines
+# like a "code block"
+# activated by highlighting your code and running CTRL + shift + C (or Command + shift + C on mac)
+
+```
+
+We can also use a series of number signs `#` or combination of number signs and dashes `#-` to format our script and partition our code. For instance, for a script dedicated to data cleaning, we can specify its purpose at the top as such:
+
+```{r}
+####################
+# Data Cleaning
+#------------------#
+```
+
+Formatting our script in this manner creates visual bookmarks and highlights different sections of our script.
+
+Another use for comments is to "comment out" code that we might be testing or might need later. Use a number sign to comment out a line:
+
+```{r}
+# fake_data <- data %>% mutate(log_earnings = log(earnings))
+```
+
+Comment out a block of code by running CTRL + shift + C on Windows or Command + shift + C on mac. There is no formal way of commenting out a block of code in writing like in Stata, so this command is the best approach to quickly comment out a block of code if you don't want to run it right now but feel you may need it later:
+
+```{r}
+# fake_data %>% group_by(region) %>% count()
+# fake_data %>% group_by(sex) %>% summarise(meanearnings = mean(earnings))
+# fake_data %>% group_by(region) %>% summarise(total = n())
+```
+
+Most importantly, we should leave comments before and after our code to explain what we did!
+
+```{r}
+# Open Raw Data
+fake_data <- read.csv("1. data/fake_data.csv")
+
+fake_data <- as.factor(fake_data) # factorize all variables
+```
+
+As we move on to writing more complex code, leaving comments will become more helpful.
+
+### 17.4.2 Splitting the Code Across Lines
+
+R can automatically read code as continuing across multiple lines, provided we don't give it a reason to believe our code is finished. Let's look at an example to see why.
+Imagine we want to create a scatterplot in R combining the command `ggplot` and `geom_point` (for all details on how to do graphs in R, see [Module 8](https://comet.arts.ubc.ca/docs/Research/econ490-r/08_ggplot_graphs.html)). 
+
+The line of code that achieves this is `figure <- ggplot(data = fake_data, aes(x = year,  y = earnings)) + geom_point()`.
+This may be too long and we may want to split it in several lines. Knowing that R can read code as continuing across multiple lines, we would be tempted to write the following:
+
+```{r}
+figure <- ggplot(data = fake_data, aes(x = year,  y = earnings))
++ geom_point()
+
+figure()
+
+```
+
+R will return an error for the above code. This is because it believes our code is done on the first line, so that the addition of `geom_point` is alone and non-sensical. For R to understand that `ggplot` and `geom_point` belong to the same block of code, we must leave the plus sign on the first line:
+
+```{r}
+figure <- ggplot(data = fake_data, aes(x = year,  y = earnings)) + 
+geom_point()
+
+figure()
+
+```
+
+The plus sign at the end of the first line signals to R that the code on the first line is not complete and it must keep reading down below to `geom_point`. While operators allow R to "keep reading" across multiple lines, an open bracket achieves the same goal. For example, we could split the code in two lines such that `aes(` is the last word on the first line:
+
+```{r}
+figure <- ggplot(data = fake_data, aes(
+                     x = year, y = earnings)) + geom_point()
+                 
+figure
+```
+
+Now our code is split across multiple lines and is also easier to read.
+
+### 17.4.3 Indenting and Spacing our Code
+
+Using indentations in our code and spacing it neatly can further improve its readability with little effort. We can use the `tab` button on our keyboard to indent and organize our code. Let's reformat the last example to see this in action.
+
+```{r}
+figure <- ggplot(data = fake_data,
+                 aes(
+                     x = year,  
+                     y = earnings)) + 
+          geom_point()
+
+figure
+```
+
+This is the same code block as before, but it is significantly easier to read this time around.
+
+We might not want to indent our code on such a granular level, as shown in the example above. That's okay, as long as the code is organized in a way that is clear to us and our collaborators, and generally easy to understand.
+
+### 17.4.4 Putting it All Together 
+
+Let's review a final example which combines all the code styling tools we have discussed so far:
+
+```{r}
+figure <- ggplot(data = fake_data, # choose the data we want
+                 aes(
+                     x = year,  # x is year
+                     y = average_logearn)) # y is earnings
+          + geom_point()
+                 
+
+figure
+```
+
+The comments in this example might seem unnecessary since the code is self-explanatory. However, depending on our familiarity with R (or coding in general) and the complexity of the code, adding comments that seem obvious at the time can be helpful when we revisit work days or weeks later. As students of economics, we understand that there is an opportunity cost to everything, including time spent deciphering code we have already written.
+
+## 17.5 Wrap Up
+
+In this notebook, we looked at how to use UBC OneDrive to securely store projects. We also looked at how to use R's built-in RStudio Projects functionality to minimize the need for setting directories. Further, we explored how to structure this directory, how to name files, and how to separate scripts. We also discussed important file types to include and best practices for coding more generally.
+
+## References
+
+- [Structuring a Good README File](https://www.freecodecamp.org/news/how-to-write-a-good-readme-file/)
+- [Understanding RStudio Projects](https://martinctc.github.io/blog/rstudio-projects-and-working-directories-a-beginner%27s-guide/)
+

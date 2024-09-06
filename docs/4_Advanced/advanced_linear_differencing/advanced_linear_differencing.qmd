@@ -1,0 +1,558 @@
+---
+title: "3.4 - Advanced - Linear Differencing"
+author: "COMET Team <br> _Uddhav Kalra, Avi Woodward-Kelen_"
+Last update: 2 July 2024
+description: This notebook introduces students to linear differencing, focusing on techniques of difference-in-differences with variation in treatment timing, and event-studies with a continuous treatment.
+categories: [advanced, R, linear differencing, difference in differences, continuous treatment, treatment timing]
+format:
+  html:
+    code-fold: show
+editor: visual
+---
+
+## Outline
+
+### Prerequisites
+
+1.  Differences-in-Differences
+2.  Event Studies
+
+This notebook will cover:
+
+  - Difference-in-differences research when there are more than two groups, and when treatment timing varies.
+  - Event studies when treatment is a continuous variable. 
+
+
+# Setting up
+
+Install necessary packages
+
+```{r, fold-code: true}
+#install.packages("bacondecomp")
+#install.packages("lmtest")
+#install.packages("gridExtra")
+#install.packages("coefplot")
+```
+
+Load Packages
+
+```{r, library, fold-code: false, warning=FALSE, message=FALSE}
+library(tidyverse)
+library(haven)
+library(ggplot2)
+library(bacondecomp)
+library(dplyr)
+library(lmtest)
+library(gridExtra)
+library(fixest)
+library(coefplot)
+library(plm)
+library(broom)
+```
+
+The following blocks of code are data generating functions which will simulate the panel-structured data with which we will be working. 
+
+You do not need to follow how this data is constructed in order to understand the notebook. 
+
+```{r, dgp1, code-fold: true}
+dgp <- function(N, T, a, g, id_var = "id", time_var = "time") {
+  ids <- 1:N # Unique ids
+  times <- 1:T # Time periods
+  panel_data <- expand.grid(id = ids, time = times)  
+  panel_data$group <- rep(rep(1:a, each = N/a), length.out = N) # Generating groups
+  
+  # Initial means for each group
+  initial_means <- rnorm(a, mean = 10, sd = 2.5)  # Generate initial means for each group
+  initial_sds <- rnorm(a, mean = 2.5, sd = 0.5)
+  # Generating var1 with different initial means for each group
+  panel_data$var1 <- rep(NA, N * T)
+  for (i in 1:a) {
+    panel_data$var1[panel_data$group == i & panel_data$time == 1] <- 
+      rnorm(sum(panel_data$group == i & panel_data$time == 1), mean = initial_means[i], sd = initial_sds[i])
+  }
+  
+  # Adding growth rate
+  for (t in 2:T) {
+    panel_data$var1[panel_data$time == t] <- panel_data$var1[panel_data$time == t - 1] + g + rnorm(1, mean = 0, sd = 5)
+  }
+  
+  # Adding jumps at different time periods for different groups
+  jump_times <- rep(NA, a)  # Initialize jump_times vector
+  jump_magnitude <- rnorm(a, mean = 40, sd = 10) # Generate jump magnitudes for each group
+  
+  for (i in 2:a) {
+    jump_times[i] <- sample(2:T, 1)  # Randomly select a jump time
+    panel_data$var1[panel_data$group == i & panel_data$time >= jump_times[i]] <- 
+      panel_data$var1[panel_data$group == i & panel_data$time >= jump_times[i]] + jump_magnitude[i]
+    panel_data$jump_time[panel_data$group == i] <- jump_times[i]
+  }
+  
+  return(panel_data)
+}
+
+plot_avgs <- function(panel_data){
+  avg_data <- aggregate(var1 ~ group + time, data = panel_data, FUN = mean)
+  
+  # Plotting the average of var1 for each group
+  p <- ggplot(avg_data, aes(x = time, y = var1, color = factor(group))) +
+    geom_line() +
+    labs(title = "Average of var1 for Each Group Over Time",
+         x = "Time",
+         y = "Average of var1",
+         color = "Group") +
+    theme_minimal()
+  
+  return(p)
+}
+```
+
+```{r, dgp2, code-fold: true}
+dgp_2 <- function(N, T, g, id_var = "id", time_var = "time") {
+  ids <- 1:N  # Unique ids
+  times <- 1:T  # Time periods
+  panel_data <- expand.grid(id = ids, time = times)  
+  panel_data$group <- rep(rep(1:2, each = N/2), length.out = N)  # Generating 2 groups
+  
+  # Initial means and standard deviations for each group
+  initial_means <- rnorm(2, mean = 10, sd = 5)  
+  initial_sds <- rnorm(2, mean = 2.5, sd = 0.5)
+  
+  # Generating var1 with different initial means for each group
+  panel_data$var1 <- rep(NA, N * T)
+  for (i in 1:2) {
+    panel_data$var1[panel_data$group == i & panel_data$time == 1] <- 
+      rnorm(sum(panel_data$group == i & panel_data$time == 1), mean = initial_means[i], sd = initial_sds[i])
+  }
+  
+  # Adding growth rate
+  for (t in 2:T) {
+    panel_data$var1[panel_data$time == t] <- panel_data$var1[panel_data$time == t - 1] + g + rnorm(1, mean = 0, sd = 5)
+  }
+  
+  # Select a random time for treatment for group 2
+  treat_time <- sample(2:T, 1)
+  
+  # Generating jump magnitudes for each unit
+  jump_magnitudes <- rnorm(N, mean = 100, sd = 40)
+  
+  # Add jump magnitudes as a column in the panel dataset
+  panel_data$jump_magnitude <- jump_magnitudes
+  
+  # Set jump magnitudes to 0 for control group (group 1)
+  panel_data$jump_magnitude[panel_data$group == 1] <- 0
+  
+  # Add jumps to var1 based on jump magnitudes and treatment time for group 2
+  panel_data$var1[panel_data$group == 2 & panel_data$time >= treat_time] <- 
+    panel_data$var1[panel_data$group == 2 & panel_data$time >= treat_time] + panel_data$jump_magnitude[panel_data$group == 2]
+  
+  return(panel_data)
+}
+```
+
+# Difference-in-Differences with Variation in Treatment Timing
+
+## Purpose?
+
+**To implement a DiD-style analysis when there are multiple treatment groups, multiple control groups, and treatment occurs at multiple different times**
+
+This application of linear differencing extends traditional 2x2 difference-in-differences estimation techniques to situations where there are more than two groups and/or those groups are being treated at multiple different times. 
+
+In our classic difference-in-differences estimator we only had "pre" and "post" period for only two groups, the "control" and "treatment". 
+
+$$
+y_{it} = \alpha + \gamma_i TREAT_i + \gamma_t POST_t + \beta TREAT_i \times POST_t + u_{it} 
+$$
+
+Where the average treatment effect on the treated (ATT), our outcome of interest, is also equivalent to $\hat{\beta}$ 
+
+$$
+ATT = \hat{\beta} = [\bar{y}{^{Post} _{Treated}} - \bar{y}{^{Pre} _{Treated}}] - [\bar{y}{^{Post} _{Untreated}} - \bar{y}{^{Pre} _{Untreated}}]
+$$
+
+However this 2x2 set-up fails when we have multiple treated groups being treated at different times. Why? Because a post period isn't properly defined.
+
+Consider:
+
+```{r, fake_data, code-fold: false}
+set.seed(123)
+fake_data <- dgp(N=50, T=20, a=3, g=10)
+plot_avgs(fake_data)
+```
+
+```{r, fake_data_treatment, code-fold: false}
+fake_data$treatment <- 0
+for (grp in 2:3) {
+  fake_data$treatment <- ifelse((fake_data$group == grp & fake_data$time >= fake_data$jump_time), 1, fake_data$treatment)
+}
+```
+
+
+In this example, group 2 is treated at $t=12$ while group 3 is treated at $t=8$. So do we use 12 as our post period or do we use 8 as our post period? Suppose we use 12 as our post period, then group 2 is our treated group. In this case, should we use group 1 as our control, or group 3 from $t = 8 \ \text{to} \ 20$ as our control? The answer to these questions will depend on what our research question is.
+
+## Variance Weighting: the Bridge from Traditional DiD to Linear Differencing
+
+A hidden facet of traditional difference-in-differences equations is that the effect one finds is implicitly a Variance Weighted Average Treatment effect on Treated (**VWATT**). However, when there are only two groups and one period of treatment, the variance weighting divides out by itself to become $1$. Thus, for simplicity's sake we ignore it during traditional analyses. 
+
+Now, consider the example from our above graph: suppose group 3 (first treated) has $n=100$ and $\hat{\beta} = 0.50$, group 2 (second treated) has $n=50$ and $\hat{\beta} = 0.40$. A simple average of the effect would give a coefficient of $0.45$ but that would be misleading because having a different number of observations in each group will (in general) affect the variance in such a way as to make it not simplify to $1$. 
+
+Recoginizing this is _critical_ to understanding the equations which undergird linear differencing.
+
+Now, with no further ado, the <u>Linear Differencing Equation</u>
+
+$$
+\hat \beta^{DiD} = \sum_{k \neq U}s_{kU} \hat \beta_{kU} + \sum_{k \neq U} \sum_{k>l} [s^k_{kl} \hat \beta_{kl}^{k} + s^l_{kl} \hat \beta_{kl}^{l}]
+$$
+
+
+::: {.callout-note}
+Let *k* and *l* be treated groups, where *k* is treated at a point in time earlier than *l*, and *U* is the untreated group. When used as a superscript, this denotes the treatment group to whom the sample variance or coefficient belongs. 
+
+$\hat{\beta}_{kU}$ uses *k* as the treated group and *U* as the control group, $\hat{\beta}_{kl}^k$ uses *k* as the treated and pre-treatment *l* as the control group and finally $\hat{\beta}_{kl}^l$ uses *l* as the treated group and post-treatment *k* as the control group.
+
+$s_{kU}$, $s^k_{kl}$ and $s^l_{kl}$ are variance weights. 
+:::
+
+Where we once had only two groups and two time periods (basically just the first term and $s_{kU}=1$), we are now expanding that to cover three groups over three time periods (although this can be generalized to many groups and many periods). 
+
+Simply put, our traditional DiD estimator was a truncated version of a more generalized 2x2 estimator which we are now employing.  
+
+And the 2x2 estimators we used in our <u>Linear Differencing Equation</u> are:
+
+$$
+\begin{equation}
+\hat{\beta}_{kU} = (\bar{y}_k^{POST(k)} - \bar{y}_k^{PRE(k)}) - (\bar{y}_U^{POST(k)} - \bar{y}_U^{PRE(k)})
+\end{equation}
+$$
+
+$$
+\begin{equation}
+\hat{\beta}_{kl}^k = (\bar{y}_k^{MID(k,l)} - \bar{y}_k^{PRE(k)}) - (\bar{y}_l^{MID(k,l)} - \bar{y}_l^{PRE(k)})
+\end{equation}
+$$
+
+$$
+\begin{equation}
+\hat{\beta}_{kl}^l = (\bar{y}_l^{POST(l)} - \bar{y}_l^{MID{(k,l)}}) - (\bar{y}_k^{POST(l)} - \bar{y}_k^{MID(k,l)})
+\end{equation}
+$$
+
+::: {.callout-note}
+
+In the context of our example, PRE refers to $0<time<8$ (i.e. up until group 3 is treated), MID to $8<time<12$ (i.e. when group 3 has been treated by group 2 has not been), and POST to $12<time<20$ (i.e. when groups 2 and 3 have both been treated). 
+
+:::
+ 
+
+Although this equation looks really complicated (and it is), what it essentially means is that our <u>Linear Differencing Equation</u> is a variance weighted average of all possible DiD estimators with staggered treatment.
+
+We'll get into some of the capabilities and limits of linear differencing in the next sections. Suffice to say for now that the coefficient can be difficult to interpret. So, it is important to know what it is you want to estimate for your research question before deciding whether the <u>Linear Differencing Equation</u> is required or if a more traditional DiD would suffice.
+
+::: {.callout-tip}
+## For $n$ treated and one control group there are $n^2$ possible DiD estimators! Can you list all of the ones from our example? 
+
+:::
+
+## A New Common Trends
+
+Since we have multiple estimates for DiD, we will also need multiple new common trends assumptions. The assumptions needed are similar to the assumption needed for a traditional 2x2 DiD estimator. In order to see what common trends assumptions are required in this new staggered environment let's look at the decomposition of all of the 2x2 DiD estimates:
+
+$$
+\hat{\beta}_{kU} = ATT_k(POST(k)) + [\Delta Y_k^0(POST(k),PRE(k)) - \Delta Y_U^0(POST(k),PRE(k))]
+$$
+
+$$
+\hat{\beta}_{kl}^k = ATT_k(MID(k,l)) + [\Delta Y_k^0(MID(k,l),PRE(k)) - \Delta Y_l^0(MID(k,l),PRE(k))]
+$$
+
+$$
+\hat{\beta}_{kl}^l = ATT_l(POST(l)) + [\Delta Y_l^0(POST(l),MID(k,l)) -\Delta Y_k^0(POST(l),MID(k,l))] \\ - [ATT_k(POST(l)) - ATT_k(MID(k,l))]
+$$
+
+The first two $(\hat{\beta}_{kU}$, $\hat{\beta}_{kl}^k)$ should seem familiar as they are the same as the 2x2 DiD we just covered, but the last term $(\hat{\beta}_{kl}^l)$ is different. It involves the counterfactual values, as before, and includes the change in treatment effects of the already treated control group(s).
+
+::: {.callout-tip}
+## If the CTA holds, all the $[...]$ terms should cancel to zero
+
+:::
+
+## Average Treatment on Treated
+
+To isolate for just the effect of the treatment, we need to account for the effects of timing of the treatment. To do so let's put all the equations in the previous sections together. Doing so yields a decomposition of the <u>Linear Differencing Equation</u> in terms of treatment effects,
+
+$$
+\beta^{DiD} = VWATT + VWCT - \Delta ATT
+$$
+
+where, $VWATT$ is the variance weighted average treatment effect on treated, $VWCT$ is the variance weighted common trends and $\Delta ATT$ is the weighted sum of the treatment effects within each group's post-period with respect to another group's treatment timing.
+
+
+
+::: {.callout-important}
+The $VWATT$ term is a positively weighted average of $ATTs$ for the treatment groups and post-periods across the 2x2 DiD estimators that make up $\hat{\beta}^{DiD}$.
+
+$VWCT$ generalises the common trends to a setting with timing variation. It is the weighted average of the difference in counterfactual trends between pairs of groups and different time periods.
+
+Since already treated groups act as controls, we need to subtract average changes in their untreated outcomes and their treatment effects which is captured by $\Delta ATT$. If we expect the effect of treatment to not vary over time, then $\Delta ATT = 0$.
+
+:::
+
+If the common trends assumption holds, as it must for a DiD research design to be valid, then $VCWT = 0$.
+
+$$
+\beta^{DiD} = VWATT + \underbrace{VWCT}_{0} - \Delta ATT 
+$$
+
+$$
+\rightarrow \beta^{DiD} = VWATT - \Delta ATT 
+$$
+
+Now that we know the decomposition of the DiD estimator in terms of $ATTs$, how do we interpret it?
+
+First let's consider the case where treatment effect is the same across time but vary across units in a group, in other words $\Delta ATT = 0$. So, we are only left with $VWATT$. The $VWATT$ weights together the group specific $ATTs$ *not* by share of sample size but rather by a function of sample shares and treatment variance. In general the $VWATT$ does not equal the sample $ATT$ neither does it equal the effect in the average treated period. The $VWATT$ suffers from the bias-variance: the variance weights come from the fact that OLS combines 2x2 DiD estimators efficiently but potentially moves the point estimate away from the $ATT$. The extent to which $VWATT$ differs from $ATT$ depends on the relationship between treatment effect heterogeneity and treatment timing in a given sample.
+
+That said, this does not mean the $VWATT$ is uninformative. In cases where one group is very large or there is little variation in treatment timing, the weights matter less and $VWTT$ can be a good estimator of $ATT$ in these situations.
+
+Now, let's allow treatment effect to vary across time but not across units in a group. In this case biases arise when using already treated groups as controls. Due to this variation in treatment across time, common trends between counterfactual outcomes leaves the set of estimates $\hat{\beta}_{kl}^l$ biased, while common trends between counterfactuals and treated outcomes leaves the set of estimates $\hat{\beta}_{kl}^k$ biased. In this case, it would be preferable to to extract $ATT$ through an event study instead.
+
+## Example
+
+Now let's use our fake data to illustrate this in code. We will use the `bacon` function from the `bacondecomp` package. The `bacon` function gives us the 2x2 DiD decomposition along with the weights associated. Run `?bacon` to see the documentation.
+
+```{r, summary_1, code-fold: false}
+summary_1 <- bacon(var1 ~ treatment, data = fake_data, id_var = "id", time_var = "time")
+print(summary_1)
+```
+
+From the table above we can see that $\hat{\beta}_{2,1} = \hat{\beta}^2_{2,3} = 37.15$, $\hat{\beta}_{3,1}= \hat{\beta}^3_{2,3} = 27.79$ in our fictitious case. Using these estimates and weights we can compute the $WVATT$.
+
+```{r, att_1, code-fold: false}
+ATT_1 <- weighted.mean(summary_1$estimate, summary_1$weight)
+print(ATT_1)
+```
+
+Now let's try a larger example with 5 treated groups, 1 control group and 50 time periods.
+
+```{r, fake_data_2, code-fold: false}
+set.seed(123)
+fake_data_2 <- dgp(N=100, T=50, a=6, g=10)
+fake_data_2$treatment <- 0
+for (grp in 2:6) {
+  fake_data_2$treatment <- ifelse((fake_data_2$group == grp & fake_data_2$time >= fake_data_2$jump_time), 1, fake_data_2$treatment)
+}
+plot_avgs(fake_data_2)
+```
+
+Try to do it yourself.
+
+```{r, summary_2, code-fold: false}
+summary_2 <- bacon(var1 ~ treatment, data = fake_data_2, id_var = "id", time_var = "time")
+print(summary_2)
+```
+
+Now calculate the weighted mean for *ATT*.
+
+```{r, att_2, code-fold: false}
+ATT_2 <- weighted.mean(summary_2$estimate, summary_2$weight)
+print(ATT_2)
+#Should be 42.12366
+```
+
+# Continuous Treatment
+
+Now lets consider a case where treatment is not just a dummy variable but rather a continuous variable. One example could be the effects of taking Advil (not a sponsor). What's the effect of taking 1mg, 2mg, 3mg, and so forth up to 400mg? If we try to use our old treatment definitions, we get stuck. For example, do we discretise treatment and calculate the *ATT* for each group? What if we have a continuum of treatment? The "trick" to showing causality in this set-up will be aggregating our parameters of interest in order to simplify our estimation such that it resembles an event study. 
+
+### Roadmap: 
+
+1) Formally set-up the situation
+2) Define our outcomes of interest
+3) Redefine our two continuous measures of timing into a single event-study time variable
+4) Redefine our continuous treatment (dosage) into a binary high- or low-dose treatment
+5) Work through an example
+
+## Setting Up
+
+Going forward we will consider a set-up with *N* units indexed by *i*, *T* time periods by *t*, treatment time of groups as $G_i$ such that $G_i \in \mathcal{G} = \{2, \ldots , T, \infty \}$ where $G_i = \infty$ means the unit is never treated (control) and $D_i$ as the "dose group" such that $D_i \in \mathcal{D} \subseteq [0, d_H]$, where $d_H < \infty$ denotes the treatment dose (intensity) received by *i*.
+
+### Average Causal Response
+
+In order to show causality, we will adopt the potential outcome framework as in Differences-in-Differences. So, we will write $Y_{i,t}(g,d)$ as the potential outcome of unit *i* at time *t* if the unit is treated in period *g*, with dose *d*. $Y_{i,t}(0) = Y_{i,t}(\infty , 0)$ represents the never treated units. Using this notation we an define a group-time-dose-specific average treatment effect on treated:
+
+$$
+ATT(g,t,d) = E[Y_t(g,d) - Y_t(0)|G=g, D=d]
+$$
+
+*ATT*(*g*,*t*,*d*) is the average treated effect in period *t* of becoming treated in period *g* and experiencing a dose of *d* against the never treated. In the continuous treatment set-up, we can't focus at point *d* (because of continuity). So a new class of causal parameters need to be introduced. Consider the Average Causal Response, defined as:
+
+$$
+ACR(g,t,d) = \frac{\partial E[Y_t(g,d)|G=g]}{\partial \bar{d}} \Bigg|_{\bar{d} = d}
+$$
+
+*ACR*(g,t,d) is the average causal response to a marginal change in the dose at *d* for all units in timing group *g*. The *ACR* answers causal questions about what level of treatment matters. Since this slope parameter is a function of *g*, *t*, and *d*, variations along any of these dimensions may cause economically meaningful changes.
+
+### Event Study Parameters
+
+Combining a research set up in which treatment is continuous across each *t* and *g* with the fact that changes across any one of *g*, *t*, and *d* could be economically meaningful suggests there could be *N* dose-response functions we need to estimate! This puts us in a sticky situation for untangling causality. The solution? Refefine our two variables for time into a new parameter, *e*, the "event-time" or *time-since-treatment* $e \equiv t - g$. 
+
+Under some fairly innocuous assumptions, event study aggregations that average over treatment dosages can be used to calculate a dose response function. More specifically, let $$ATT^o(g,t) = E[ATT(g,t,d)| G=g, D>0]$$ be the average *ATT* for that group in a given point in time, and the event study *ATT* $$ATT^{es} (e) = E[ATT^o(G, G+e)|G+e \in [2,T], D>0]$$ be the average treatment effect among those that have been exposed for exactly *e* periods, conditional on being observed having participated in the treatment for that number of periods $(G+e \in [2,T])$ and being ever treated $(D>0)$.
+
+
+This is the first redefinition of the problem we talked about: changing timing into being a single variable. That's a start, but it doesn't quite get us where we need to go. Next, it's worth emphasizing that when *D* is binary, $ATT^{es}(e)$ reduces to an event-study coefficient. We'll use this fact to split $ATT^{es}(e)$ into "lower-dose" and "higher-dose" groups by partially aggregating the doses in each group and time period. We can also aggregate over some event-times, which will facilitate reporting dose-response functions.
+
+## Necessary Assumptions
+
+::: {.callout-tip collapse="true"}
+## Assumption 1: We have panel data
+*The observed data consists of* $\{Y_{i,1}, \ldots, Y_{i,T}, D_i, G_i\}^n_{i=1}$ *which is independently and identically distributed.*
+
+This assumption states that we have panel data.
+
+:::
+
+
+::: {.callout-tip collapse="true"}
+## Assumption 2: Some units are never-treated and treatment is continuous
+i) $\mathcal{D}_{+} = [dL,d_U]$ *with* $0<d_L<d_U<\infty$ 
+ii) $P(D=0) > 0$ *and* $dF_{D|G}(d|g) > 0$ *and* $(g,d) \in (\mathcal{G} \backslash \{\infty\}) \times \mathcal{D}_{+}$, 
+iii) *For all* $g \in (\mathcal{G} \backslash \{\infty\})$ *and* $t=2, \ldots , T$, $E[\Delta Y_t | G=g, D=d]$ *is continuously differentiable in* $d$ *on* $\mathcal{D}_+$.
+
+This assumption states that we have a set of units that are never-treated and that treatment is continuous. If there are no never-treated units, we can restrict attention to periods $t = 1, \ldots , \bar{G}-1$, where $\bar{G} = \text{max}\{G_i : G_i < \infty \}$ is the time of the last group treated.
+
+:::
+
+::: {.callout-tip collapse="true"}
+## Assumption 3: There is no anticipation and treatment is staggered.
+i) *For all* $g \in \mathcal{G}$ *and* $t = 1, \ldots , T$ *with* $t<g$, $Y_{i,t}(g,d) = Y_{i,t}(0)$ *a.s.* 
+ii) $W_{i,1} = 0$ *a.s. and for* $t = 2, \ldots , T$, $W_{i,t-1} = d$ *implies* $W_{i,t} = d$ *a.s.*
+
+This assumption states that there is no anticipation and that treatment is staggered.
+
+
+:::
+
+::: {.callout-tip collapse="true"}
+## Assumption 4: Parallel trends assumption is valid
+*For all* $(g,g') \in \mathcal{G}$, $t-=2, \ldots ,T$ *and* $(d,d') \in \mathcal{D} \times \mathcal{D}$, $E[\Delta Y_t(0)|G = g, D = d] = E[\Delta Y_t(0)|G=g', D=d']$
+
+This assumption is the parallel trends assumptions, in the absence of treatment, the average evolution of the untreated potential outcomes is the same across dosage-time groups.
+
+:::
+
+Under these assumptions, it can be shown that:
+
+::: {.callout-caution}
+## Treatment intensity is unimportant in the context of our $ATT^{es}(e)$ parameter
+
+$ATT^{es}(e) = E[\theta^o(G,G+e)|G+e \in [2,T], D>0$ implies that we can ignore treatment intensity when focusing on the event study type parameters $ATT^{es}(e)$ and therefore use the estimators from staggered DiD setups with binary treatement to estimate these paramaters.
+
+:::
+
+
+::: {.callout-caution}
+## This is also true with partial aggregation
+$ATT^{es}_{d_1,d_2}(e) = E[\theta^o_{d_1,d_2}(G, G+e)|G+e \in [2,T], d_1 \leq D \leq d_2]$ shows that this is still the case when one wants to present event-studies that only partially aggregate across dosages
+
+:::
+
+
+
+::: {.callout-caution}
+## We can rely on dose-response-curve estimators for two period setups
+
+$ATT^{es}_{e_1,e_2}(d) = E[\tilde{Y}^{e_1, e_2}(G)|G+e_2 \in [2,T], D=d]$ tells us that one can rely on dose-response-curve estimators for two period setups
+:::
+
+::: {.callout-important}
+## For the full proof, see theorem 1 from Callaway, Goodman-Bacon, and Sant’Anna (2024)
+:::
+
+## Example
+
+To see this in action, we'll use `dgp_2` to generate some fresh data for us.
+
+```{r, fake_data_3, code-fold: false}
+set.seed(221)
+fake_data_3 <- dgp_2(1000, 6, 0)
+plot_avgs(fake_data_3)
+```
+
+Woah! Look at that spike. 
+
+Okay, so clearly our treatment is doing *something* (remember, we're treating people in the treated group a dose across a continuum), but we don't necessarily know how much it is doing. It could be that 1mg  and 1000mg Advil have the same effect, it could be that there's no effect for those taking less than 100mg but a huge effect on those taking more than 100mg, or that the effect increases continously.
+
+How do we tease that out? We'll go back to our friend the partial dose aggregation effect $ATT^{es}_{d_1,d_2}(e)$.
+
+In the block of code below, take a look at `jump_magnitude` within `fake_data_3` to see the treatment effect on each unit. Can you see how we're defining a high and low dosage?
+
+
+
+```{r, event_study, code-fold: false}
+sub_data <- subset(fake_data_3, group == 2)
+fake_data_3$d1 <- ifelse(fake_data_3$jump_magnitude >= min(sub_data$jump_magnitude) & fake_data_3$jump_magnitude <= median(sub_data$jump_magnitude) & fake_data_3$group == 2, 1, 0)
+fake_data_3$d2 <- ifelse(fake_data_3$jump_magnitude > median(sub_data$jump_magnitude) & fake_data_3$group == 2, 1, 0)
+fake_data_3$treat <- ifelse(fake_data_3$group == 2, 1, 0)
+fake_data_3$event_time_enter <- ifelse(fake_data_3$group == 2, 4, NA)
+fake_data_3$event_time <- fake_data_3$time - fake_data_3$event_time_enter
+
+fake_data_3 <- fake_data_3 %>%
+            mutate(event_time_dummy1 = case_when(event_time == -3 ~ 1, TRUE ~ 0),
+                   event_time_dummy2 = case_when(event_time == -2 ~ 1, TRUE ~ 0),
+                   event_time_dummy3 = case_when(event_time == -1 ~ 1, TRUE ~ 0),
+                   event_time_dummy4 = case_when(event_time == 0 ~ 1, TRUE ~ 0),
+                   event_time_dummy5 = case_when(event_time == 1 ~ 1, TRUE ~ 0),
+                   event_time_dummy6 = case_when(event_time == 2 ~ 1, TRUE ~ 0))
+
+sub_data_d1 <- subset(fake_data_3, group == 1 | fake_data_3$d1 == 1)
+
+event_study_1 <- plm(var1 ~ event_time_dummy1 + event_time_dummy2 + event_time_dummy4 + event_time_dummy5 + event_time_dummy6 , data = sub_data_d1, index=c("id", "time"), model = "within")
+
+sub_data_d2 <- subset(fake_data_3, group == 1 | fake_data_3$d2 == 1)
+
+event_study_2 <- plm(var1 ~ event_time_dummy1 + event_time_dummy2 + event_time_dummy4 + event_time_dummy5 + event_time_dummy6 , data = sub_data_d2, index=c("id", "time"), model = "within")
+
+coef_data1 <- tidy(event_study_1)
+coef_data2 <- tidy(event_study_2)
+
+combined_coef_data <- rbind(coef_data1, coef_data2)
+combined_coef_data$model <- c(rep("Low Dose", nrow(coef_data1)), rep("High Dose", nrow(coef_data2)))
+
+event_time_labels <- c("event_time_dummy1" = "t = 1",
+                       "event_time_dummy2" = "t = 2",
+                       "event_time_dummy3" = "t = 3",
+                       "event_time_dummy4" = "t = 4",
+                       "event_time_dummy5" = "t = 5",
+                       "event_time_dummy6" = "t = 6")
+
+
+  combined_plot <- ggplot(combined_coef_data, aes(x = term, y = estimate, color = model)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = estimate - std.error, ymax = estimate + std.error), width = 0.2) +
+  labs(x = "Coefficient", y = "Estimate", title = "Combined Coefficient Plot") +
+  scale_x_discrete(labels = event_time_labels) +
+  theme_minimal()
+
+```
+
+
+::: {.callout-tip collapse=TRUE}
+High dose ($d_2$) has been defined as a dosage above the median, and a low dose ($d_1$) as that which is below the median. We could have defined it as broadly or as narrowly as we like, this was just a convienent middle ground. 
+:::
+
+
+```{r, results, code-fold: false}
+summary(event_study_1)
+summary(event_study_2)
+print(combined_plot)
+```
+
+The plot above shows the the event study for both dosage types, and we can extract the $ATT^{es}_{d_1,d_2}(e)$ from the `summary()` table. 
+
+For the low dose group ($d_1$), the immediate effect is ~64.47 in $t=4$, and rises slightly in periods $t=5$ and $t=6$ to settle around ~69. For the high dose group ($d_2$) the immediate effect is ~124.77 in $t=4$ and it also rises slightly over time, setting around ~130 in $t=5$ and $t=6$. 
+
+In the context of the effect of taking Advil it might be a little hard to intuitively interpret coefficents like this (what does it mean to have a 124 unit change in headaches?), but the specifics aren't important (maybe we're measuring how much Advil is processed by your liver, whatever, it's fake data!). What *is* important is the technique for aggregating continuous treatment effects in order to make them interpretable. 
+
+Note, in this case we chose to aggregate over different dose types, however if we had differing event times, we could aggregate over them too. The choice of what to aggregate over will depend on the research question.
+
+## References
+
+1.  Goodman-Bacon, A. (2021). Difference-in-differences with variation in treatment timing. *Journal of econometrics*, *225*(2), 254-277.
+2.  Callaway, B., Goodman-Bacon, A., & Sant'Anna, P. H. (2024). *Event-Studies with a Continuous Treatment* (No. w32118). National Bureau of Economic Research.

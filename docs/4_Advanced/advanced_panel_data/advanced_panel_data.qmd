@@ -1,0 +1,556 @@
+---
+title: '3.11 - Advanced - Panel Data'
+author: COMET Team <br> _Jane Platt_
+date: July 26, 2024
+description: This module goes over the theory of panel data analysis as well as how to apply the theory to real-world data. We look into panel regressions, fixed effects, a few other regression topics with panel data. 
+categories: [advanced, R, panel data, regression, fixed effects, random effects, pooling]
+format: 
+    html: default
+    ipynb:
+        jupyter:
+            kernelspec:
+                display_name: R
+                language: r
+                name: ir
+---
+
+This notebook will cover:
+
+1.  How to identify panel data.
+2.  Why panel data is useful.
+3.  Fixed effects.
+4.  Panel regressions.
+5.  Common issues with panel data.
+
+This notebook assumes you are familiar with and draws on concepts covered in:
+
+1.  Introduction to Jupyter.
+2.  Introduction to R.
+3.  Introduction to Data.
+4.  Expectations and Summary Statistics.
+5.  Regression Analysis.
+
+This module will go over how to run regressions with panel data using a real-world dataset. The data comes from a previous COMET module which used information on electricity usage, GDP per sector, pollution, and population, all for the purpose of a final project. We will be using the merged dataset from this module. If you would like to learn more about how the dataset was created, you can find more information [here](https://comet.arts.ubc.ca/docs/Projects/projects_example_project_econ326/Projects_Example_Project_ECON326.html).
+
+## What is Panel Data?
+
+So far, we have seen how to run regressions with two different types of data: cross-sectional and time series.
+
+-   **Cross-sectional data** contain information on multiple observations at a single moment in time.
+-   **Time series data** contain information for a single observation over multiple time periods.
+
+In this module, we will introduce regressions using the third data type we have seen: **panel data**. **Panel data** contain both multiple observations both and multiple time periods. Therefore, each observation has both a unit $i$ and time $t$ index. Panel data can be either balanced or unbalanced.
+
+-   Balanced panel data includes observations for *all* $N$ units over *all* $T$ included time periods. As a result, our data set in total will have $n = N*T$ observations.
+-   Unbalanced panel data does *not* include observations for all $N$ units over all $T$ included time periods. This could happen, for example, if some units drop out. Thus, unbalanced panel data necessarily has $n < N*T$ observations.
+
+### Preparing Panel Data
+
+Before using panel data to run regressions and conduct empirical analyses, the data needs to be prepared specifically for a panel analysis. To do this, we need to identify both the panel variable and the time variable. Then, we can specify that to R and run our regressions!
+
+Let's start first by loading the packages we'll need for this module. To work with panel data, we need to install the `plm` package. This allows us to tell R we are using panel data as well as run panel regressions.
+
+```{r}
+# Clear the workspace
+rm(list = ls())
+
+# Load packages
+library(tidyverse)
+library(stargazer)
+library(plm)
+library(fixest)
+
+# Load self-tests
+source('../Advanced/advanced_panel_data/advanced_panel_data_tests.r')
+```
+
+As mentioned above, we're going to use the dataset created in a previous COMET module. Luckily, this data was saved in the current folder as "CO2_data". Let's import it and take a quick look at what we're working with.
+
+```{r}
+# Import data
+CO2_data <- read.csv("../Advanced/advanced_panel_data/CO2_data.csv")
+
+# Get a quick summary
+glimpse(CO2_data)
+```
+
+As we can see, we have a handful of variables, like *GDP* which lists the provincial GDP in Canadian dollars and *electricity* which indicates the total electricity generated in megawatt hours. To find out more information on the variables we have access to, you can go look at the module where we introduced these datasets, [here](https://comet.arts.ubc.ca/docs/Projects/projects_example_project_econ326/Projects_Example_Project_ECON326.html).
+
+One important thing to notice is that we have a variable *province* which is observed for once each year of the *year* variable (from 2009 to 2020). These will be our **panel** and **time** variables. Looking at these variables, we have 13 unique values for *province* and 12 unique values for *year*. If we have a balanced panel, i.e. all of our provinces are recorded in each time period, we should have $N*T=156$ rows in our dataset. Let's check that below:
+
+```{r}
+nrow(CO2_data)
+```
+
+Looks good! Before we can tell R that we are using panel data, let's clean up our dataset a bit. First, we'll want our province variable to be a factor to facilitate analysis.
+
+```{r}
+CO2_data_clean  <- CO2_data  %>%
+  mutate(province = case_when(
+    province == "Newfoundland and Labrador" ~ "1",
+    province == "Prince Edward Island" ~ "2",
+    province == "Nova Scotia" ~ "3",
+    province == "New Brunswick" ~ "4",
+    province == "Quebec" ~ "5",
+    province == "Ontario" ~ "6",
+    province == "Manitoba" ~ "7",
+    province == "Saskatchewan" ~ "8",
+    province == "Alberta" ~ "9",
+    province == "British Columbia" ~ "10",
+    province == "Yukon" ~ "11",
+    province == "Northwest Territories" ~ "12",
+    province == "Nunavut" ~ "13",
+  )) %>%
+  mutate(province = as_factor(province))
+```
+
+We should also transform some of our variables to per capita rather than absolute values.
+
+```{r}
+CO2_data_clean$gdp_pc <- (CO2_data_clean$GDP/CO2_data_clean$population)*1000000
+    # GDP is in millions, so we need to multiply by 1,000,000
+```
+
+> **Think deeper**: Why would we want to make these transformations? Why shouldn't we just continue using the raw absolute values for these variables?
+
+Looks good! The last step will be to order our data by *province* and *year*.
+
+```{r}
+CO2_data_clean <- CO2_data_clean %>% arrange(province, year)
+```
+
+Let's now tell R we are using panel data. We'll do using the function `pdata.frame()` from the package `plm`, which takes the following syntax:
+
+``` r
+pdata.frame(data, index = c("panel_var", "time_var"))
+```
+
+> **Note**: When using the `pdata.frame()` function, R assumes that your data is sorted by panel variable first, then by time variable. Make sure you properly sort your data before converting it to panel data.
+
+Let's use the `pdata.frame()` function with our dataset:
+
+```{r}
+CO2_data_panel <- pdata.frame(CO2_data_clean, index = c("province", "year"))
+```
+
+To be safe, we'll check that we have properly converted our data. We can use the `pdim()` function. This tells us whether we have a balanced panel, how many unique values our panel variable has, and how many unique values our time variable has.
+
+```{r}
+pdim(CO2_data_panel)
+```
+
+As we can see, all of our information carried over! We're ready to start running regressions with panel data. Before that, let's go over some of the theory behind why panel data is so useful.
+
+## Panel Data Theory
+
+To understand why we use panel data, consider the following example which uses our `CO2_data_panel` dataset.
+
+As we know from the data, we observe 13 provinces, which we will index by $i=1,2,...,13$. Let's imagine now that we only have two time periods, $t=2009$ and $t=2020$, and we want to know the change in the CO2 emissions between these two time periods caused by changes in GDP per capita. We will estimate the following regression for each time period:
+
+$$
+{CO_{2}}_{it} = \beta_{0} + \beta_{1}GDPpc_{it} + \beta_{2}Z_{i} + e_{it}
+$$
+
+where ${CO_{2}}_{it}$ is the amount of CO2 emissions in kilotons in province $i$ at time $t$, $GDPpc_{it}$ indicates the GDP per capita in province $i$ at time $t$, $Z_{i}$ represents all **fixed** province characteristics that *do not change over time*, such as geographic characteristics, and $e_{it}$ represents the error term. For each period, we will have
+
+$$
+{CO_{2}}_{i,2009} = \beta_{0} + \beta_{1}GDPpc_{i,2009} + \beta_{2}Z_{i} + e_{i,2009} \tag{1}
+$$ 
+$$
+{CO_{2}}_{i,2020} = \beta_{0} + \beta_{1}GDPpc_{i,2020} + \beta_{2}Z_{i} + e_{i,2020} \tag{2}
+$$
+
+If we take the difference between these two equations to get the change in CO2 emission between 2009 and 2020, we get
+
+$$
+{CO_{2}}_{i,2020} - {CO_{2}}_{i,2009} = (\beta_{0} - \beta_{0}) + \beta_{1}(GDPpc_{i,2020} - GDPpc_{i,2009}) + \beta_{2}Z_{i} - \beta_{2}Z_{i} + e_{i,2020} - e_{i,2009}
+$$
+
+Notice that in doing this, the time-invariant province characteristics ($Z_{i}$) drop out of the regression! We have managed to calculate the change in CO2 emissions over time, robust to fixed provincial characteristics.
+
+### Fixed Effects
+
+Often, we will want to study more than just two time periods. Going back to our original regression, we have
+
+$$
+{CO_{2}}_{it} = \beta_{0} + \beta_{1}GDPpc_{it} + \beta_{2}Z_{i} + e_{it}.
+$$
+
+Let's define
+
+$$
+\alpha_{i} = \beta_{0} + \beta_{2}Z_{i},
+$$
+
+which gives us
+
+$$
+{CO_{2}}_{it} = \beta_{1}GDPpc_{it} + \alpha_{i} + e_{it}. \tag{3}
+$$
+
+Consider what happens when we take the average of CO2 emissions ${CO_{2}}$ over time:
+
+$$
+\frac{1}{T}{\sum_{t}}{CO_{2}}_{it} = \beta_{1}\frac{1}{T}\sum_{t}GDPpc_{it} + \frac{1}{T}\sum_{t}\alpha_{i} + \frac{1}{T}\sum_{t}e_{it}
+$$ 
+
+We can alternatively write the sums as follows: 
+
+$$
+\overline{CO_{2}}_{i} = \beta_{1}\overline{GDP}_{i} + \overline{\alpha}_{i} + \overline{e}_{i} \tag{4}
+$$
+
+Notice, however, that $\alpha_{i}$ is not indexed over time: it does not change over time for a fixed province $i$. Hence, $\overline{\alpha}_{i} = \alpha_{i}$. We can therefore subtract the two province level means from the original equation to get:
+
+$$
+{CO_{2}}_{it} - \overline{CO_{2}}_{i} = \beta_{1}(GDPpc_{it}-\overline{GDP}_{i}) + (e_{it} - \overline{e}_{i})  + \underbrace{ \alpha_{i} - \overline{\alpha}_{i}  }_\text{equals zero!} 
+$$
+
+$$
+\widetilde{CO_{2}}_{i} = \beta_{1}\widetilde{GDPpc_{it}} + \widetilde{e_{it}} \tag{5}
+$$
+
+Therefore, we are able to get rid of the unobserved heterogeneity in provincial emissions trends, and focus solely on the effect of GDP per capita, by "de-meaning" our regression! This is extremely useful if we think that there are some sort of unobserved shocks that are creating endogeneity. For example, if one province has more renewable resources, it may systematically use less CO2 and have fewer emissions. This would create a source of endogeneity, and bias our coefficients. By including province fixed effects, we successfully remove these time-invariant characteristics from the regression.
+
+## Regressions with Panel Data
+
+Running regressions with panel data is quite simple. We just replace the `lm` function with `plm`, and we can specify additional options (discussed later).
+
+Let's run a very basic regression using the `plm` function. We'll regress CO2 emissions on GDP per capita.
+
+```{r}
+simple <- plm(CO2 ~ gdp_pc, data=CO2_data_panel)
+stargazer(simple, type="text")
+```
+
+The interpretation of coefficients in panel regressions is similar to the interpretation of basic OLS regressions. The results from the regression above tell us that an increase of one million dollars in GDP per capita leads to an increase of 0.493 kilotons of CO2 emissions.
+
+This model is almost certainly incorrect, though, because we only included the bare minimum in terms of coefficients. We didn't include any covariates, and we also didn't control for time-invariant characteristics that might affect CO2 emissions and GDP per capita, such as geography (as we discussed above). Recall that one solution we discussed was the use of fixed effects, which panel data is particularly useful for. Below, we'll dive into how to run regressions with fixed effects in R.
+
+### Regressions with Fixed Effects
+
+In this section, we will work through the theory discussed previously using our the real-world data we imported earlier to see how the theory holds up in real life.
+
+Let's start by running equations $1$ and $2$ to try to understand the general relationship between these two variables.
+
+> **Think Deeper**: Why might we suspect that relationships exist between these variables? Is this consistent with economic theory? How would these relationships relate to your own experience?
+
+```{r}
+# Generate 2009 and 2020 datasets
+data_09 <- subset(CO2_data_panel, year == "2009")
+data_20 <- subset(CO2_data_panel, year == "2020")
+
+# Estimate simple regression models using 2009 and 2020 data
+model1 <- lm(CO2 ~ gdp_pc, data = data_09)
+model2 <- lm(CO2 ~ gdp_pc, data = data_20)
+```
+
+```{r}
+# Generate differences between 2009 and 2020
+diff_co2 <- data_20$CO2 - data_09$CO2
+diff_gdp <- data_20$gdp_pc - data_09$gdp_pc
+
+# Estimate simple regression using differenced data
+model3 <- lm(diff_co2 ~ diff_gdp)
+```
+
+Let's take a look at the results from the three previous regressions.
+
+```{r}
+stargazer(model1, model2, model3,
+            type = "text")
+```
+
+What this tells us is that when provinces increase their GDP per capita by 1 million dollars, CO2 emissions increase by 0.1933 kilotons in 2009 and by 0.205 kilotons in 2020. The effect of GDP per capita on CO2 emissions has decreased over time, as is evidenced by the negative coefficient on *diff_gdp*.
+
+Notice that when doing this, we find small, statistically insignificant results. This may be due to omitted variables. However, it is also possible that this is because we only included two years in our regression. There may be things that are correlated with both CO2 emissions and GDP per capita which also change over time.
+
+As we saw in the panel data theory section, we are able to include multiple time periods using fixed effects. We did this in equations $3, 4,$ and $5$. Let's start by simply running equation $3$, where we have province fixed effects and no constant.
+
+```{r}
+# We include province fixed effects by adding the province variable to the regression, and we remove the constant by including "- 1"
+model4 <- lm(CO2 ~ gdp_pc + province - 1, data = CO2_data_panel)
+stargazer(model4, type="text")
+```
+
+When we include *province* in the regression, R automatically creates a series of dummy variables for each province and includes all but one of them in the regression (to avoid the dummy variable trap).
+
+Now, we have a coefficient of 0.379 that is statistically significant. This tells us that when provinces increase their GDP per capita by 1 million dollars, CO2 emissions increase by 0.379 kilotons. This is much larger than what we found before!
+
+> **Think deeper**: Does this coefficient make sense? Is it what you would expect the relationship between GDP and emissions to be?
+
+Next, let's attempt to do this by "de-meaning", which is what we did in equations $4$ and $5$. To do this, we'll need to calculate the averages for *CO2* and *gdp_pc* by province over all of the years we have in our dataset. Then, we can run regressions using the de-meaned values of *CO2* and *gdp_pc*.
+
+```{r}
+# Generate the average variables
+CO2_data_panel  <- CO2_data_panel  %>%
+  group_by(province) %>%
+    mutate(
+        avg_co2 = mean(CO2, na.rm = TRUE),
+        avg_gdp_pc = mean(gdp_pc, na.rm = TRUE)
+        )
+
+# Generate the difference variables 
+CO2_data_panel  <- CO2_data_panel  %>%
+  group_by(province) %>%
+    mutate(
+        co2_demean = CO2 - avg_co2,
+        gdp_demean = gdp_pc - avg_gdp_pc
+        )
+```
+
+```{r}
+# Run the de-meaned regressions
+demeaned <- lm(co2_demean ~ gdp_demean, data = CO2_data_panel)
+stargazer(demeaned, type="text")
+```
+
+As you can see, we have found the same coefficient! In running the de-meaned regression, we eliminate time-invariant provincial characteristics while also accounting for multiple time periods, bringing us closer to a more accurate coefficient.
+
+Finally, we can also analyze panel data with fixed effects. There are two ways to do this. We can do what we did for model 4, where we include *province* dummies, but this gives us a very large table with much more information than we need. An alternative method is to use the `plm` function and add the option `model="within"`. This tells R that we are using panel data and we want to include fixed effects. Since we already defined our data as being panel data above, R knows to include *province* fixed effects (the panel variable we specified above).
+
+```{r}
+panel_fe <- plm(CO2 ~ gdp_pc, 
+              data = CO2_data_panel,
+              model = "within")
+stargazer(panel_fe, type="text")
+```
+
+As you can see, we get the same result for the coefficient on *gdp_pc* as when we ran our regression using `lm` and adding *province* dummies. Increasing GDP per capita by one million dollars increases CO2 emissions by 0.493 kilotons.
+
+### Panel Data Regressions with Random Effects/Pooling
+
+There are other models that use panel data that R supports with the `plm` function. For this module, we will go over two examples.
+
+The first is the pooled OLS model. This simply applies OLS methodology to panel data. This is the same as running a regular simple regression using `lm`. Try it out yourself below (and compare to our *simple* model from above)!
+
+```{r}
+pooled <- plm(CO2 ~ gdp_pc, 
+              data = CO2_data_panel,
+              model = "pooling")
+
+stargazer(pooled, type="text")
+```
+
+The second is the random effects model. Random effects models assume that the differences between panel variables (in our case, provinces) are random. Let's see what that gives us below:
+
+```{r}
+random <- plm(CO2 ~ gdp_pc, 
+              data = CO2_data_panel,
+              model = "random")
+stargazer(random, type="text")
+```
+
+In this instance, there are little differences between the results of the random model and the pooled model. This is not always the case. One tool that can be used to evaluate which model is preferred is the `phtest`. You can find more information about that [here](https://www.rdocumentation.org/packages/plm/versions/2.6-4/topics/phtest).
+
+There are many other options you can specify in the `model` section, such as `between` for between-effects model, `fd` for the first-differences model, and `ht` for the Hausman-Taylor model. All of these models serve different purposes and will lead to slightly different results, so be sure to speak with your instructor or TA before deciding which model you would like to use.
+
+### Regressions with Multiple Fixed Effects
+
+In the previous regression, we only included province fixed effects. This means that we are controlling for time-invariant province characteristics. Is this the only source of endogeneity? Probably not! There may be factors that have **province-invariant** effects that change over time! For example, if there was an economic shock in a specific year, it will affect all provinces. We can include fixed effects for these as well! This is equivalent to including *year* fixed effects, or a series of *yea* dummies. We could do what we did before using `lm` and adding *year* dummies, but we can also do so very simply with the `plm` function. All we need to do is add the argument `index=c("panel_var","time_var")`, where `panel_var` is our *province* variable, and `time_var` is our *year* variable. Let's see the results below!
+
+```{r}
+panel_twfe <- plm(CO2 ~ gdp_pc, 
+              data = CO2_data_panel,
+              index=c("province","year"),
+              model = "within"
+              )
+stargazer(panel_twfe, type="text")
+```
+
+We find the same results as we did when we ran our de-meaned regression! This is because the `plm` function calculates OLS de-meaned regressions. Again, the coefficient on *gdp_pc* is positive, indicating that an increase in GDP per capita by one million dollars leads to an increase in CO2 emissions of 0.379 kilotons.
+
+Are these time fixed effects useful? It is worth checking! We can easily do this in R using the `pFtest()` and `plmtest()` functions. Before doing this, we need to save our regressions, which we did above.
+
+For the `pFtest()` function, the only inputs we need are the names of the province and the province-year fixed effects models. We include the model with multiple fixed effects first.
+
+```{r}
+pFtest(panel_twfe, panel_fe)
+```
+
+The null hypothesis of this test is that there are no significant time effects. The p-value we found is less than 0.05, so we can reject the null hypothesis that there are no significant time effects. This suggests that we should include the time fixed effects.
+
+For the `plm(test)` function, we only need to include the model without time fixed effects. We add `c("time")` to indicate that we are testing whether time fixed effects are needed, and `type=("bp")` specifies that we want to do a Breusch-Pagan test.
+
+```{r}
+plmtest(panel_fe, c("time"), type=("bp"))
+```
+
+The null hypothesis of this test is again that there are no significant time effects. Given our p-value is less than 0.05, we reject the null hypothesis and should include the time fixed effects.
+
+#### Regressions with **Many** Fixed Effects
+
+If we wanted to include more than those two fixed effects, we can use the `feols()` function from the `fixest` package. This function allows us to include many different fixed effects in a regression quite easily. The syntax is very similar to that of the `plm` function. Let's run the same regression we did above, with province and time fixed effects as well as coordinate fixed effects (*COORDINATE.x*), using the `feols()` function.
+
+```{r}
+multiple_fe <- feols(CO2 ~ gdp_pc | province + year +COORDINATE.x, data = CO2_data_panel)
+summary(multiple_fe) # stargazer does not support feols
+```
+
+As we can see, our results change slightly. Now, an increase of GDP per capita by one million dollars leads to a smaller insignificant increase in CO2 emissions by 0.310 kilotons.
+
+> **Think deeper**: What other fixed effects might be useful to include in a regression like this?
+
+Take a look at the tables below to compare the regressions we ran above. 
+
+```{r}
+stargazer(simple, model1, model2, model3,  title = "Intro", type = "text")
+```
+
+```{r}
+stargazer(model4, demeaned, panel_fe, title = "Panel Regressions", type="text")
+```
+
+```{r}
+stargazer(simple, panel_fe, pooled, random, panel_twfe, title="OLS, Fixed Effects, Random Effects Models", type="text")
+```
+
+> *Think deeper*: Which model do you think is the most appropriate for our question of interest, if any?
+
+## Common Issues
+
+There are many issues that affect all of our regressions. You can find a detailed discussion of these [here](https://comet.arts.ubc.ca/docs/Intermediate/intermediate_issues_in_regression/intermediate_issues_in_regression.html). It is important to review these, as they apply to panel regressions as well.
+
+Specifically, we need to make sure we adjust our standard errors to account for heteroskedasticity. Recall that you can do this using the command `coeftest()`.
+
+## Wrap Up
+
+There are a few key things to remember from this module:
+
+-   Take the time to prepare your data properly. Make sure you know what your panel variable is and what your time variable is, and indicate this to R using the `pdata.frame` function.
+-   Discuss with others before selecting your model. It is important to have an idea of why you are using fixed effects, random effects, or any other type of model. Make sure you know why you are using the model you selected before running regressions.
+-   Make your standard errors robust to heteroskedasticity and serial correlation!
+
+## Practice 
+
+#### Exercise 1
+
+In this module, we only looked at the relationship between CO2 emissions and GDP per capita. What other variables might impact CO2 emissions? What do you think these relationships would look like?
+
+Try running some regressions yourself to test this out. Regress CO2 emissions on population and then on electricity usage. Include both provincial and time fixed effects. What do you find? How would you interpret these results? Does this make sense?
+
+```{r}
+#CO2 and population
+question1 <- ???(Y ~ X,
+                data=CO2_data_panel,
+                index=c("???", "???"),
+                model = "???"
+               )
+
+answer_1 <- round(coef(question1)[[1]], 5)
+
+test_1()
+```
+
+```{r}
+#CO2 and electricity usage
+question2 <- ???(Y ~ X,
+                data=CO2_data_panel,
+                index=c("???", "???"),
+                model = "???"
+               )
+
+answer_2 <- coef(question2)[[1]]    
+
+test_2()
+```
+
+<span style="color: red">Answer in red here!</span>
+
+#### Exercise 2
+
+The following questions are regarding types of datasets. Type your answers in lowercase with spaces between the words (e.g. you'd write *cross sectional* for cross-sectional data).
+
+What type of data is the Canadian Census? The Census collects data from all Canadians, presenting a random sample each year.
+
+```{r}
+#Write your answer in the place of X
+answer_3 <- "X"
+
+test_3()
+```
+
+What type of data is the public Labour Force Survey (LFS) data? The LFS is a dataset that has information on workers over many years. Each year, a random sample is selected to produce the LFS public dataset.
+
+```{r}
+#Write your answer in the place of X
+answer_4 <- "X"
+
+test_4()
+```
+
+What type of data is the Nurse's Health Study? It is an observational study which started in 1976 and had a second wave in 1989. The survey follows over 100,000 nurses and collected data on clinical outcomes like blood pressure. They collected data by speaking to nurses that were in hospitals at the time of the survey.
+
+```{r}
+#Write your answer in the place of X
+answer_5 <- "X"
+
+test_5()
+```
+
+#### Exercise 3
+
+What is "de-meaning"?
+
+(A) Regressing the mean of Y on the mean of X.
+(B) Subtracting the mean of Y from Y, the mean of X from X, etc. and running that regression.
+(C) Subtracting the mean of Y over *t* from Y, the mean of X over *t* from X, etc. and running that regression.
+(D) Subtracting the mean of Y over *i* from Y, the mean of X over *i* from X, etc. and running that regression.
+
+```{r}
+#Write your answer in the place of X. Multiple answers may be accepted. If you think multiple answers are correct, write them as such: AB if A and B are correct, ABC if A, B, and C are correct. 
+answer_6 <- "X"
+
+test_6()
+```
+
+#### Exercise 4
+
+Which model is more appropriate for the dataset we are currently using (`CO2_data_panel`)?
+
+(A) Fixed effects
+(B) Random effects
+
+```{r}
+#Write your answer in the place of X. 
+answer_7 <- "X"
+
+test_7()
+```
+
+## References
+
+-   Cohen, A., and Einav, L. (2003). The Effects of Mandatory Seat Belt Laws on Driving Behavior and Traffic Fatalities. The Review of Economics and Statistics, 85, 828–843
+-   Stock, J.H. and Watson, M.W. (2007). Introduction to Econometrics, 2nd ed. Boston: Addison Wesley
+-   Marina Adshade and the COMET Team (https://comet.arts.ubc.ca/docs/Research/econ490-r/14_Panel_Data.html)
+
+
+## ANSWERS
+
+#### 1
+```{r}
+question1 <- plm(CO2 ~ population,
+                data=CO2_data_panel,
+                index=c("province", "year"),
+                model = "within"
+               )
+question2 <- plm(CO2 ~ electricity,
+                data=CO2_data_panel,
+                index=c("province", "year"),
+                model = "within"
+               ) 
+```
+#### 2
+```{r}
+answer_3 <- "cross sectional"
+answer_4 <- "cross sectional"
+answer_5 <- "unbalanced panel"
+```
+#### 3
+```{r}
+answer_6 <- "CD"
+```
+#### 4
+```{r}
+answer_6 <- "A"
+```

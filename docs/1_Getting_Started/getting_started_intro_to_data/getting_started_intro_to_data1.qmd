@@ -1,0 +1,424 @@
+---
+title: "0.3.1 - Introduction to Data in R - Part 1"
+author: COMET Team <br> _Manas Mridul, Valeria Zolla, Colby Chamber, Colin Grimes, Jonathan Graves_
+date: 12 January 2023
+description: This notebook introduces you to data in R, primarily using the `tidyverse` set of packages.  It includes basic data curation and cleaning, including table-based inspection and missing data.
+categories: [introduction, getting started, R, data, tidyverse, cleaning, factor variables, dummy variables, importing data]
+format: 
+  html: default
+  ipynb:
+    jupyter:
+      kernelspec:
+        display_name: R
+        language: r
+        name: ir
+---
+## Outline
+
+### Prerequisites
+
+-   Introduction to Jupyter
+-   Introduction to R
+
+### Outcomes
+
+After completing this notebook, you will be able to:
+
+-   Identify and understand the packages and commands needed to load, manipulate, and combine data frames in R
+-   Load data using R in a variety of forms
+-   Create and reformat data, including transforming data into factor variables
+
+### References
+
+-   [Introduction to Probability and Statistics Using R](https://mran.microsoft.com/snapshot/2018-09-28/web/packages/IPSUR/vignettes/IPSUR.pdf)
+-   [DSCI 100 Textbook](https://datasciencebook.ca/index.html)
+
+## Introduction
+
+```{r, message = FALSE}
+# Run this cell
+source("getting_started_intro_to_data_tests.r")
+```
+
+
+Drawing insights from data requires information to be presented in a way that is both interpretable to R and our audiences. However, before you can wrangle data sets, you need to ensure that they are clean. A *clean* data set means:
+
+1.  Observations where data for key variables are missing are removed or stored in a different data set (e.g., `df_raw`). *Missing data* can create bias in your analysis.
+2.  Data set is *tidy*, i.e., each row captures only one observation and each column captures only one variable/characteristic of the observation. Data scraped and collected manually or using automation often comes in *untidy* shapes (e.g., two variables might be placed in the same column separated with a hyphen `-`).
+
+In this notebook, we teach you how to load data sets properly in R and then clean them using some common methods from the `haven` and `tidyverse` packages.
+
+## Part 1: Introduction to data in R
+
+R needs to be provided with the appropriate packages to have access to the appropriate functions needed to interpret our raw data.
+
+`install.packages('package_name')` is used to install packages for the first time while `library(package_name)` is used to import the package into our notebook's session run-time.
+
+Let's get started by loading them now.
+
+```{r}
+# loading in our packages
+library(tidyverse)
+library(haven)
+```
+
+Researchers usually work with data stored in STATA, Excel, or comma-separated variables (CSV) files. The extension of a file tells us the file type we're dealing with. For instance:
+
+-   `.dta` for a STATA data file
+-   `.csv` for a comma-separated variables file
+-   `.txt` for text files (stores data separated by white-space)
+
+In R, we import data with functions that specify the file names and types. These are the R functions used to import data from the most commons file types:
+
+```{r}
+#| eval: false
+# import csv files
+read_csv("file_name")
+
+# import stata data files
+read_dta("file_name")
+
+# import excel files
+read_excel("file_name")
+
+# import text files
+read_table("file_name", header = FALSE)
+```
+
+To use the `read_dta` function you have to have the `haven` package installed and to use `read_excel` you have to have the package `readxl` installed.
+
+The `header` argument in the last function indicates whether the first row of the data represents the column names or not.
+
+### Cleaning data
+
+Cleaning our dataset might mean:
+
+1.  Loading the data into R by importing a local file or from the internet and telling R how to interpret it.
+2.  Merging data frames from different sources, horizontally or vertically, in order to be able to answer certain questions about the populations.
+3.  Renaming variables, creating new variables and removing observations where data for the new variables is missing.
+4.  Removing outliers or creating subsets of the data based on values for different variables using `filter`, `select`, and other reshaping methods in R.
+
+We now begin to clean the census data. Let's redefine and factor some variables, create new ones, and drop missing observations.
+
+### Test your knowledge
+
+In this notebook, we will be working with data from the Canadian census which is stored in the folder `datasets` as the file `01_census2016.dta`. 
+
+Which function should we use to load this file? Complete the name of the function below.
+
+```{r}
+#| eval: false
+#| classes: "question"
+
+answer_1 <- "read_..."
+
+test_1()
+```
+
+```{r}
+#| eval: false
+#| classes: "answer"
+
+answer_1 <- "read_dta" # 'read_dta()' also works
+
+test_1()
+```
+
+Did you get it? Okay, now replace the `???` in the code below with that function to load the data!
+
+```{r}
+#| eval: false
+#| classes: "question"
+
+census_data <- ???("../datasets_getting_started/01_census2016.dta") 
+
+answer_2 <- census_data # don't change this!
+test_2()
+```
+
+```{r}
+#| eval: false
+#| classes: "answer"
+
+census_data <- read_dta("../datasets_getting_started/01_census2016.dta") 
+
+answer_2 <- census_data
+test_2()
+```
+```{r}
+# inspecting the data
+glimpse(census_data)
+```
+
+## Part 2: Factor variables
+
+As explained in *Intro to R*, R usually stores qualitative variables as **character** variables. However, they can also be stored as **factor** variables, used to map a (usually predetermined) set of responses to categorical values. In other words, factors encode the data so that the levels of the variable are represented by numeric codes. This process is useful because it streamlines data interpretation and analysis.
+
+Look at line `pr` in the output from `glimpse` above:
+
+    pr      <dbl+lbl> 35, 35, 11, 24, 35, 35, 35, 10, 35, 35, 59, 59, 46, 24, 59
+
+The `pr` variable in the Census data stands for province. Do these look much like Canadian provinces to you? We can see the variable type is `<dbl+lbl>`: this is a *labeled double*. Let's transform this variable type into factors.
+
+There are three ways to change variables types into factor variables.
+
+1.  We can change a specific variable inside a dataframe to a factor by using the `as_factor` command
+
+> **Note**: The operator `%>%` is called the pipe operator. It is used to indicate the "next operation". For example, you could read the code below as: the final value will be assigned to object `census_data`; the value should be calculated by (1) taking the data from `census_data` and (2) mutating `pr` to `as_factor(pr)`. The pipe operator indicates that we're going from operation (1) to operation (2). 
+
+```{r}
+census_data <- census_data %>%  # overwrite the object census_data with `<-`
+    mutate(pr = as_factor(pr)) # use mutate function to update variable type (more on this later)
+
+glimpse(census_data)
+```
+
+Do you see the difference in the `pr` variable now? Notice that the type has changed to `<fct>`, which stands for **factor**.
+
+R knows how to decode province names out of the `<dbl+lbl>` type variable because the `<dbl+lbl>` specification captures both the numeric code as `dbl` and the label as `lbl`.
+
+2.  We can **supply a list of factors** using the `factor` command. This command takes three inputs:
+
+- The variable we're trying to convert
+- A list of the codes the qualitative variable will take on (e.g., `35`, `11`, `24`, ...)
+- A list of labels corresponding to each of the codes (e.g., `"Ontario"`, `"Prince Edward Island"`, `"Quebec"`, ...)
+
+Let's take the variable `pkids` as an example. `pkids` stores whether the respondent has children or not. Let's change the built-in labels to our own labels.
+
+```{r}
+# write a list of levels
+kids_levels = c(0,1,9)
+
+# write a list of our labels
+kids_labels = c('none', 'one_or_more', 'not_applicable')
+
+# apply the new level-label combinations to the data
+census_data <- census_data %>%  # overwrite the object census_data with `<-`
+    mutate(pkids = factor(pkids,   # notice the function is "factor", not "as_factor"
+                          levels = kids_levels, 
+                          labels = kids_labels)) # mutate (update pkids) to be a factor of pkids
+glimpse(census_data)
+```
+
+Notice that now `pkids` has our customized factor labels.
+
+3.  We can use `as_factor` on the **entire dataset** to convert all of the variables with appropriate types.
+
+> **Note**: `as_factor` will only match the levels (e.g., `35`, `11`, `24`, ...) to labels (e.g., `"Ontario"`, `"Prince Edward Island"`, `"Quebec"`) if the variable is of `<dbl+lbl>` type.
+
+```{r}
+census_data <- as_factor(census_data)
+glimpse(census_data)
+```
+
+Here is our final dataset, all cleaned up! Notice that some of the variables (e.g., `ppsort`) were *not* converted into factor variables.
+
+> **Think Deeper**: Can you tell why?
+
+### Creating new variables
+
+Another important clean-up task is to make new variables. The best way to create a new variables is using the `mutate` command.
+
+The `mutate` command is an efficient way of manipulating the columns of our data frame. We can use it to create new columns out of existing columns or with completely new inputs. The structure of the mutate command is as follows:
+
+    census_data <- census_data %>%
+            mutate(new_variable_name = function(...))
+
+It's easier to understand with an example. 
+
+When working with economic data, we usually deal with wages in logarithmic form. Let's use `mutate` to create a new variable on the dataset for the log of wages.
+
+```{r}
+census_data <- census_data %>% 
+        mutate(log_wages = log(wages)) # we pass `wages` to the function `log()` to create log_wages
+
+glimpse(census_data)
+```
+
+Do you see our new variable at the bottom? Nice!
+
+### Test your knowledge
+
+In the following code, what is (1) the name of the new variable created, (2) the inputs used to make the new variable, and (3) the function used to transform the inputs in the values of the new varible?
+
+(A) grade_adjusted, grade and 2, mutate
+(B) mutate, grade and 2, mutate
+(C) round, data, mutate
+(D) mutate, data, round 
+(E) grade_adjusted, grade and 2, round
+(F) round, data, round
+
+```{r}
+#| echo: false
+set.seed(123)
+data <- data.frame(student = c(1:15), grade = rnorm(15,70,10))
+```
+
+```{r}
+#| eval: false
+#| classes: "question"
+
+data <- data %>%
+        mutate(grade_adjusted = round(grade,2))
+
+# enter your answer as "A", "B", "C", "D", "E", or "F"
+answer_3 <-"..."
+
+test_3()
+```
+
+```{r}
+#| eval: false
+#| classes: "answer"
+
+data <- data %>%
+        mutate(grade_adjusted = round(grade,2))
+
+# enter your answer as "A", "B", "C", "D", "E", or "F"
+answer_3 <- "E"
+
+test_3()
+```
+
+## Part 3: Functions
+
+We won't cover a lot of complex functions in this notebook, but we will mention a very important one: the `case_when` function. This function acts like a combination of "if (...), then (...)" operators, creating different values for an input based on specified cases. You can read more about it by running the code block below.
+
+```{r}
+# use the helper function to read details of `case-when`
+# ?case_when
+```
+
+The `case_when()` function operates with the following parameters:
+
+-   The 'case', which is the condition that you're checking for.
+
+-   The 'value', which is what you assign when that condition is met.
+
+Suppose we are working with the `pkids` variable and find it has three levels (`'none'`, `'one or more'`, `'not applicable'`). We are interested in creating a dummy variable which equals one if the respondent has children and zero otherwise. Let's call this new variable `has_kids`.
+
+Here's how you can use `case_when()` to achieve this:
+
+```{r}
+census_data <- census_data %>%
+    mutate(has_kids = case_when( # use mutate to make a new variable called `has_kids`
+        pkids == "none" ~ 0, # case 1: when pkids is "none"; output is 0 (no kids)
+        pkids == "one_or_more" ~ 1, # case 2: when pkids is "one or more"; output is 1 (kids)
+        pkids == 'not_applicable' ~ 0)) # case 2: when pkids is "not applicable"; output is 0 (no kids) 
+       
+
+glimpse (census_data)
+```
+
+Notice that our new variable `has_kids` is not a factor variable. We must add on the appropriate line of codes to make it a factor.
+
+### Dummy Variables
+
+We might also want to use R to create dummy variables in our dataset. For example, suppose we want to create a variable that indicates whether the respondent is retired (dummy == 1) or not retired (dummy == 0). We can simply decode the data of the variable `agegrp`, which is currently a factor indicating the age of the respondent.
+
+Let's start by taking a look at `agegrp`. 
+
+`glimpse(census_data$agegrp)` tells us that `agegrp` is a factor variable with 22 levels. We can see the names of the levels with the function `levels()`.
+
+```{r}
+# inspect the data
+glimpse(census_data$agegrp)
+
+# understand levels
+levels(census_data$agegrp)
+```
+
+We can now bunch together all levels that represent **ages 65 and above** (the retirement age) and assign such observations a value of 1 (and 0 otherwise).
+
+```{r}
+census_data <- census_data %>% 
+    mutate(retired = case_when(
+        (agegrp == "65 to 69 years")| # the vertical bar can be read as "or"
+        (agegrp == "70 to 74 years")|
+        (agegrp == "75 to 79 years")|
+        (agegrp == "80 to 84 years")|
+        (agegrp == "85 years and over") ~ 1, # the ~ separates the 'case' from the 'value'
+                               TRUE ~ 0)) %>% # use `TRUE` for the 'otherwise' condition
+    mutate(retired = as_factor(retired)) # make the variable a factor
+
+glimpse(census_data)
+```
+
+> **To Remember:** To assign a default value on all cases that don't match your specified conditions, use TRUE as your last 'case'. This works because the condition TRUE will always be met if none of the previous conditions are.
+
+### Test your knowledge
+
+Overwrite the existing `has_kids` variable with an new `has_kids` variable but with type factor.
+
+> **Hint**: To overwrite a variable create a new variable with the same name as the name of the variable you want to ovewrite. 
+
+```{r}
+# use this cell to write your code
+```
+
+```{r}
+#| eval: false
+#| classes: "question"
+
+# run this cell to check your answer - don't change the code here!
+
+answer_4 <- class(census_data$has_kids)
+
+test_4()
+```
+
+```{r}
+#| eval: false
+#| classes: "answer"
+
+census_data <- census_data %>%
+                    mutate(has_kids = as_factor(has_kids))
+
+answer_4 <- class(census_data$has_kids)
+
+test_4()
+```
+
+Create a new dummy variable called `knows_english` for whether the respondent speaks english (dummy == 1) or not (dummy == 0). Use data from the variable `kol` and assign the updated data frame to the object `answer_4`.
+
+```{r}
+#Run this first:
+glimpse(census_data$kol)
+levels(census_data$kol)
+```
+
+
+```{r}
+#| eval: false
+#| classes: "question"
+# don't forget to factorize your new variable!
+
+answer_5 <- census_data %>% 
+    mutate(... = case_...(
+        (kol == ...)|
+        (... == ...) ~ ..., 
+            TRUE ~ ...)) %>% 
+    mutate(... = ...(...)) 
+
+test_5()
+```
+
+```{r}
+#| eval: false
+#| classes: "answer"
+
+answer_5 <- census_data %>% 
+    mutate(knows_english = case_when(
+        (kol == "english only")|
+        (kol == "both english and french") ~ 1, 
+                               TRUE ~ 0)) %>% 
+    mutate(knows_english = as_factor(knows_english))
+
+test_5()
+```
+
+### Conclusion
+
+In this notebook, we learned how to load and manipulate data using various R packages and commands. You also learned how to factor variables and create dummies to meet the needs of your statistical research.
+
+Don't hesitate to come back to this notebook and apply what you've learned here to new data sets. You may now proceed to Part 2 on Intro to Data.

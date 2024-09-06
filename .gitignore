@@ -1,5 +1,5 @@
+/.quarto/
 
-.ipynb_checkpoints/*
-*/.ipynb_checkpoints/*
-*/*/.ipynb_checkpoints/*
-docs/*/*/.ipynb_checkpoints/*
+/.luarc.json
+
+/_site

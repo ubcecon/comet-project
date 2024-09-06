@@ -1,0 +1,358 @@
+---
+title: "3.8 - Advanced - Vocalization"
+categories: [advanced, python, vocalization, text-to-speech, gTTS, mozilla TTS, Microsoft Azure text-to-speech]
+format: 
+    html: default
+    ipynb:
+        jupyter:
+            kernelspec:
+                display_name: "Python 3 (ipykernel)"
+                language: python3
+                name: python3
+---
+
+
+## Outline
+***
+
+Text-to-speech tools have improved dramatically in the last few years, and are now capable of producing fluent, human-like vocalization of text. In the context of research, there are cases where researchers have to explain the instruction in the same manner to each participant to avoid any potential impact on research outcomes. This notebook aims to show learners how to create vocalizations of text-based content using modern, open-source tools that can handle non-standard or technical English words (jargon). 
+
+## Prerequisites
+***
+
+1. Introduction to Jupyter Notebooks
+2. Some familiarity programming in Python
+
+## Learning Outcomes
+***
+
+In the notebook, you will
+
+1. Familiarize yourself with Text-to-Speech models in Python.
+2. Understand the models and structures behind them in the context of research and synthesize speech from texts using open-source tools. 
+
+## Sources
+***
+This notebook is based on the following sources, which we highly recommend you explore if you're interested in furthering your knowledge and application of Text-to-Speech Tools. These sources provide additional insights and tutorials that can enhance your understanding and skills in this area. 
+
+- gTTS (Library using Google Text-to-Speech)
+    - [gTTS PyPI Documentation](https://pypi.org/project/gTTS/)
+    - [gTTS Documentation](https://gtts.readthedocs.io/en/latest/)
+    - [GitHub for gTTS](https://github.com/pndurette/gTTS)
+
+- mozilla TTS (Open-source API)
+    - [GitHub for mozilla TTS](https://github.com/mozilla/TTS?referral=top-free-text-to-speech-tools-apis-and-open-source-models)
+    - [mozilla TTS Documentation and Tutorials](https://github.com/mozilla/TTS/wiki/TTS-Notebooks-and-Tutorials)
+    
+- Microsoft Azure Text-to-Speech (Cloud-based)
+    - [Microsoft Azure AI Speech Service Documentation](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/)
+    - [Microsoft Azure Text-to-Speech Overview](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/text-to-speech)
+    - [Microsoft Azure Text-to-Speech Quick Start](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/get-started-text-to-speech?tabs=linux%2Cterminal&pivots=programming-language-python)
+
+
+## 0. Preparation
+> (As a reference, I relied on the [YouTube video](https://www.youtube.com/watch?v=MYRgWwis1Jk) for troubleshooting. Please delete it if needed.)
+
+***
+
+Before we dive into the Text-to-Speech Tools, it's always a good practice to create a virtual environment whenever you start a new project. In this preparation section, we will go through the steps to create a virtual environment. 
+
+First, create a new folder called `tts`
+
+```
+mkdir tts
+cd tts/
+```
+
+Within the folder, create a virtual environment and activate it
+
+```
+!python3 -m venv .
+!source bin/activate
+```
+
+That's it!
+
+## 1. Python Library Tool: gTTS
+> This section is based on the [gTTS PyPI Documentation](https://pypi.org/project/gTTS/), [gTTS Documentation](https://gtts.readthedocs.io/en/latest/), and [GitHub for gTTS](https://github.com/pndurette/gTTS).
+
+### Part 1: Introducing gTTS
+***
+
+
+In this section, we’re introducing `gTTS`, a Python library and CLI tool that generate speech from texts using google Text-to-Speech. Their customizable speech-specific sentence tokenizer allows users to process long passages while maintaining proper intonation, abbreviations, decimals, and other nuances effectively. Their customizable text pre-processors can also implement adjustments such as correcting pronunciation errors. It offers ***5 languages with different local accents***, which we will play around with in Part 3! For more information, take a look at the [language list](https://gtts.readthedocs.io/en/latest/module.html).
+
+### Part 2: Installing gTTS
+***
+
+Before we begin, make sure you have the supported version of Python, which is **Python > 3.7**! 
+
+First thing first, install the `gTTS` from PyPI
+
+```
+!pip install gTTS
+```
+
+### Part 3: Let's Generate Speech from Text!
+***
+
+We can now generate speech from texts using gTTS! Import `gTTS` from the library we just installed.
+
+```
+from gtts import gTTS
+```
+
+
+Let's let them say "Hello world!" in default English, which is British English, and save the output as an mp3 file:
+
+```
+tts = gTTS('Hello World!', lang='en')
+tts.save('Hello_World.mp3')
+```
+
+Download the file on your computer, and play it!
+
+Then, let's try our favourite accent, Canadian! In this case, code:
+
+```
+tts = gTTS('Hello World', lang='en', tld='ca')
+tts.save('Hello_World.mp3')
+```
+
+Again, download the file and open it on your computer to listen. 
+
+## 2. Open-Source Free API: mozilla TTS
+> This section is based on [GitHub for mozilla TTS](https://github.com/mozilla/TTS?referral=top-free-text-to-speech-tools-apis-and-open-source-models) and [mozilla TTS Documentation and Tutorials](https://github.com/mozilla/TTS/wiki/TTS-Notebooks-and-Tutorials).
+
+> (As a reference, I also relied on the [YouTube video](https://www.youtube.com/watch?v=MYRgWwis1Jk) and [GitHub discussion](https://github.com/coqui-ai/TTS/discussions/3477) for troubleshooting. Please delete it if needed.)
+
+### Part 1: Introducing mozilla TTS
+***
+
+In this section, we’re introducing mozilla TTS, a free, open-source API, to synthesize speech. Before we begin, take a look at the [sample page](https://erogol.com/ddc-samples/) and explore what mozilla TTS can do. It allows us to generate natural-sounding voices from basic texts as well as complex utterances. mozilla TTS has been applied to ***20+ languages*** due to its fast, easy, and efficient model training!
+
+### Part 2: Installing mozilla TTS
+***
+
+We’re using their pre-trained models to synthesize speech from texts in Python. mozilla TTS supports **Python >=3.6, <3.9**, so make sure you installed the correct version! 
+
+Before we install the TTS tool, let's install or update some basic modules and tools
+
+```
+!pip3 install setuptools wheel pip -U
+```
+
+Finally, we install mozilla TTS from PyPI and import OS. It may take a while...But be patient!
+
+```
+!pip install TTS
+import os
+os.environ["COQUI_TOS_AGREED"] = "1"
+```
+
+Now we have installed the TTS tool! Let's take a look at the list of pre-trained models
+
+```
+!tts --list_models
+```
+
+As you can see, there are **70 pre-trained models and 17 vocoders** in mozilla TTS. We will see how they are different at the end of the next section. For more details about their pre-trained models, see [documentation](https://github.com/mozilla/TTS/wiki/Released-Models).
+
+### Part 3: Let's Generate Speech from Text!
+***
+
+You’re ready to synthesize speech from texts using their pre-trained models! Run a `model_name` and a `vocoder_name` from the list we took a look in the previous part. 
+
+You can copy and paste the names of the models and vocoders you want to use from the list as arguments for the command below:
+
+```
+!tts --model_name "<type>/<language>/<dataset>" \ 
+     --vocoder_name "<type>/<language>/<dataset>/<model_name>"
+```
+
+For learning purposes, let's proceed with the first one for both TTS model and vocoder for now. In this case, the code will be something like this:
+
+```
+!tts --model_name "tts_models/multilingual/multi-dataset/xtts_v2" \
+     --vocoder_name "vocoder_models/universal/libri-tts/wavegrad"
+```
+
+Then, install `espeak-ng` package, a text-to-speech software that converts texts into spoken words in a lot of languages. 
+
+```
+!sudo apt-get install espeak-ng
+```
+
+Lastly, type something (let's say your name) in the code below and let it speak! 
+
+```
+!tts --text "type your name here"
+```
+
+A wav. file will appear in your folder. Click and open it!
+
+### Part 4: Different Pre-Trained Models and Vocoders
+***
+
+In the previous section, we used `xtts_v2 model` (for more details, see [documentation](https://docs.coqui.ai/en/latest/models/xtts.html)). These models make some differences in the generated speech. In this part, we will take a look at the differences between models.
+
+We use the same code as the previous section,  but with a different model, `fast_pitch`.
+
+```
+!tts --model_name "tts_models/en/ljspeech/fast_pitch" \
+     --vocoder_name "vocoder_models/universal/libri-tts/wavegrad"
+```
+
+Then, type whatever you want to generate a speech from.
+
+```
+!tts --text "type whatever you like!"
+```
+
+Does it make any difference? Try other TTS models on your own!
+
+## 3. Cloud-Based AI: Microsoft Azure Text-to-Speech
+> This section is based on [Microsoft Azure AI Speech Service Documentation](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/), [Microsoft Azure Text-to-Speech Overview](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/text-to-speech), and [Microsoft Azure Text-to-Speech Quick Start](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/get-started-text-to-speech?tabs=linux%2Cterminal&pivots=programming-language-python).
+
+### Part 1: Introducing Microsoft Azure Text-to-Speech
+***
+
+In this section, we’re introducing our third Text-to-Speech option, Microsoft Azure Text-to-Speech, a cloud-based AI tool that generates speech from texts. Their prebuilt neural voice allows us to generate highly natural, human-like speech from texts. It is **free up to 0.5 million characters per month**. Check out the [Voice Gallery](https://speech.microsoft.com/portal/voicegallery) and find your favourite voice! For the pricing option details, see [Azure AI Speech Pricing](https://azure.microsoft.com/ja-jp/pricing/details/cognitive-services/speech-services/). For the list of supported languages, see the [table](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/language-support?tabs=tts).
+
+### Part 2: Installing Microsoft Azure Text-to-Speech
+> This section relies heavily on the [Microsoft Tutorial](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/get-started-text-to-speech?tabs=linux%2Cterminal&pivots=programming-language-python), which will be helpful for you to solve any troubles you may encounter during the process.
+***
+
+Before we begin, make sure to [create an Azure account](https://azure.microsoft.com/free/cognitive-services) for free, [create a Speech resource](https://portal.azure.com/#create/Microsoft.CognitiveServicesSpeechServices) in your portal, and [get the keys](https://learn.microsoft.com/en-us/azure/ai-services/multi-service-resource?pivots=azportal#get-the-keys-for-your-resource) for your resource. Microsoft Azure Text-to-Speech requires **Python >= 3.7**, so double check if you have the supported version before you start the installation process. 
+
+Install the Microsoft Azure Speech SDK
+
+```
+!pip install azure-cognitiveservices-speech
+```
+
+Then, replace the speech region and speech key with your actual values below:
+
+```
+SPEECH_REGION = "type your speech region"
+SPEECH_KEY = "type your speech key"
+```
+
+
+
+### Part 3: Let's Generate Speech from Text!
+***
+
+Now you're ready to generate speech from texts! Execute the following request, and a mp3 file should appear in your folder. As an example, the mp3 file speaks "Hello World!" but you can always replace it with whatever you want!
+
+```
+import requests
+
+url = f"https://{SPEECH_REGION}.tts.speech.microsoft.com/cognitiveservices/v1"
+headers = {
+    "Ocp-Apim-Subscription-Key": SPEECH_KEY,
+    "Content-Type": "application/ssml+xml",
+    "X-Microsoft-OutputFormat": "audio-16khz-128kbitrate-mono-mp3",
+    "User-Agent": "python-requests"
+}
+        
+    data = '''
+    <speak version='1.0' xml:lang='en-US'>
+        <voice xml:lang='en-US' name='en-US-AvaMultilingualNeural'>
+            Hello World!
+        </voice>
+    </speak>
+    '''
+
+    response = requests.post(url, headers=headers, data=data.encode('utf-8'))
+
+    if response.status_code == 200:
+        with open('output.mp3', 'wb') as f:
+            f.write(response.content)
+        print("Audio file saved as output.mp3")
+
+    else:
+        print("Error:", response.status_code, response.text)     
+```
+
+Although we used Ava's voice who speaks American English (`en-US-AvaMultilingualNeural`) in this example, you can always change the speech systhesis language by replacing `en-US-AvaMultilingualNeural` with another [supported languages and voices](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/language-support?tabs=tts#prebuilt-neural-voices) (check out [Voice Gallery](https://speech.microsoft.com/portal/voicegallery) to listen to demo voices). Reminder: make sure to use **Neural voice**, which is free up to 0.5 million character!
+
+Note that all neural voices are not just fluent in their own language but are multilingual and can speak English! If you select a voice that is not English for English texts, they will generate speech in English but with an accent from their own language.
+
+Let's try `es-ES-ElviraNeural`, Elvira who speaks Spanish, and type an input text "I'm so excited to use Text-to-Speech Tools in my own research!".
+
+```
+import requests
+
+url = f"https://{SPEECH_REGION}.tts.speech.microsoft.com/cognitiveservices/v1"
+headers = {
+    "Ocp-Apim-Subscription-Key": SPEECH_KEY,
+    "Content-Type": "application/ssml+xml",
+    "X-Microsoft-OutputFormat": "audio-16khz-128kbitrate-mono-mp3",
+    "User-Agent": "python-requests"
+}
+        
+    data = '''
+    <speak version='1.0' xml:lang='en-ES'>
+        <voice xml:lang='en-ES' name='es-ES-ElviraNeural'>
+            I'm so excited to use Text-to-Speech Tools in my own research!
+        </voice>
+    </speak>
+    '''
+
+    response = requests.post(url, headers=headers, data=data.encode('utf-8'))
+
+    if response.status_code == 200:
+        with open('output.mp3', 'wb') as f:
+            f.write(response.content)
+        print("Audio file saved as output.mp3")
+
+    else:
+        print("Error:", response.status_code, response.text)  
+        
+```
+
+## 4: Application of TTS in Real-World Research Context
+***
+
+Congratulations! You can use 3 different Text-to-Speech Tools to synthesize speech from texts. In the real-world research contexts, however, you may want to repeat the process without coding the same thing again and again. Here's a great tip to generate speech from texts without copying and pasting the same thing repeatedly, by using a text box. Take Microsoft Azure Text-to-Speech as an example, execute the following request, and a text box should appear at the bottom of this cell. Type whatever words or sentences you want it to speak! As always, an mp3 file will be created under your file.
+
+```
+import requests
+
+url = f"https://{SPEECH_REGION}.tts.speech.microsoft.com/cognitiveservices/v1"
+headers = {
+    "Ocp-Apim-Subscription-Key": SPEECH_KEY,
+    "Content-Type": "application/ssml+xml",
+    "X-Microsoft-OutputFormat": "audio-16khz-128kbitrate-mono-mp3",
+    "User-Agent": "python-requests"
+}
+
+text = ''
+while True:
+    text = input('Enter text: ')
+    if text == 'quit':
+        break
+        
+    data = f'''
+    <speak version='1.0' xml:lang='en-US'>
+        <voice xml:lang='en-US' name='en-US-AvaMultilingualNeural'>
+            {text}
+        </voice>
+    </speak>
+    '''
+
+    response = requests.post(url, headers=headers, data=data.encode('utf-8'))
+
+    if response.status_code == 200:
+        with open('output.mp3', 'wb') as f:
+            f.write(response.content)
+        print("Audio file saved as output.mp3")
+
+    else:
+        print("Error:", response.status_code, response.text)     
+```
+
+Download the mp3 file just created in your file on your computer and open it! Type `quit` in the box when you want it to stop running.
+
+

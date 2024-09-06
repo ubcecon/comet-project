@@ -1,0 +1,972 @@
+---
+title: "3.5 - Advanced - Word Embeddings (R)"
+categories: [advanced, R, natural language processing, large language models, word embeddings, word2vec, vectors, cosine similarity]
+format: 
+  html: default
+  ipynb:
+    jupyter:
+      kernelspec:
+        display_name: R
+        language: r
+        name: ir
+---
+
+_R Version_
+
+<div>
+<img src="media/word_embedding_cover_art.png" width="1000"/>
+</div>
+
+_This notebook was prepared by Laura Nelson in collaboration with [UBC COMET](https://comet.arts.ubc.ca/) team members: Jonathan Graves, Angela Chen and Anneke Dresselhuis_
+
+
+## Prerequisites
+
+1. Some familiarity programming in R
+2. Some familarity with natural language processing
+3. No computational text experience necessary!
+
+## Learning outcomes
+
+In the notebook you will 
+
+1. Familiarize yourself with concepts such as word embeddings (WE) vector-space model of language, natural language processing (NLP) and how they relate to small and large language models (LMs) 
+1. Import and pre-process a textual dataset for use in word embedding 
+1. Use word2vec to build a simple language model for examining patterns and biases textual datasets
+1. Identify and select methods for saving and loading models
+1. Use critical and reflexive thinking to gain a deeper understanding of how the inherent social and cultural biases of language are reproduced and mapped into language computation models
+
+## Outline
+
+The goal of this notebook is to demystify some of the technical aspects of language models and to invite learners to start thinking about how these important tools function in society.
+
+In particular, this lesson is designed to explore features of word embeddings produced through the word2vec model. The questions we ask in this lesson are guided by Ben Schmidt's blog post, [Rejecting the Gender Binary]("http://bookworm.benschmidt.org/posts/2015-10-30-rejecting-the-gender-binary.html).
+
+The primary corpus we will use consists of the <a href="http://txtlab.org/?p=601">150 English-language novels</a> made available by the <em>.txtLab</em> at McGill University. We also look at a <a href="http://ryanheuser.org/word-vectors-1/">Word2Vec model trained on the ECCO-TCP corpus</a> of 2,350 eighteenth-century literary texts made available by Ryan Heuser. (Note that the number of terms in the model has been shortened by half in order to conserve memory.)
+
+## Key Terms
+Before we dive in, feel free to familiarize yourself with the following key terms and how they relate to each other.
+</div>
+<img src="media/ai_key_terms.png" width="500"/>
+</div>
+
+**Artificial Intelligence (AI):** this term is a broad category that includes the study and development of computer systems that can copy intelligent human behaviour (adapted from [_Oxford Learners Dictionary_](https://www.oxfordlearnersdictionaries.com/definition/english/ai#:~:text=%2F%CB%8Ce%C9%AA%20%CB%88a%C9%AA%2F-,%2F%CB%8Ce%C9%AA%20%CB%88a%C9%AA%2F,way%20a%20human%20brain%20does.))
+
+**Machine Learning (ML):** this is branch of AI which is uses statistical methods to imitate the way that humans learn (adapted from [_IBM_](https://www.ibm.com/topics/machine-learning))
+
+**Natural Language Processing (NLP):** this is branch of AI which focuses on training computers to interpret human text and spoken words (adapted from [_IBM_](https://www.ibm.com/topics/natural-language-processing#:~:text=the%20next%20step-,What%20is%20natural%20language%20processing%3F,same%20way%20human%20beings%20can.))
+
+**Word Embeddings (WE):** this is an NLP process through which human words are converted into numerical representations (usually vectors) in order for computers to be able to understand them (adapted from [_Turing_](https://www.turing.com/kb/guide-on-word-embeddings-in-nlp))
+
+**word2vec:** this is an NLP technique that is commonly used to generate word embeddings
+
+
+
+## What are Word Embeddings?
+
+Building off of the definition above, word embeddings are one way that humans can represent language in a way that is legible to a machine. More specifically, they are an NLP approach that use vectors to store textual data in multiple dimensions; by existing in the multi-dimensional space of vectors, word embeddings are able to include important semantic information within a given numeric representation.
+
+For example, if we are trying to answer a research question about how popular a term is on the web at a given time, we might use a simple word frequency analysis to count how many times the word "candidate" shows up in tweets during a defined electoral period. However, if we wanted to gain a more nuanced understanding of what kind of language, biases or attitudes contextualize the term, "candidate" in discourse, we would need to use a method like word embedding to encode meaning into our understanding of how people have talked about candidates over time. Instead of describing our text as a series of word counts, we would treat our text like coordinates in space, where similar words and concepts are closer to each other, and words that are different from each other are further away.
+
+![Comparing word frequency count and word embedding methods](media/word_frequency_vs_word_embeddings.png)
+
+For example, in the visualization above, a word frequency count returns the number of times the word "candidate" or "candidates" is used in a sample text corpus. When a word embedding is made from the same text corpus, we are able to map related concepts and phrases that are closely related to "candidate" as neighbours, while other words and phrases such as "experimental study" (which refers to the research paper in question, and not to candidates specifically) are further away. 
+
+Here is another example of how different, but related words might be represented in a word embedding:
+<img src = "media/w2v-Analogies.png">
+
+## Making a Word Embedding
+So, how do word embeddings work? To make a word embedding, an input word gets compressed into a dense vector.
+
+![Creating a word embedding vector](media/creating_a_word_embedding.png)
+
+The magic and mystery of the word embedding process is that often the vectors produced during the model embed qualities of a word or phrase that are not interpretable by humans. However, for our purposes, having the text in vector format is all we need. With this format, we can perform tests like cosine similarity and other kinds of operations. Such operations can reveal many different kinds of relationships between words, as we'll examine a bit later.
+
+## Using word2vec
+
+Word2vec is one NLP technique that is commonly used to generate word embeddings. More precisely, word2vec is an algorithmic learning tool rather than a specific neural net that is already trained. The example we will be working through today has been made using this tool.
+
+The series of algorithms inside of the word2vec model try to describe and acquire parameters for a given word in terms of the text that appear immediately to the right and left in actual sentences. Essentially, it learns how to predict text.
+
+Without going too deep into the algorithm, suffice it to say that it involves a two-step process: 
+
+1. First, the input word gets compressed into a dense vector, as seen in the simplified diagram, "Creating a Word Embedding," above. 
+2. Second, the vector gets decoded into the set of context words. Keywords that appear within similar contexts will have similar vector representations in between steps. 
+
+Imagine that each word in a novel has its meaning determined by the ones that surround it in a limited window. For example, in Moby Dick's first sentence, “me” is paired on either side by “Call” and “Ishmael.” After observing the windows around every word in the novel (or many novels), the computer will notice a pattern in which “me” falls between similar pairs of words to “her,” “him,” or “them.” Of course, the computer had gone through a similar process over the words “Call” and “Ishmael,” for which “me” is reciprocally part of their contexts. This chaining of signifiers to one another mirrors some of humanists' most sophisticated interpretative frameworks of language.
+
+The two main model architectures of word2vec are **Continuous Bag of Words (CBOW)** and **Skip-Gram**, which can be distinguished partly by their input and output during training. 
+
+**CBOW** takes the context words (for example, "Call","Ishmael") as a single input and tries to predict the word of interest ("me").
+
+<div>
+<img src="media/CBOW.gif" width="500"/>
+</div>
+
+**Skip-Gram** does the opposite, taking a word of interest as its input (for example, "me") and tries to learn how to predict its context words ("Call","Ishmael"). 
+
+<div>
+<img src="media/SG.gif" width="500"/>
+</div>
+
+In general, CBOW is is faster and does well with frequent words, while Skip-Gram potentially represents rare words better.
+
+Since the word embedding is a vector, we are able perform tests like cosine similarity (which we'll learn more about in a bit!) and other kinds of operations. Those operations can reveal many different kinds of relationships between words, as we shall see.
+
+## Bias and Language Models
+
+You might already be piecing together that the encoding of meaning in word embeddings is entirely shaped by patterns of language use captured in the training data. That is, what is included in a word embedding directly reflects the complex social and cultural biases of everyday human language - in fact, exploring how these biases function and change over time (as we will do later) is one of the most interesting ways to use word embeddings in social research.
+
+#### It is simply impossible to have a bias-free language model (LM). 
+
+In LMs, bias is not a bug or a glitch, rather, it is an essential feature that is baked into the fundamental structure. For example, LMs are not outside of learning and absorbing the pejorative dimensions of language which in turn, can result in reproducing harmful correlations of meaning for words about race, class or gender (among others). When unchecked, these harms can be “amplified in downstream applications of word embeddings” ([Arseniev-Koehler & Foster, 2020, p. 1](https://osf.io/preprints/socarxiv/b8kud/)).
+
+Just like any other computational model, it is important to critically engage with the source and context of the training data. One way that [Schiffers, Kern and Hienert](https://arxiv.org/abs/2302.06174v1) suggest doing this is by using domain specific models (2023). Working with models that understand the nuances of your particular topic or field can better account for "specialized vocabulary and semantic relationships" that can help make applications of WE more effective. 
+
+## Preparing for our Analysis
+
+#### Word2vec Features
+
+**Here are a few features of the word2vec tool that we can use to customize our analysis:**
+
+* `size`: Number of dimensions for word embedding model</li>
+* `window`: Number of context words to observe in each direction</li>
+* `min_count`: Minimum frequency for words included in model</li>
+* `sg` (Skip-Gram): '0' indicates CBOW model; '1' indicates Skip-Gram</li>
+* `alpha`: Learning rate (initial); prevents model from over-correcting, enables finer tuning</li>
+* `iterations`: Number of passes through dataset</li>
+* `batch size`: Number of words to sample from data during each pass</li>
+
+Note: the script uses default value for each argument.
+
+**Some limitations of the word2vec Model**
+
+* Within word2vec, common articles or conjunctions, called **stop words** such as "the" and "and," may not provide very rich contextual information for a given word, and may need additional subsampling or to be combined into a word phrase (Anwla, 2019).
+* Word2vec isn't always the best at handling out-of-vocabulary words well (Chandran, 2021).
+
+Let's begin our analysis!
+
+## Exercise #1: Eggs, Sausages and Bacon
+<div>
+<img src="media/eggs_bacon_sausages.png" width="750"/>
+<div>
+
+To begin, we are going to install and load a few packages that are necessary for our analysis. Run the code cells below if these packages are not already installed:
+
+```{r}
+#| tags: []
+# uncomment these by deleting the "#" to install them
+
+#install.packages("tidyverse")
+#install.packages("repr")
+#install.packages("proxy")
+#install.packages("scales")
+#install.packages("tm")
+#install.packages("MASS")
+#install.packages("SentimentAnalysis")
+#install.packages("reticulate")
+```
+
+```{r}
+#| tags: []
+# Load the required libraries
+library(tidyverse)
+library(repr)
+library(proxy)
+library(tm)
+library(scales)
+library(MASS)
+
+
+# Set up figures to save properly
+options(jupyter.plot_mimetypes = "image/png") 
+```
+
+```{r}
+# Time: 30s
+library(reticulate)
+gensim <- import("gensim")
+```
+
+#### Create a Document-Term Matrix (DTM) with a Few Pseudo-Texts
+To start off, we're going to create a mini dataframe based on the use of the words "eggs," "sausages" and "bacon" found in three different novels: A, B and C.
+
+```{r}
+#| tags: []
+# Construct dataframe
+columns <- c('eggs', 'sausage', 'bacon')
+indices <- c('Novel A', 'Novel B', 'Novel C')
+dtm <- data.frame(eggs = c(50, 90, 20),
+                  sausage = c(60, 10, 70),
+                  bacon = c(60, 10, 70),
+                  row.names = indices)
+
+# Show dataframe
+print(dtm)
+```
+
+#### Visualize
+
+```{r}
+#| tags: []
+# Then, we'll create the scatter plot of our data using ggplot2
+ggplot(dtm, aes(x = eggs, y = sausage)) +
+  geom_point() +
+  geom_text(aes(label = rownames(dtm)), nudge_x = 2, nudge_y = 2, size = 3) +
+  xlim(0, 100) +
+  ylim(0, 100) +
+  labs(x = "eggs", y = "sausage")
+```
+
+### Vectors
+
+At a glance, a couple of points are lying closer to one another. We used the word frequencies of just two words in order to plot our texts in a two-dimensional plane. The term frequency "summaries" of <i>Novel A</i> & <i>Novel C</i> are pretty similar to one another: they both share a major concern with "sausage", whereas <i>Novel B</i> seems to focus primarily on "eggs."
+
+This raises a question: how can we operationalize our intuition that spatial distance expresses topical similarity?
+
+## Cosine Similarity
+The most common measurement of distance between points is their [Cosine Similarity](https://en.wikipedia.org/wiki/Cosine_similarity). Cosine similarity can operate on textual data that contain word vectors and allows us to identify how similar documents are to each other, for example. Cosine Similarity thus helps us understand how much content overlap a set of documents have with one another. For example, imagine that we were to draw an arrow from the origin of the graph - point (0,0) - to the dot representing each text. This arrow is called a _vector_. 
+
+Mathematically, this can be represented as: 
+<div>
+<img src='media/Dot-Product.png' >
+
+Using our example above, we can see that the angle from (0,0) between Novel C and Novel A (orange triangle) is smaller than between Novel A and Novel B (navy triangle) or between Novel C and Novel B (both triangles together).
+<div>
+<img src="media/annotated_scatterplot.png" width="400"/>
+<div>
+
+Because this similarity measurement uses the cosine of the angle between vectors, the magnitude is not a matter of concern (this feature is really helpful for text vectors that can often be really long!). Instead, the output of cosine similarity yields a value between 0 and 1 (we don't have to work with something confusing like 18º!) that can be easily interpreted and compared - and thus we can also avoid the troubles associated with other dimensional distance measures such as [Euclidean Distance](https://en.wikipedia.org/wiki/Euclidean_distance).
+
+### Calculating Cosine Distance
+
+```{r}
+#| tags: []
+# Assuming dtm_df is a data frame containing the document-term matrix
+dtm_matrix <- as.matrix(dtm)
+
+# Calculate cosine similarity
+cos_sim <- proxy::dist(dtm_matrix, method = "cosine")
+
+
+# Although we want the Cosine Distance, it is mathematically simpler to calculate its opposite: Cosine Similarity
+# The formula for Cosine Distance is = 1 - Cosine Similarity
+
+# Convert the cosine similarity matrix to a 2-dimensional array
+# So we will subtract the similarities from 1
+n <- nrow(dtm_matrix)
+cos_sim_array <- matrix(1 - as.vector(as.matrix(cos_sim)), n, n)
+
+# Print the result
+print(cos_sim_array)
+```
+
+```{r}
+#| tags: []
+# Make it a little easier to read by rounding the values
+cos_sim_rounded <- round(cos_sim_array, 2)
+
+# Label the dataframe rows and columns with eggs, sausage and bacon
+cos_df <- data.frame(cos_sim_rounded, row.names = indices, check.names = FALSE)
+colnames(cos_df) <- indices
+
+# Print the data frame
+head(cos_df)
+```
+
+## Exercise #2: Working with 18th Century Literature
+
+<div>
+<img src="media/18th_cent_literature.png" width="750"/>
+<div>
+
+<font color="blue" size=12>Workshop Run Here at Start</font>
+
+```{r}
+#| tags: []
+# Load the required libraries
+library(tidyverse)
+library(repr)
+library(proxy)
+library(tm)
+library(scales)
+library(MASS)
+
+
+# Set up figures to save properly
+options(jupyter.plot_mimetypes = "image/png") 
+
+# Time: 3 mins
+# File paths and names
+filelist <- c(
+  'txtlab_Novel450_English/EN_1850_Hawthorne,Nathaniel_TheScarletLetter_Novel.txt',
+  'txtlab_Novel450_English/EN_1851_Hawthorne,Nathaniel_TheHouseoftheSevenGables_Novel.txt',
+  'txtlab_Novel450_English/EN_1920_Fitzgerald,FScott_ThisSideofParadise_Novel.txt',
+  'txtlab_Novel450_English/EN_1922_Fitzgerald,FScott_TheBeautifulandtheDamned_Novel.txt',
+  'txtlab_Novel450_English/EN_1811_Austen,Jane_SenseandSensibility_Novel.txt',
+  'txtlab_Novel450_English/EN_1813_Austen,Jane_PrideandPrejudice_Novel.txt'
+)
+
+novel_names <- c(
+  'Hawthorne: Scarlet Letter',
+  'Hawthorne: Seven Gables',
+  'Fitzgerald: This Side of Paradise',
+  'Fitzgerald: Beautiful and the Damned',
+  'Austen: Sense and Sensibility',
+  'Austen: Pride and Prejudice'
+)
+
+# Function to read non-empty lines from the text file
+readNonEmptyLines <- function(filepath) {
+  lines <- readLines(filepath, encoding = "UTF-8")
+  non_empty_lines <- lines[trimws(lines) != ""]
+  return(paste(non_empty_lines, collapse = " "))
+}
+
+# Read non-empty texts into a corpus
+text_corpus <- VCorpus(VectorSource(sapply(filelist, readNonEmptyLines)))
+
+# Preprocess the text data
+text_corpus <- tm_map(text_corpus, content_transformer(tolower))
+text_corpus <- tm_map(text_corpus, removePunctuation)
+text_corpus <- tm_map(text_corpus, removeNumbers)
+text_corpus <- tm_map(text_corpus, removeWords, stopwords("english"))
+text_corpus <- tm_map(text_corpus, stripWhitespace)
+
+## Time: 5 mins
+# Create a custom control for DTM with binary term frequency
+custom_control <- list(
+  tokenize = function(x) SentimentAnalysis::ngram_tokenize(x, ngmax = 1),
+  bounds = list(global = c(3, Inf)),
+  weighting = weightTf
+)
+
+# Convert the corpus to a DTM using custom control
+dtm <- DocumentTermMatrix(text_corpus, control = custom_control)
+
+# Convert DTM to a binary data frame (0 or 1)
+dtm_df_novel <- as.data.frame(as.matrix(dtm > 0))
+colnames(dtm_df_novel) <- colnames(dtm)
+
+# Set row names to novel names
+rownames(dtm_df_novel) <- novel_names
+
+# Print the resulting data frame
+tail(dtm_df_novel)
+```
+
+```{r}
+#| tags: []
+# Just as we did above with the small data frame, we'll find the cosine similarity for these texts
+cos_sim_novel <- as.matrix(proxy::dist(dtm_df_novel, method = "cosine"))
+
+# Convert the cosine similarity matrix to a 2-dimensional array
+n <- nrow(dtm_df_novel)
+cos_sim_array <- matrix(1 - as.vector(as.matrix(cos_sim_novel)), n, n)
+
+# Round the cosine similarity matrix to two decimal places
+cos_sim_novel_rounded <- round(cos_sim_array, 2)
+
+# Print the rounded cosine similarity matrix
+print(cos_sim_novel_rounded)
+```
+
+```{r}
+#| tags: []
+# Again, we'll make this a bit more readable
+cos_df <- data.frame(cos_sim_novel_rounded, row.names = novel_names, check.names = FALSE)
+
+# Set column names to novel names
+colnames(cos_df) <- novel_names
+
+# Print the DataFrame
+head(cos_df)
+```
+
+```{r}
+#| tags: []
+# Transform cosine similarity to cosine distance
+cos_dist <- 1 - cos_sim_novel_rounded
+
+# Perform MDS
+mds <- cmdscale(cos_dist, k = 2)
+
+# Extract x and y coordinates from MDS output
+xs <- mds[, 1]
+ys <- mds[, 2]
+
+# Create a data frame with x, y coordinates, and novel names
+mds_df <- data.frame(x = xs, y = ys, novel_names = novel_names)
+
+ggplot(mds_df, aes(x, y, label = novel_names)) +
+  geom_point(size = 4) +
+  geom_text(hjust =0.6, vjust = 0.2, size = 4, angle = 45, nudge_y = 0.01) +  # Rotate text and adjust y position
+  labs(title = "MDS Visualization of Novel Differences") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(size = 20, hjust = 0.6, margin = margin(b = 10)),
+    plot.margin = margin(5, 5, 5, 5, "pt"),  # Adjust the margin around the plot
+    plot.background = element_rect(fill = "white"),  # Set the background color of the plot to white
+    plot.caption = element_blank(),  # Remove the default caption
+    axis.text = element_text(size = 12),  # Adjust the size of axis text
+    legend.text = element_text(size = 12),  # Adjust the size of legend text
+    legend.title = element_text(size = 14)  # Adjust the size of legend title
+  )
+```
+
+The above method has a broad range of applications, such as unsupervised clustering. Common techniques include <a href = "https://en.wikipedia.org/wiki/K-means_clustering">K-Means Clustering</a> and <a href="https://en.wikipedia.org/wiki/Hierarchical_clustering">Hierarchical Dendrograms</a>. These attempt to identify groups of texts with shared content, based on these kinds of distance measures.
+
+Here's an example of a dendrogram based on these six novels:
+
+```{r}
+#| tags: []
+# Assuming you have already calculated the "cos_dist" matrix and have the "novel_names" vector
+
+# Perform hierarchical clustering
+hclust_result <- hclust(as.dist(cos_dist), method = "ward.D")
+
+# Plot the dendrogram
+plot(hclust_result, hang = -1, labels = novel_names)
+
+# Optional: Adjust the layout to avoid cutoff labels
+par(mar = c(5, 4, 2, 10))  # Adjust margins
+
+# Display the dendrogram plot
+```
+
+#### Vector Semantics
+
+We can also turn this logic on its head. Rather than produce vectors representing texts based on their words, we will produce vectors for the words based on their contexts.
+
+```{r}
+#| tags: []
+# Transpose the DTM data frame
+transposed_dtm <- t(dtm_df_novel)
+
+# Display the first few rows of the transposed DTM
+tail(transposed_dtm)
+```
+
+Because the number of words is so large, for memory reasons we're going to work with just the last few, pictured above.  
+
+* If you are running this locally, you may want to try this with more words
+
+```{r}
+#| tags: []
+# Assuming dtm_df is a data frame containing the document-term matrix
+tail_transposed_dtm <- tail(transposed_dtm)
+
+dtm_matrix <- as.matrix(tail_transposed_dtm) #remove 'tail_' to use all words
+
+# Calculate cosine similarity
+cos_sim_words <- proxy::dist(dtm_matrix, method = "cosine")
+
+# Convert the cosine similarity matrix to a 2-dimensional array
+n <- nrow(dtm_matrix)
+cos_sim_words <- matrix(1 - as.vector(as.matrix(cos_sim_words)), n, n)
+
+# Print the result
+head(cos_sim_words)
+```
+
+```{r}
+#| tags: []
+# In readable format
+
+cos_sim_words <- data.frame(round(cos_sim_words, 2))
+row.names(cos_sim_words) <- row.names(tail_transposed_dtm) #remove tail_ for all
+colnames(cos_sim_words) <- row.names(tail_transposed_dtm) #remove tail_ for all
+
+head(cos_sim_words)
+```
+
+Theoretically we could visualize and cluster these as well - but it would a lot of computational power!
+
+We'll instead turn to the machine learning version: word embeddings
+
+```{r}
+#check objects in memory; delete the big ones
+
+sort(sapply(ls(), function(x) format(object.size(get(x)), unit = 'auto')))
+            
+rm(cos_sim_words, cos_sim_array, text_corpus, dtm_df_novel)
+            
+sort(sapply(ls(), function(x) format(object.size(get(x)), unit = 'auto')))
+```
+
+## Exercise #3: Using Word2vec with 150 English Novels
+
+In this exercise, we'll use an English-language subset from a dataset about novels created by [Andrew Piper](https://www.mcgill.ca/langlitcultures/andrew-piper). Specifically we'll look at 150 novels by British and American authors spanning the years 1771-1930. These texts reside on disk, each in a separate plaintext file. Metadata is contained in a spreadsheet distributed with the novel files.
+
+#### Metadata Columns
+<ol><li>Filename: Name of file on disk</li>
+<li>ID: Unique ID in Piper corpus</li>
+<li>Language: Language of novel</li>
+<li>Date: Initial publication date</li>
+<li>Title: Title of novel</li>
+<li>Gender: Authorial gender</li>
+<li>Person: Textual perspective</li>
+<li>Length: Number of tokens in novel</li></ol>
+
+#### Import Metadata
+
+```{r}
+#| tags: []
+# Import Metadata into Dataframe
+meta_df <- read.csv('resources/txtlab_Novel450_English.csv', encoding = 'UTF-8')
+```
+
+```{r}
+#| scrolled: true
+#| tags: []
+# Check Metadata
+head(meta_df)
+```
+
+#### Import Corpus
+
+```{r}
+#| tags: []
+# Set the path to the 'fiction_folder'
+fiction_folder <- "txtlab_Novel450_English/"
+
+# Create a list to store the file paths
+file_paths <- list.files(fiction_folder, full.names = TRUE)
+
+# Read all the files as a list of single strings
+novel_list <- lapply(file_paths, function(filepath) {
+  readChar(filepath, file.info(filepath)$size)
+})
+```
+
+```{r}
+#| tags: []
+# Inspect first item in novel_list
+cat(substr(novel_list[[1]], 1, 500))
+```
+
+#### Pre-Processing
+Word2Vec learns about the relationships among words by observing them in context. This means that we want to split our texts into word-units. However, we  want to maintain sentence boundaries as well, since the last word of the previous sentence might skew the meaning of the next sentence.
+
+Since novels were imported as single strings, we'll first need to divide them into sentences, and second, we'll split each sentence into its own list of words.
+
+```{r}
+# Define a regular expression pattern for sentence splitting
+sentence_pattern <- "[^.!?]+(?<!\\w\\w\\w\\.)[.!?]"
+
+# Split each novel into sentences
+sentences <- unlist(lapply(novel_list, function(novel) {
+  str_extract_all(novel, sentence_pattern)[[1]]
+}))
+```
+
+```{r}
+first_sentence <- sentences[1]
+print(first_sentence)
+```
+
+We are defining a function called fast_tokenize, we will be using this function later when we train the word vector model. See example usage for its feature.
+
+```{r}
+fast_tokenize <- function(text) {
+  
+  # Remove punctuation characters
+  no_punct <- gsub("[[:punct:]]", "", tolower(text))
+  
+  # Split text over whitespace into a character vector of words
+  tokens <- strsplit(no_punct, "\\s+")[[1]]
+  
+  return(tokens)
+}
+
+# Example usage
+text <- "Hello, world! This is an example sentence."
+tokens <- fast_tokenize(text)
+print(tokens)
+```
+
+```{r}
+# Time: 2 mins
+# Split each sentence into tokens
+# this will take 1-2 minutes
+
+words_by_sentence <- lapply(sentences, function(sentence) {
+  fast_tokenize(sentence)
+})
+```
+
+```{r}
+# Remove any sentences that contain zero tokens
+words_by_sentence <- words_by_sentence[sapply(words_by_sentence, length) > 0]
+```
+
+```{r}
+#| scrolled: true
+# Inspect first sentence
+
+first_sentence_tokens <- words_by_sentence[[1]]
+print(first_sentence_tokens)
+```
+
+## Training
+
+To train the model we can use this code
+
+```{r}
+# Time: 3 mins
+# Train word2vec model from txtLab corpus
+
+model <- gensim$models$Word2Vec(words_by_sentence, vector_size=100L, window=5L, min_count=25L, sg=1L, alpha=0.025, epochs=5L, batch_words=10000L)
+```
+
+However, this is both very slow and very memory instensive.  Instead, we will short-cut here to load the saved results instead:
+
+```{r}
+# Load pre-trained model word2vec model from txtLab corpus
+model <- gensim$models$KeyedVectors$load_word2vec_format('resources/word2vec.txtlab_Novel150_English.txt')
+model$wv <- gensim$models$KeyedVectors$load_word2vec_format('resources/word2vec.txtlab_Novel150_English.txt')
+```
+
+## Embeddings 
+
+> Note: the output here is different than the Python version, even though the model is using the same parameters and same input, which is *sentences*
+
+This create a 100-dimension representation of specific words in the text corpus.  This is a _dense_ vector, meaning all of the valaues are (usually) non-zero.
+
+```{r}
+#| scrolled: true
+# Return dense word vector
+vector <- model$wv$get_vector("whale")
+
+data.frame(dimension = 1:100, value = vector)
+```
+
+## Vector-Space Operations
+
+The key advantage of the word-embedding is the dense vector representations of words: these allow us to do _operations_ on those words, which are informative for learning about how those words are used.
+
+* This is also where the connection with LLM is created: they use these vectors to inform _predictions_ about sequences of words (and sentences, in more complex models)
+
+### Similarity
+Since words are represented as dense vectors, we can ask how similiar words' meanings are based on their cosine similarity (essentially how much they overlap). <em>gensim</em> has a few out-of-the-box functions that enable different kinds of comparisons.
+
+```{r}
+# Find cosine distance between two given word vectors
+
+similarity <- model$wv$similarity("pride", "prejudice")
+similarity
+```
+
+```{r}
+# Find nearest word vectors by cosine distance
+
+most_similar <- model$wv$most_similar("pride")
+most_similar
+```
+
+```{r}
+# Given a list of words, we can ask which doesn't belong
+
+# Finds mean vector of words in list
+# and identifies the word further from that mean
+
+doesnt_match <- model$wv$doesnt_match(c('pride', 'prejudice', 'whale'))
+doesnt_match
+
+```
+
+## Multiple Valences
+A word embedding may encode both primary and secondary meanings that are both present at the same time. In order to identify secondary meanings in a word, we can subtract the vectors of primary (or simply unwanted) meanings. For example, we may wish to remove the sense of <em>river bank</em> from the word <em>bank</em>. This would be written mathetmatically as <em>RIVER - BANK</em>, which in <em>gensim</em>'s interface lists <em>RIVER</em> as a positive meaning and <em>BANK</em> as a negative one.
+
+```{r}
+# Get most similar words to BANK, in order
+# to get a sense for its primary meaning
+
+most_similar <- model$wv$most_similar("bank")
+most_similar
+```
+
+```{r}
+# Remove the sense of "river bank" from "bank" and see what is left
+
+result <- model$wv$most_similar(positive = "bank", negative = "river")
+
+result
+```
+
+## Analogy
+Analogies are rendered as simple mathematical operations in vector space. For example, the canonic word2vec analogy <em>MAN is to KING as WOMAN is to ??</em> is rendered as <em>KING - MAN + WOMAN</em>. In the gensim interface, we designate <em>KING</em> and <em>WOMAN</em> as positive terms and <em>MAN</em> as a negative term, since it is subtracted from those.
+
+```{r}
+# Get most similar words to KING, in order
+# to get a sense for its primary meaning
+
+most_similar <- model$wv$most_similar("king")
+most_similar
+```
+
+```{r}
+# The canonic word2vec analogy: King - Man + Woman -> Queen
+
+result <- model$wv$most_similar(positive = c("woman", "king"), negative = "man")
+result
+```
+
+### Gendered Vectors
+Can we find gender a la Schmidt (2015)? (Note that this method uses vector projection, whereas Schmidt had used rejection.)
+
+```{r}
+#| scrolled: true
+# Feminine Vector
+
+result <- model$wv$most_similar(positive = c("she", "her", "hers", "herself"), negative = c("he", "him", "his", "himself"))
+result
+```
+
+```{r}
+# Masculine Vector
+
+result <- model$wv$most_similar(positive = c("he", "him", "his", "himself"), negative = c("she", "her", "hers", "herself"))
+result
+```
+
+## Visualization
+
+```{r}
+# Note: due to some discrepencies between Python and R, this may not be translated exactly
+# Dictionary of words in model
+
+key_to_index <- model$wv$key_to_index #this stores the index of each word in the model
+
+head(key_to_index)
+```
+
+```{r}
+# Visualizing the whole vocabulary would make it hard to read
+
+key_to_index <- model$wv$key_to_index
+
+# Get the number of unique words in the vocabulary (vocabulary size)
+vocabulary_size <- length(key_to_index)
+
+# Find most similar tokens
+similarity_result <- model$wv$most_similar(positive = c("she", "her", "hers", "herself"),
+                                           negative = c("he", "him", "his", "himself"),
+                                           topn = as.integer(50))  # Convert to integer
+
+# Extract tokens from the result
+her_tokens <- sapply(similarity_result, function(item) item[1])
+```
+
+```{r}
+her_tokens_first_15 <- her_tokens[1:15]
+
+# Inspect list
+her_tokens_first_15
+```
+
+```{r}
+#| tags: []
+# Get the vector for each sampled word
+
+for (i in 1:length(her_tokens)){
+    
+    if (i == 1) { vectors_matrix <- model$wv$get_vector(i) } else {
+        vectors_matrix <- rbind(vectors_matrix, model$wv$get_vector(i))
+    } 
+    
+}
+
+# Print the vectors matrix
+head(vectors_matrix, n = 5)            
+```
+
+```{r}
+#| tags: []
+# Calculate distances among texts in vector space
+
+dist_matrix <- as.matrix(proxy::dist(vectors_matrix, by_rows = TRUE, method = "cosine"))
+
+# Print the distance matrix
+head(dist_matrix, n = 5)
+```
+
+```{r}
+#| tags: []
+# Multi-Dimensional Scaling (Project vectors into 2-D)
+
+
+# Perform Multi-Dimensional Scaling (MDS)
+mds <- cmdscale(dist_matrix, k = 2)
+
+# Print the resulting MDS embeddings
+head(mds)
+```
+
+```{r}
+plot_data <- data.frame(x = mds[, 1], y = mds[, 2], label = unlist(her_tokens))
+
+
+# Create the scatter plot with text labels using ggplot2
+p <- ggplot(plot_data, aes(x = x, y = y, label = label)) +
+  geom_point(alpha = 0) +
+  geom_text(nudge_x = 0.02, nudge_y = 0.02) +
+  theme_minimal()
+
+# Print the plot
+print(p)
+```
+
+```{r}
+# For comparison, here is the same graph using a masculine-pronoun vector
+
+# Find most similar tokens
+similarity_result <- model$wv$most_similar(negative = c("she", "her", "hers", "herself"),
+                                           positive = c("he", "him", "his", "himself"),
+                                           topn = as.integer(50))  # Convert to integer
+
+his_tokens <- sapply(similarity_result, function(item) item[1])
+
+
+# Get the vector for each sampled word
+
+for (i in 1:length(his_tokens)){
+    
+    if (i == 1) { vectors_matrix <- model$wv$get_vector(i) } else {
+        vectors_matrix <- rbind(vectors_matrix, model$wv$get_vector(i))
+    } 
+    
+}
+
+dist_matrix <- as.matrix(proxy::dist(vectors_matrix, by_rows = TRUE, method = "cosine"))
+ 
+mds <- cmdscale(dist_matrix, k = 2)
+                     
+plot_data <- data.frame(x = mds[, 1], y = mds[, 2], label = unlist(his_tokens))
+
+# Create the scatter plot with text labels using ggplot2
+p <- ggplot(plot_data, aes(x = x, y = y, label = label)) +
+  geom_point(alpha = 0) +
+  geom_text(nudge_x = 0.02, nudge_y = 0.02) +
+  theme_minimal()
+
+# Print the plot
+print(p)
+```
+
+> ### <span style="color:#CC7A00" > **Questions:** </p>
+> <span style="color:#CC7A00" > What kinds of semantic relationships exist in the diagram above? </p>
+> <span style="color:#CC7A00" > Are there any words that seem out of place?
+</span>
+
+## 3. Saving/Loading Models
+
+```{r}
+# Save current model for later use
+
+model$wv$save_word2vec_format('resources/word2vec.txtlab_Novel150_English.txt') 
+```
+
+```{r}
+# Load up models from disk
+
+# Model trained on Eighteenth Century Collections Online corpus (~2500 texts)
+# Made available by Ryan Heuser: http://ryanheuser.org/word-vectors-1/
+
+ecco_model <- gensim$models$KeyedVectors$load_word2vec_format('resources/word2vec.ECCO-TCP.txt')
+```
+
+```{r}
+# What are similar words to BANK?
+
+ecco_model$most_similar('bank')
+```
+
+```{r}
+# What if we remove the sense of "river bank"?
+ecco_model$most_similar(positive = list('bank'), negative = list('river'))
+```
+
+## Exercises!
+
+See if you can attempt the following exercises on your own!
+
+```{r}
+## EX. Use the most_similar method to find the tokens nearest to 'car' in either model.
+##     Do the same for 'motorcar'.
+
+## Q.  What characterizes these two words inthe corpus? Does this make sense?
+
+model$wv$most_similar("car")
+```
+
+```{r}
+model$wv$most_similar('motorcar')
+```
+
+```{r}
+## EX. How does our model answer the analogy: MADRID is to SPAIN as PARIS is to __________
+
+## Q.  What has our model learned about nation-states?
+
+
+model$wv$most_similar(positive = c('paris', 'spain'), negative = c('madrid'))
+```
+
+```{r}
+## EX. Perform the canonic Word2Vec addition again but leave out a term:
+##     Try 'king' - 'man', 'woman' - 'man', 'woman' + 'king'
+
+## Q.  What do these indicate semantically?
+
+model$wv$most_similar(positive = c('woman'), negative = c('man'))
+```
+
+```{r}
+## EX. Heuser's blog post explores an analogy in eighteenth-century thought that
+##     RICHES are to VIRTUE what LEARNING is to GENIUS. How true is this in
+##     the ECCO-trained Word2Vec model? Is it true in the one we trained?
+
+##  Q. How might we compare word2vec models more generally?
+```
+
+```{r}
+# ECCO model: RICHES are to VIRTUE what LEARNING is to ??
+
+ecco_model$most_similar(positive = c('learning', 'virtue'), negative = c('riches'))
+```
+
+```{r}
+#| scrolled: true
+# txtLab model: RICHES are to VIRTUE what LEARNING is to ??
+model$wv$most_similar(positive = c('learning', 'virtue'), negative = c('riches'))
+```
+
+## Concluding Remarks and Resources
+Throughout this notebook we have seen how a number of mathematical operations can be used to explore word2vec's word embeddings. Hopefully this notebook has allowed you to see how the inherent biases of language become coded into word embeddings and systems that use word embeddings cannot be treated as search engines. 
+
+While getting inside the technics of these computational processes can enable us to answer a set of new, interesting questions dealing with semantics, there are many other questions that remain unanswered.
+
+For example:
+* Many language models are built using text from large, online corpora (such as Wikipedia, which is known to have a contributor basis that is majority white, college-educated men) - what kind of impact might this have on a language model?
+* What barriers to the healthy functioning of democracy are created by the widespread use of these tools and technologies in society?
+* How might language models challenge or renegotiate ideas around copyright, intellectual property and conceptions of authorship more broadly?
+* What might guardrails look like for the safe and equitable management and deployment of language models?
+
+## Resources
+* [UBC Library Generative AI Research Guide](https://guides.library.ubc.ca/GenAI/home)
+* ... other UBC resources...
+* [What Is ChatGPT Doing … and Why Does It Work?](https://writings.stephenwolfram.com/2023/02/what-is-chatgpt-doing-and-why-does-it-work/) by Stephen Wolfram
+
+## References
+This notebook has been built using the following materials:
+- Arseniev-Koehler, A., & Foster, J. G. (2020). Sociolinguistic Properties of Word Embeddings [Preprint]. SocArXiv. https://doi.org/10.31235/osf.io/b8kud
+- Schiffers, R., Kern, D., & Hienert, D. (2023). Evaluation of Word Embeddings for the Social Sciences (arXiv:2302.06174). arXiv. http://arxiv.org/abs/2302.06174
+
+- [TensorFlow word2vec tutorial](https://www.tensorflow.org/text/tutorials/word2vec)
+
+- Anwla, P. K. (2019, October 22). Challenges in word2vec Model. TowardsMachineLearning. https://towardsmachinelearning.org/performance-problems-in-word2vec-model/
+
+- Chandran, S. (2021, November 16). Introduction to Text Representations for Language Processing—Part 2. Medium. https://towardsdatascience.com/introduction-to-text-representations-for-language-processing-part-2-54fe6907868
+
+

@@ -1,0 +1,568 @@
+---
+title: '2.5 - Intermediate - Interactions and Non-linear Terms'
+author: 'COMET Team <br> _Emrul Hasan, Jonah Heyl, Shiming Wu, William Co, Jonathan Graves_'
+date: 8 December 2022
+description: 'How do we specific non-linear models?  Why would we want to do so?  This notebooks covers non-linear and interaction models, including marginal effects and related issues.'
+categories: [econ 326, multiple regression, regression, controls, intermediate, R, interaction terms, non-linear terms, polynomial terms, continuous variable]
+format: 
+  html: default
+  ipynb:
+    jupyter:
+      kernelspec:
+        display_name: R
+        language: r
+        name: ir
+---
+
+## Outline
+
+### Prerequisites
+- Multiple regression
+- Simple regression
+- Data analysis and introduction
+
+### Outcomes
+In this worksheet, you will learn:
+
+- How to incorporate interaction terms into a regression analysis
+- How to interpret models with interaction terms
+- How to create models which include non-linear terms
+- How to compute simple marginal effects for models with non-linear terms
+- How to explain polynomial regressions as approximations to a non-linear regression function
+
+### References
+
+- Statistics Canada, Survey of Financial Security, 2019, 2021. Reproduced and distributed on an "as is" basis with the permission of Statistics Canada.Adapted from Statistics Canada, Survey of Financial Security, 2019, 2021. This does not constitute an endorsement by Statistics Canada of this product.
+
+- Stargazer package is due to: Hlavac, Marek (2022). stargazer: Well-Formatted Regression and Summary Statistics Tables. R package version 5.2.3. https://cran.r-project.org/web/packages/stargazer/index.html
+
+```{r, message = FALSE}
+library(tidyverse)
+library(haven)
+library(dplyr)
+library(scales)
+library(stargazer)
+library(car)
+
+source("intermediate_interactions_and_nonlinear_terms_functions.r")
+source("intermediate_interactions_and_nonlinear_terms_tests.r")
+
+SFS_data <- read_dta("../datasets_intermediate/SFS_2019_Eng.dta")
+SFS_data <- clean_up_data()
+```
+
+## Part 1: Interactions in Regression Models
+
+One of the most common extensions to multiple regression models is to include **interaction** terms.  What is an interaction term?  It's basically a term which represents the product of two (or more) variables in a model.
+
+For example, if we have a dummy variable for being a female ($F_i$) and a dummy variable for having a university degree ($D_i$), the _interaction_ of these two variables is the product $D_i \times F_i$.  This can seem complicated but it also has a simple interpretation: it is now a dummy for being _both_ a female and having a university degree.  You can see why this is true:
+
+$$ 
+D_i \times F_i = 1 \iff D_i = 1 \text{ and } F_i = 1
+$$
+
+This is why these terms are so important for understanding regressions: they provide us with a simple way to describe and study how *combinations* of our explanatory variables impact our model.  These variables enter into our regression models in exactly the same way as usual:
+
+$$
+Y_i = \beta_0 + \beta_1 F_i + \beta_2 D_i + \beta_3 D_i \times F_i + \epsilon_i
+$$
+
+At this point, you can see that this is just a multiple regression model - the only difference is that one of the variables is a combination of the other variables.  From an estimation perspective, there's no issue - you can use OLS to estimate a model with interaction terms, just like simple regressions.  However, as we have seen, there are important differences when it comes to the *interpretation* of these models.  Let's learn more about this in this worksheet.
+
+There are (in general) two ways to create interactions in R: (i) manually (i.e. creating a new variables which is $D_i \times F_i$ then adding it to the regression), or (ii) using the built-in tools in R.  However, method (i) is a trap!  You should never use this method.  Why?  There are two reasons:
+
+1.  The main reason is that R (and you, the analyst) lose track of the relationship between the created interaction variable and the underlying variables.  This means that you can't use other tools to analyze this relationship (there are many packages such as `margins` which allow you to investigate complex interactions) which is a big loss.  You also can't perform post-regression analysis on the underlying variables in a simple way anymore.
+2.  The second reason is that it's easy to make mistakes.  You might define the interaction incorrectly (possible!).  However, it's more of an issue if later on you change the underlying variables and then forget to re-compute the interactions.  It also makes your code harder to read.
+
+Bottom line: don't do it.  Interaction in R are easy to create: you simply use the `:` or `*` operator when defining an interaction term.  
+
+- The `:` operator creates the interaction(s) of the two variables in question
+- The `*` operation creates the interactions(s) _and_ the main effects of the variables as well
+
+Even better: if you are interacting two qualitative (factor) variables, it will automatically "expand" the interaction into every possible combination of the variables.  A lot less work!
+
+For example, let's look at a regression model which interacts gender and education. Before we run regression, let's first summarize education into 'university' and 'non-university'.
+
+```{r}
+
+SFS_data <- SFS_data %>% # creates a Education dummy variable
+               mutate( 
+               Education = case_when(
+                     education == "University" ~ "University", # the ~ seperates the original from the new name
+                     education == "Non-university post-secondary" ~ "Non-university",
+                     education == "High school" ~ "Non-university",
+                     education == "Less than high school" ~ "Non-university")) %>%
+             mutate(Education = as_factor(Education)) # remember, it's a factor!
+```
+
+```{r}
+
+regression1 <- lm(wealth ~ gender + Education + gender:Education, data = SFS_data)
+
+# regression1 <- lm(wealth ~ gender*Education, data = SFS_data) # an alternative way to run the same regression
+
+summary(regression1)
+```
+
+There are a few important things to notice about this regression result.  First, take a close look at the terms:
+
+- `genderFemale` this is the main effect for being a female.  You *might* immediately say that this is the impact of being a female - but this is *not true*.  Why?  Because female shows up in two places!  We have to be a little more careful - this is the effect of being a female in the base group (non-university) 
+- `genderFemale:EducationUniversity` this is the interaction effect of being a female and having a university degree.  Basically, family with female (university degree) as main earner accumulates $143,396 + 324,112 = 467,508$ less wealth, compared with male counterpart.
+
+You can see this interpretation in the regression model itself:
+
+$$
+W_i = \beta_0 + \beta_1 F_i + \beta_2 D_i + \beta_3 F_i \times D_i + \epsilon_i
+$$
+
+Consider:
+
+$$
+\frac{\Delta W_i}{\Delta F_i} = \beta_1 + \beta_3 D_i
+$$
+
+The marginal effect of being a female-lead household _changes_ depending on what the value of $D_i$ is!  For non-university degree (the level where $D_i = 0$) it's $\beta_1$.  For university degree (the level where $D_i =1$), it's $\beta_1 + \beta_3$.  This is why, in an interaction model, it doesn't really make sense to talk about the "effect of female" - because there isn't a single, immutable effect.  It is different for different education degrees!
+
+You can talk about the *average* effect, which is just $\beta_1 + \beta_3 \bar{D_i}$ - but that's not really what people are asking about when they are discussing the gender effect, in general.
+
+This is why it's very important to carefully think about a regression model with interaction terms - the model may seem simple to estimate, but the interpretation is more complex.
+
+### Interactions with Continuous Variables
+
+So far, we have just looked at interacting qualitative variables - but you can interact any types of variables!
+
+- Qualitative-Qualitative
+- Qualitative-Quantitative
+- Quantitative-Quantitative
+
+The format and syntax in R is similar, with some small exceptions to deal with certain combinations of variables.  However (again), you do need to be careful with interpretation.
+
+For example, let's look at the interaction of income and sex on wealth.  In a regression equation, this would be expressed like:
+
+$$
+W_i = \beta_0  + \beta_1 Income_i + \beta_2 F_i + \beta_3 Income_i \times F_i + \epsilon_i
+$$
+
+Notice that, just like before:
+
+$$
+\frac{\partial W_i}{\partial Income_i} = \beta_1 + \beta_3 F_i
+$$
+
+There are two *different* "slope" coefficients; basically, male and female lead family can have a different return to wealth.  Let's see this in R:
+
+```{r}
+regression2 <- lm(wealth ~ income_before_tax + gender + income_before_tax:gender, data = SFS_data)
+
+summary(regression2)
+```
+
+As we can see here, the female-lead households in our model accumulate about 3.946 dollars more in wealth per dollar of income earned than male-lead respondents. But female-lead households accumulate 343,300 dollars less than male counterparts. So the overall effects depend on average income before tax. 
+
+This addresses the common problem of estimating a regression model where you think the impact of a continuous variable might be different across the two groups.  One approach would be to run the model only for men, and only for women, and then compare - but this isn't a good idea.  Those regressions have a much smaller sample size, and if you have other controls in the model, you will "throw away" information.  The interaction method is much better.
+
+## Part 2: Non-linear Terms in Regression Models
+
+You might have been puzzled by why these models were called "linear" regressions.  The reason is because they are linear in the *coefficients*: the dependent variable is expressed as a linear combination of the explanatory variables.
+
+This implies that we can use the same methods (OLS) to estimate models that including linear combinations of _non-linear functions_ of the explanatory variables.  We have actually already seen an example of this: remember using `log` of a variable?  That's a non-linear function!
+
+As we learned when considering `log`, the most important difference here is again regarding interpretations, not the actual estimation.
+
+In R, there is one small complication: when you want to include mathematical expressions in a model formula, you need to "isolate" then using the `I()` function.  This is because many operations in R, like `+` or `*` have a special meaning in a regression model.
+
+For example, let's consider a quadratic regression - that is, including both $Income_i$ and $Income_i^2$ (income squared) in our model.
+
+```{r}
+
+regression3 <- lm(wealth ~ income_before_tax + I(income_before_tax^2), data = SFS_data)
+
+summary(regression3)
+```
+
+As you can see, we get regression results much like we would expect.  However, how do we interpret them?  The issue is that *income* enters into two places.  We need to carefully interpret this model, using our knowledge of the equation:
+
+$$
+W_i = \beta_0 + \beta_1 Income_i + \beta_2 Income_i^2 + \epsilon_i
+$$
+
+$$
+\implies \frac{\partial W_i}{\partial Income_i} = \beta_1 + 2 \beta_2 Income_i
+$$
+
+You will notice something special about this; the marginal effect is *non-linear*. As $Income_i$ changes, the effect of income on $W_i$ changes. This is because we have estimated a quadratic relationship; the slope of a quadratic changes as the explanatory variable changes. That's what we're seeing here!
+
+This makes these models relatively difficult to interpret, since the marginal effects change (often dramatically) as the explanatory variables change. You frequently need to carefully interpret the model and often (to get estimates) perform tests on *combinations* of coefficients, which can be done using things like the `car` package or the `lincom` function.  You can also compute this manually, using the formula for the sum of variances.
+
+For example, let's test if the marginal effect of income is significant at $Income_i = \overline{Income}_i$.  This is the most frequently reported version of this effects, often called the "marginal effect at the means".
+
+```{r}
+m <- mean(SFS_data$income_before_tax)
+
+linearHypothesis(regression3, hypothesis.matrix = c(0, 1, 2*m), rhs=0) 
+```
+
+As we can see, it is highly significant
+
+> **Think Deeper**: what is the vector ``c(0, 1, 2*m)`` doing in the above expression?
+
+Let's see exactly what those values are.  Recall the formula:
+
+$$
+V(aX + bY) = a^2 V(X) + b^2 V(Y) + 2abCov(X,Y)
+$$
+
+In our situation, $X = Y = W_i$, so this is:
+
+$$
+V(\beta_1 + 2\bar{W_i}\beta_2) = V(\beta_1) + 4\bar{W_i}^2V(\beta_2) + 2(2\bar{W_i})Cov(\beta_1,\beta_2)
+$$
+
+Fortunately, these are all things we have from the regression and its variance-covariance matrix:
+
+```{r}
+
+v <- vcov(regression3)
+coefs <- regression3$coefficients
+v
+
+var <- v[2,2] + 4*(m^2)*v[3,3] + 4*m*v[3,2]
+
+var
+
+coef <-  coefs[[2]] + 2*m*coefs[[3]]
+
+print("Coefficent Combination and SD")
+round(coef,3)
+round(sqrt(var),3)
+```
+
+As you can see, this gets fairly technical and is not something you will want to do without a very good reason.  In general, it's a better idea to rely on some of the packages written for R that handle this task for the (specific) model you are interested in evaluating.
+
+### Aside: Why Polynomial Terms?
+
+You might be wondering why econometricians spend so much time talking about models that included polynomial terms, when those are (realistically) a very small set of the universe of possible functions of an explanatory variable (you already know why we talk about `log` so much!).  
+
+The reason is actually approximation.  Consider the following _non-linear_ model:
+
+$$
+Y_i = f(X_i) + e_i
+$$
+
+This model is truly non-linear (and not just in terms of the parameters).  How can we estimate this model?  It's hard!  There are techniques to estimate complex models like this, but how far can we get with good-old OLS?  The answer is - provided that $f$ is "smooth" - pretty far.
+
+Think back to introductory calculus; you might remember a theorem called [Taylor's Theorem](https://en.wikipedia.org/wiki/Taylor%27s_theorem).  It says that a smoothly differentiable function can be arbitrarily well-approximated (about a point) by a polynomial expansion:
+
+$$
+f(x) = f(a) + f'(a)(x-a) + \frac{f''(a)}{2!}(x-a)^2 + \cdots + \frac{f^{(k)}(a)}{k!}(x-a)^k + R_k(x)
+$$
+
+and the error term $R_k(x) \to 0$ as $x \to a$ and $k \to \infty$.
+
+Look closely at this expression.  Most of the terms (like $f'(a)$) are constants.  In fact, you can show that this can be written like:
+
+$$
+f(x) = \beta_0 + \beta_1 x + \beta_2 x^2 + \cdots + \beta_k x^k + r
+$$
+
+Putting this into our expression above gives us the relationship:
+
+$$
+Y_i = \beta_0 + \beta_1 X_i + \beta_2 X_i^2 + \cdots + \beta_k X_i^k+ \epsilon_i
+$$
+
+Which is a linear regression model!  What this say is actually very important: linear regression models can be viewed as _approximations_ to nonlinear regressions, provided we have enough polynomial terms.  This is one complication: the error term is definitely not uncorrelated.  You can learn more about how to address this issue in other courses, but at the most the omitted variable bias is relatively small as $k \to \infty$.
+
+## Part 3: Exercises
+
+This sections has both written and coding exercises for you to test your knowledge about interactions and non-linear terms in regression models. The answers to the written exercises are on the last section of the notebook.
+
+### Questions
+
+Consider the following regression model:
+
+$$
+\begin{equation}
+W_i = \beta_1 + \beta_2 F_i + \beta_3 E_i + \beta_4 P_i + \beta_5 F_i\times E_i + \beta_6 F_i \times P_i + \epsilon_i
+\end{equation}
+$$
+
+where
+
+- $W_i$ denotes wealth
+- $F_i$ is a dummy variable for the gender of main earner in the household ($F_i=1$ if female is the main earner)
+- $E_i$ is a factor variable for education 
+- $P_i$ is a factor variable for province
+
+1. How should we interpret the coefficients $\beta_5$ and $\beta_6$? Why might these effects be important to estimate?
+
+
+Now, let's estimate the model and interpret it concretely. (Please follow the order of variables in regression model): 
+
+```
+reg1 <- gender, Education, province
+
+reg0 <- gender, education, province
+```
+
+What are your interaction variables? (remember to follow the same order)
+
+```{r}
+#| eval: false
+#| classes: "question"
+
+reg0 <- lm(???, data = SFS_data)
+
+reg1 <- lm(???, data = SFS_data)
+
+summary(reg0)
+summary(reg1)
+
+test_2()
+test_3()
+```
+
+```{r}
+#| eval: false
+#| classes: "answer"
+reg0 <- lm(wealth ~ gender+education+province+gender:education+gender:province, data = SFS_data)
+
+reg1 <- lm(wealth ~ gender+Education+province+gender:Education+gender:province, data = SFS_data)
+
+summary(reg0)
+summary(reg1)
+
+test_2()
+test_3()
+```
+
+4. How do we interpret the coefficient estimate on `gender:Education`? What education level do female-lead households appear to be most discriminated in? How might we explain this intuitively?
+
+5. How do you interpret the coefficient estimate on `genderFemale:provinceAlberta`? (Hint: Write out the average wealth equations for female, male in Alberta, and female in Alberta separately.)
+
+Now let's test whether the returns to education increase if people are entrepreneurs. `business` is a factor variable which suggests whether the household owns a business. Please add terms to the regression equation that allow us to run this test. Then, estimate this new model. We don't need `province` and `gender` variables in this exercise. For education, please use `education` variable. And we will continue to study wealth accumulated in households.
+
+```{r}
+#| eval: false
+#| classes: "question"
+
+SFS_data$business <- relevel(SFS_data$business, ref = "No") # co not change; makes "not a business owner" the reference level for business
+
+reg2 <- lm(???, data = SFS_data)
+
+summary(reg2)
+test_6()
+```
+
+```{r}
+#| eval: false
+#| classes: "answer"
+
+SFS_data$business <- relevel(SFS_data$business, ref = "No")
+
+reg2 <- lm(wealth ~ education+business+education:business, data = SFS_data)
+
+summary(reg2)
+
+test_6()
+```
+
+7. Do returns to education increase when people are entrepreneurs? Explain why or why not with reference to the regression estimates.
+
+A topic that many labour economists are concerned with, and one that we have discussed before, is the gender-wage gap. In this activity, we will construct a "difference-in-difference" regression to explore this gap using the `SFS_data2`.
+
+Suppose that we want to estimate the relationship between age, sex and wages. Within this relationship, we suspect that women earn less than men from the beginning of their working lives, ***but this gap does not change as workers age***.
+
+Estimate a regression model (with no additional control variables) that estimates this relationship using ``SFS_data2``. We will use `income_before_tax` variable. Order: list `gender` before `agegr`.
+
+Tested Objects: `reg3A`
+
+Let's first simplify levels of age group using following codes.
+
+```{r}
+
+# some data cleaning - just run this!
+SFS_data <- 
+        SFS_data %>%
+        mutate(agegr = case_when(
+              age == "01" ~ "Under 30", #under 20
+              age == "02" ~ "Under 30", #20-24
+              age == "03" ~ "20s", #25-29
+              age == "04" ~ "30s",
+            age == "05" ~ "30s",
+              age == "06" ~ "40s",
+              age == "07" ~ "40s",
+              age == "08" ~ "50s",
+              age == "09" ~ "50s",
+              age == "10" ~ "60s", #60-64
+              age == "11" ~ "Above 65", #65-69
+              age == "12" ~ "Above 65", #70-74
+              age == "13" ~ "Above 75", #75-79
+              age == "14" ~ "Above 75", #80 and above
+              )) %>%
+        mutate(agegr = as_factor(agegr))
+
+SFS_data$agegr <- relevel(SFS_data$agegr, ref = "Under 30") #Set "Under 30" as default factor level
+```
+
+Let's restrict the sample to main working groups. Just run the following line.
+
+```{r}
+SFS_data2 <- subset(SFS_data, agegr == "20s" | agegr == "30s" | agegr == "40s" | agegr == "50s" | agegr == "60s" )
+```
+
+```{r}
+#| eval: false
+#| classes: "question"
+
+SFS_data2$agegr <- relevel(SFS_data2$agegr, ref = "20s") # do not change; makes "20s" the reference level for age
+
+reg3A <- lm(???, data = SFS_data2)
+
+summary(reg3A)
+
+test_8() 
+```
+
+```{r}
+#| eval: false
+#| classes: "answer"
+
+SFS_data2$agegr <- relevel(SFS_data2$agegr, ref = "20s")
+
+reg3A <- lm(income_before_tax ~ gender+agegr, data = SFS_data2)
+
+summary(reg3A)
+
+test_8()
+```
+
+
+9. What is the relationship between age and wages? Between sex and earnings? Is there a significant wage gap? Why might the regression above not give us the "full picture" of the sex wage gap?
+
+Now, estimate the relationship between wages and age for male-lead households and female-lead households separately, then compare their returns to age. Let's continue to use `income_before_tax`
+
+Tested objects: ``reg3M`` (for males), ``reg3F`` (for females).
+
+```{r}
+#| eval: false
+#| classes: "question"
+
+reg3M <- lm(..., data = filter(SFS_data2, gender == "Male"))
+reg3F <- lm(..., data = filter(SFS_data2, gender == "Female"))
+
+summary(reg3M)
+summary(reg3F)
+
+test_10()
+test_11() 
+```
+```{r}
+#| eval: false
+#| classes: "answer"
+
+reg3M <- lm(income_before_tax ~ agegr, data = filter(SFS_data2, gender == "Male"))
+reg3F <- lm(income_before_tax ~ agegr, data = filter(SFS_data2, gender == "Female"))
+
+summary(reg3M)
+summary(reg3F)
+
+test_10()
+test_11() 
+```
+
+12. Do these regression estimates support your argument? Explain.
+
+Add one additional term to the multiple regression that accounts for the possibility that the sex wage gap can change as workers age. Please list gender before age.
+
+Tested Objects: `reg4`.
+
+```{r}
+#| eval: false
+#| classes: "question"
+
+reg4 <- lm(???, data = SFS_data2)
+
+summary(reg4)
+
+test_13() 
+```
+
+```{r}
+#| eval: false
+#| classes: "answer"
+
+reg4 <- lm(income_before_tax ~ gender+agegr+gender:agegr, data = SFS_data2)
+
+summary(reg4)
+
+test_13() 
+```
+
+14. According to the regression you estimated above, what is the nature of the sex wage gap?
+
+Now, suppose that a team of researchers is interested in the relationship between the price of a popular children's chocolate brand (let's call it "Jumbo Chocolate Egg") and its demand. The team conducts a series of surveys over a five-year period where they ask 200 households in a Vancouver neighborhood to report how many packs of Jumbo Chocolate Egg they bought in each quarter of the year. The company that produces Jumbo Chocolate Egg is interested in estimating the price elasticity of demand for their chocolate, so they changed the price of a pack of chocolate each quarter over this period. This survey is voluntary - the team went door-to-door to gather the data, and people could refuse to participate.
+
+After they compile a dataset from the survey responses, the team estimates this model:
+
+$$
+Q_i^2 = \alpha_1 + \alpha_2 ln(P_i) + \alpha_3 H_i + \epsilon_i
+$$
+
+$Q_i$ denotes the quantity of chocolate packs that household $i$ purchased in a given quarter of a given year. That is, each quarter for a given household is a separate observation. $P_i$ is the price of the pack of chocolate in the given quarter, and $H_i$ is the household size (in number of people). Note that $\hat{\alpha_2}$ is *supposed to be* the estimated elasticity of demand.
+
+You join the team as a research advisor - in other words, you get to criticize their project and get paid doing so. Sounds great, but you have a lot of work ahead.
+
+15. Are there any omitted variables that the team should be worried about when estimating the model? Give 2 examples of such variables if so, and explain how each variable's omission could affect the estimated elasticity of demand.
+
+16. Is there anything wrong with the specification of the regression model? If so, explain how to correct it; if not, explain why the specification is correct.
+
+17. Is there any potential for sample selection bias in this study? Explain by referencing specific aspects of the experiment. What effect might this bias have on the estimated elasticity of demand?
+
+18. A member of your team writes in the research report that "this estimated elasticity of demand tells us about the preferences of consumers around Canada." Do you have an issue with this statement? Why or why not?
+
+### Solutions
+
+1. $\beta_5$ is the difference of 'value-added' of education between female-lead household and male-lead household. $\beta_6$ is the difference of province effects between female-lead household and male-lead household.
+
+These interaction terms provide us with a simple way to describe and study how _combinations_ of our explanatory variables impact our model. With these interaction terms, we can understand how education and geography affect wealth of male-lead and female-lead households differently.
+
+2-3. Coding exercises.
+
+4. It means if the main earner is a female with a university degree, the household accumulates 302,008 dollars less wealth, than the male counterpart. University degree holders are most discriminated, because $|\hat{\beta_5}|$ is higher than $|\hat{\beta_2}|$.
+
+One possible explanation is that males with university degree are more likely to become managers or other higher level employees than females. The inequality in incomes lead to the inequality in wealth.
+
+5. Average wealth for female-lead family: $E[wealth|female]=\beta_{1}+\beta_{2}=455918-87277$
+
+Average wealth for male-lead family in Alberta: $E[wealth|male,Alberta]=\beta_{1}+\beta_{4,Alberta}=455918+502683$
+
+Average wealth for female-lead family in Alberta: $E[wealth|female,Alberta]=\beta_{1}+\beta_{2}+\beta_{4,Alberta}+\beta_{6,Alberta}=455918-87277+502683-105798$
+
+Thus $\beta_{6,Alberta}$ is the difference of wealth when living in Alberta between female-lead household and male-lead household.
+
+6. Coding exercise
+
+7. From the above results of regression, owning a business increases 1.29 million dollars wealth on average. But the estimates of returns to education for being an entrepreneur or not is not significant. Thus we cannot conclude how education will affect the returns of entrepreneurs.
+
+8. Coding exercise.
+
+9. Income before tax of households increase as main earners become older, and the peak arrives at their 50s. Female-lead households generally earn 34,852 dollars less than male-lead households. This regression does not provide us the "full picture" of sex wage gap, because the gender gap may change when people age.
+
+10-11. Coding exercises
+
+12. Yes, these regression estimates support our hypothesis. First of all, for both male-lead and female-lead households, incomes increase as main earners become older, and the peak appears at their 50s. Second, there is a gender-wage gap in which female-lead households earn less. But the gap changes as age changes.
+
+13. Coding exercise.
+
+14. Generally speaking, the gender-income gap increases when workers become older. And the gender-income gap is widest at their 40s.
+
+15. There are omitted variables, for example, age of kids and a dummy variable which represents Christmas and New Year. Omitting Christmas and New Year dummy will decrease $|\hat{\alpha}_{2}|$, because people buy more chocolates during Christmas, even if price of chocolate is high. Controlling Christmas dummy will recover the real elasticity of demand, which is a larger real $|\alpha_{2}|$.
+
+When kids are young, they tend to consume more chocolates. Thus parts of the variations of consumption come from ages of kids. Without controlling for ages, the estimated elasticity is not reliable.
+
+16. The dependent variable should be $ln(Q_{i})$ instead of $Q_{i}^{2}$.
+
+17. There is sample selection bias, because people could refuse to participate. This means people who responded might be households who like Jumbo Chocolate Egg brand, and the estimated elasticity $|\hat{\alpha}_{2}|$ is smaller than the real elasticity among general population.
+
+18. The result cannot represent the whole Canada, because participants were from a single neighborhood in Vancouver.
