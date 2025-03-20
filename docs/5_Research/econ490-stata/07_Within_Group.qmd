@@ -152,6 +152,8 @@ keep if tot_obs==8
 %browse 10
 ```
 
+Notice that we now have an observation for every worker in every year, although we know some workers are only observed in a subset of these. This is known as a **balanced panel**.
+
 ## 7.3 Generating Variables Using Extended Generate
 
 The command `egen` is used whenever we want to create variables which require access to some functions (e.g. mean, standard deviation, min). The basic syntax works as follows:
@@ -264,8 +266,6 @@ reshape long earnings region age  start_year sample_weight, i(workerid) j(year)
 ```{stata}
 %browse 10
 ```
-
-Notice that we now have an observation for every worker in every year, although we know some workers are only observed in a subset of these. This is known as a **balanced panel**.
 
 To retrieve the original data set, we get rid of such observations with missing values.
 
